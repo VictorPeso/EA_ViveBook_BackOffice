@@ -55,7 +55,7 @@ export class OrganizacionList implements OnInit {
 
     this.api.getOrganizaciones().subscribe({
       next: (res) => {
-        this.organizaciones = res?.organizaciones ?? [];
+        this.organizaciones = res;
         this.organizacionesFiltradas = [...this.organizaciones];
         this.loading = false;
         this.cdr.detectChanges();
