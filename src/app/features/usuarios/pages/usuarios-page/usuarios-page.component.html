@@ -1,0 +1,31 @@
+<section class="libros-page">
+  <div class="libros-page__layout">
+    
+    <aside class="libros-page__sidebar">
+      <app-usuarios-list
+        [usuarios]="usuarios"
+        [selectedUsuarioId]="selectedUsuario?._id ?? null"
+        [isLoading]="isLoading"
+        (selectUsuario)="onSelectUsuario($event)"
+        (createNew)="onCreateNew()"
+      >
+      </app-usuarios-list>
+    </aside>
+
+    <section class="libros-page__content">
+      <app-usuario-form
+        [usuario]="selectedUsuario"
+        [isSaving]="isSaving"
+        [isDeleting]="isDeleting"
+        [isCreating]="isCreating"
+        [errorMessage]="errorMessage"
+        [successMessage]="successMessage"
+        (save)="onSaveUsuario($event)"
+        (delete)="onDeleteUsuario($event)"
+        (cancel)="onCancelForm()"
+      >
+      </app-usuario-form>
+    </section>
+
+  </div>
+</section>

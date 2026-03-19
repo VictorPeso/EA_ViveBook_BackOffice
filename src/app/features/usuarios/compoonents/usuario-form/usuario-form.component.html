@@ -1,0 +1,60 @@
+<section class="libro-form">
+  <ng-container *ngIf="hasUsuario; else emptyState">
+    <div class="libro-form__header">
+      <div>
+        <p class="libro-form__eyebrow">Perfil</p>
+        <h2 class="libro-form__title">{{ formTitle }}</h2>
+        <p class="libro-form__subtitle">{{ formSubtitle }}</p>
+      </div>
+    </div>
+
+    <div class="libro-form__alert libro-form__alert--error" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <div class="libro-form__alert libro-form__alert--success" *ngIf="successMessage">{{ successMessage }}</div>
+
+    <form class="libro-form__body" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <input type="hidden" formControlName="_id" />
+
+      <div class="libro-form__grid">
+        <div class="libro-form__field">
+          <label class="libro-form__label">Nombre</label>
+          <input type="text" class="libro-form__input" formControlName="name" placeholder="Nombre completo" />
+          <p class="libro-form__error" *ngIf="nameControl.touched && nameControl.invalid">El nombre es obligatorio.</p>
+        </div>
+
+        <div class="libro-form__field">
+          <label class="libro-form__label">Email</label>
+          <input type="email" class="libro-form__input" formControlName="email" placeholder="correo@ejemplo.com" />
+          <p class="libro-form__error" *ngIf="emailControl.touched && emailControl.invalid">Introduce un email válido.</p>
+        </div>
+
+        <div class="libro-form__field">
+          <label class="libro-form__label">Contraseña</label>
+          <input type="password" class="libro-form__input" formControlName="password" />
+        </div>
+
+        <div class="libro-form__field">
+          <label class="libro-form__label">Confirmar Contraseña</label>
+          <input type="password" class="libro-form__input" formControlName="confirmPassword" />
+          <p class="libro-form__error" *ngIf="form.hasError('passwordMismatch') && form.get('confirmPassword')?.touched">Las contraseñas no coinciden.</p>
+        </div>
+      </div>
+
+      <div class="libro-form__actions">
+        <button type="button" class="libro-form__button libro-form__button--secondary" (click)="onCancel()" [disabled]="isSaving">Cancelar</button>
+        <button type="submit" class="libro-form__button libro-form__button--primary" [disabled]="isSaving">
+          {{ isSaving ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+        <button *ngIf="!isCreating && usuario?._id" type="button" class="libro-form__button libro-form__button--danger" (click)="onDelete()" [disabled]="isDeleting">
+          {{ isDeleting ? 'Borrando...' : 'Borrar' }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+
+  <ng-template #emptyState>
+    <div class="libro-form__empty">
+      <h2>Selecciona un usuario</h2>
+      <p>Elige un usuario del listado o crea uno nuevo.</p>
+    </div>
+  </ng-template>
+</section>
