@@ -34,7 +34,7 @@ export class LibrosPageComponent implements OnInit {
   readonly successMessage = signal('');
 
   readonly currentPage = signal(1);
-  readonly pageSize = signal(8);
+  readonly pageSize = signal(5);
 
   readonly totalItems = computed(() => this.libros().length);
 

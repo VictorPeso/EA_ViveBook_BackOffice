@@ -10,5 +10,5 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './topbar.component.css',
 })
 export class TopbarComponent {
-  appName = 'Library BackOffice';
+  appName = 'ViveBook BackOffice';
 }

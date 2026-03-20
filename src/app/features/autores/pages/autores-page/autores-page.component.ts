@@ -29,7 +29,7 @@ export class AutoresPageComponent implements OnInit {
   readonly successMessage = signal('');
 
   readonly currentPage = signal(1);
-  readonly pageSize = signal(8);
+  readonly pageSize = signal(5);
 
   readonly totalItems = computed(() => this.autores().length);
 
