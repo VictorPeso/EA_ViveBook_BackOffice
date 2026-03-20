@@ -1,29 +1,38 @@
 <section class="libros-page">
   <div class="libros-page__layout">
-    <aside class="libros-page__sidebar">
-      <app-libros-list
-        [libros]="libros"
-        [selectedLibroId]="selectedLibro?._id ?? null"
-        [isLoading]="isLoading"
-        (selectLibro)="onSelectLibro($event)"
-        (createNew)="onCreateNew()"
-      >
-      </app-libros-list>
-    </aside>
-
-    <section class="libros-page__content">
+    <aside class="libros-page__form-column">
       <app-libro-form
-        [libro]="selectedLibro"
-        [isSaving]="isSaving"
-        [isDeleting]="isDeleting"
-        [isCreating]="isCreating"
-        [errorMessage]="errorMessage"
-        [successMessage]="successMessage"
+        [libro]="selectedLibro()"
+        [autores]="autores()"
+        [isSaving]="isSaving()"
+        [isDeleting]="isDeleting()"
+        [isCreating]="isCreating()"
+        [isLoadingAutores]="isLoadingAutores()"
+        [errorMessage]="errorMessage()"
+        [successMessage]="successMessage()"
         (save)="onSaveLibro($event)"
         (delete)="onDeleteLibro($event)"
-        (cancel)="onCancelForm()"
+        (cancel)="onCancelEdit()"
       >
       </app-libro-form>
+    </aside>
+
+    <section class="libros-page__list-column">
+      <app-libros-list
+        [libros]="paginatedLibros()"
+        [selectedLibroId]="selectedLibro()?._id ?? null"
+        [isLoading]="isLoading()"
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalItems]="totalItems()"
+        [pageSize]="pageSize()"
+        (selectLibro)="onSelectLibro($event)"
+        (createNew)="onCreateNew()"
+        (pageChange)="onPageChange($event)"
+        (nextPage)="onNextPage()"
+        (previousPage)="onPreviousPage()"
+      >
+      </app-libros-list>
     </section>
   </div>
 </section>

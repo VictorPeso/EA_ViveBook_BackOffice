@@ -16,19 +16,33 @@ export class AutoresService {
     return this.http.get<Autor[]>(this.apiUrl);
   }
 
-  getAutorById(id: string): Observable<Autor> {
-    return this.http.get<Autor>(`${this.apiUrl}/${id}`);
+  getAllAutores(): Observable<Autor[]> {
+    return this.http.get<Autor[]>(`${this.apiUrl}/all`);
+  }
+
+  getAutorById(autorId: string): Observable<Autor> {
+    return this.http.get<Autor>(`${this.apiUrl}/${autorId}`);
   }
 
   createAutor(autor: Autor): Observable<Autor> {
     return this.http.post<Autor>(this.apiUrl, autor);
   }
 
-  updateAutor(id: string, autor: Autor): Observable<Autor> {
-    return this.http.put<Autor>(`${this.apiUrl}/${id}`, autor);
+  updateAutor(autorId: string, autor: Partial<Autor>): Observable<Autor> {
+    return this.http.put<Autor>(`${this.apiUrl}/${autorId}`, autor);
   }
 
-  deleteAutor(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  softDeleteAutor(autorId: string, autorActual: Autor): Observable<Autor> {
+    return this.http.put<Autor>(`${this.apiUrl}/${autorId}`, {
+      ...autorActual,
+      IsDeleted: true,
+    });
+  }
+
+  restoreAutor(autorId: string, autorActual: Autor): Observable<Autor> {
+    return this.http.put<Autor>(`${this.apiUrl}/${autorId}`, {
+      ...autorActual,
+      IsDeleted: false,
+    });
   }
 }

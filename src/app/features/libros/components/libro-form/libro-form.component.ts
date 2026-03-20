@@ -9,11 +9,13 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
+  FormArray,
   FormBuilder,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
 
+import { Autor } from '../../../../Core/models/autor.model';
 import { Libro } from '../../../../Core/models/libro.model';
 
 @Component({
@@ -27,9 +29,11 @@ export class LibroFormComponent implements OnChanges {
   private readonly fb = inject(FormBuilder);
 
   @Input() libro: Libro | null = null;
+  @Input() autores: Autor[] = [];
   @Input() isSaving = false;
   @Input() isDeleting = false;
-  @Input() isCreating = false;
+  @Input() isCreating = true;
+  @Input() isLoadingAutores = false;
   @Input() errorMessage = '';
   @Input() successMessage = '';
 
@@ -39,9 +43,10 @@ export class LibroFormComponent implements OnChanges {
 
   readonly form = this.fb.nonNullable.group({
     _id: [''],
-    isbn: ['', [Validators.required, Validators.maxLength(50)]],
     title: ['', [Validators.required, Validators.maxLength(200)]],
-    authors: [''],
+    isbn: ['', [Validators.maxLength(100)]],
+    IsDeleted: [false],
+    authors: this.fb.array<string>([], [Validators.required, Validators.minLength(1)]),
   });
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -50,114 +55,146 @@ export class LibroFormComponent implements OnChanges {
     }
   }
 
-  onSubmit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    const rawValue = this.form.getRawValue();
-    const authors = this.parseAuthors(rawValue.authors);
-
-    const hasInvalidAuthors = authors.some((authorId) => !this.isValidObjectId(authorId));
-
-    if (hasInvalidAuthors) {
-      this.form.controls.authors.setErrors({ invalidObjectId: true });
-      this.form.controls.authors.markAsTouched();
-      return;
-    }
-
-    const payload: Libro = {
-      _id: rawValue._id || undefined,
-      isbn: rawValue.isbn.trim(),
-      title: rawValue.title.trim(),
-      authors: this.parseAuthors(rawValue.authors),
-    };
-
-    this.save.emit(payload);
-  }
-
-  onDelete(): void {
-    if (!this.libro) {
-      return;
-    }
-
-    this.delete.emit(this.libro);
-  }
-
-  onCancel(): void {
-    this.cancel.emit();
+  get titleControl() {
+    return this.form.controls.title;
   }
 
   get isbnControl() {
     return this.form.controls.isbn;
   }
 
-  get titleControl() {
-    return this.form.controls.title;
-  }
-
-  get authorsControl() {
+  get authorsControl(): FormArray {
     return this.form.controls.authors;
   }
 
   get hasLibro(): boolean {
-    return !!this.libro || this.isCreating;
+    return !!this.libro;
   }
 
   get formTitle(): string {
-    return this.isCreating ? 'Nuevo libro' : 'Detalle del libro';
+    return this.isCreating ? 'Nuevo libro' : 'Editar libro';
   }
 
   get formSubtitle(): string {
     return this.isCreating
-      ? 'Completa la información para registrar un nuevo libro.'
-      : 'Consulta y edita los datos del libro seleccionado.';
+      ? 'Completa los datos para crear un nuevo libro.'
+      : 'Modifica los datos del libro seleccionado.';
   }
 
-  private patchForm(libro: Libro | null): void {
-    if (!libro) {
-      this.form.reset({
-        _id: '',
-        isbn: '',
-        title: '',
-        authors: '',
-      });
+  isAuthorSelected(authorId: string): boolean {
+    return this.authorsArrayValues.includes(authorId);
+  }
+
+  onToggleAuthor(authorId: string, checked: boolean): void {
+    if (checked) {
+      if (!this.isAuthorSelected(authorId)) {
+        this.authorsControl.push(this.fb.control(authorId, { nonNullable: true }));
+      }
+    } else {
+      const index = this.authorsArrayValues.findIndex((id) => id === authorId);
+
+      if (index >= 0) {
+        this.authorsControl.removeAt(index);
+      }
+    }
+
+    this.authorsControl.markAsTouched();
+    this.authorsControl.updateValueAndValidity();
+  }
+
+  onSubmit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.authorsControl.markAsTouched();
       return;
     }
 
-    this.form.reset({
-      _id: libro._id ?? '',
-      isbn: libro.isbn ?? '',
-      title: libro.title ?? '',
-      authors: this.stringifyAuthors(libro.authors),
-    });
+    const rawValue = this.form.getRawValue();
+    const authorIds = this.getSafeAuthorIds(rawValue.authors);
+
+    const payload: Libro = {
+      _id: rawValue._id || undefined,
+      title: rawValue.title.trim(),
+      isbn: rawValue.isbn.trim(),
+      authors: authorIds,
+      IsDeleted: rawValue.IsDeleted ?? false,
+    };
+
+    this.save.emit(payload);
   }
 
-  private stringifyAuthors(authors: Libro['authors']): string {
-    if (!Array.isArray(authors) || authors.length === 0) {
-      return '';
+  private getSafeAuthorIds(values: Array<string | null | undefined>): string[] {
+    return values.filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+  }
+
+  onDelete(): void {
+    const currentLibro = this.buildCurrentLibroFromForm();
+
+    if (!currentLibro || !currentLibro._id) {
+      return;
+    }
+
+    this.delete.emit(currentLibro);
+  }
+
+  onCancel(): void {
+    this.cancel.emit();
+  }
+
+  trackByAutorId(index: number, autor: Autor): string | number {
+    return autor._id ?? index;
+  }
+
+  private patchForm(libro: Libro | null): void {
+    const authorIds = this.extractAuthorIds(libro?.authors);
+
+    this.form.reset({
+      _id: libro?._id ?? '',
+      title: libro?.title ?? '',
+      isbn: libro?.isbn ?? '',
+      IsDeleted: libro?.IsDeleted ?? false,
+      authors: [],
+    });
+
+    this.authorsControl.clear();
+
+    authorIds.forEach((authorId) => {
+      this.authorsControl.push(this.fb.control(authorId, { nonNullable: true }));
+    });
+
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+    this.authorsControl.updateValueAndValidity();
+  }
+
+  private extractAuthorIds(authors: Libro['authors'] | undefined): string[] {
+    if (!Array.isArray(authors)) {
+      return [];
     }
 
     return authors
       .map((author) => (typeof author === 'string' ? author : author._id))
-      .filter(Boolean)
-      .join(', ');
+      .filter((authorId): authorId is string => !!authorId);
   }
 
-  private parseAuthors(value: string): string[] {
-    if (!value.trim()) {
-      return [];
+  private buildCurrentLibroFromForm(): Libro | null {
+    const rawValue = this.form.getRawValue();
+    const authorIds = this.getSafeAuthorIds(rawValue.authors);
+
+    if (!rawValue._id && !rawValue.title.trim() && !rawValue.isbn.trim()) {
+      return null;
     }
 
-    return value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
+    return {
+      _id: rawValue._id || undefined,
+      title: rawValue.title.trim(),
+      isbn: rawValue.isbn.trim(),
+      authors: authorIds,
+      IsDeleted: rawValue.IsDeleted ?? false,
+    };
   }
 
-  private isValidObjectId(value: string): boolean {
-    return /^[0-9a-fA-F]{24}$/.test(value);
+  private get authorsArrayValues(): string[] {
+    return this.authorsControl.getRawValue() as string[];
   }
-
 }

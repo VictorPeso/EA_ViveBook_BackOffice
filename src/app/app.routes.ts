@@ -23,6 +23,14 @@ export const routes: Routes = [
     title: 'BackOffice - Autores',
   },
   {
+    path: 'usuarios',
+    loadComponent: () =>
+      import('./features/usuarios/pages/usuarios-page/usuarios-page.component').then(
+        (m) => m.UsuariosPageComponent
+      ),
+    title: 'BackOffice - Usuarios',
+  },
+  {
     path: '**',
     redirectTo: 'libros',
   },

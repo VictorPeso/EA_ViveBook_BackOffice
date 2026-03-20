@@ -16,23 +16,33 @@ export class LibrosService {
     return this.http.get<Libro[]>(this.apiUrl);
   }
 
-  getLibroById(id: string): Observable<Libro> {
-    return this.http.get<Libro>(`${this.apiUrl}/${id}`);
+  getAllLibros(): Observable<Libro[]> {
+    return this.http.get<Libro[]>(`${this.apiUrl}/all`);
+  }
+
+  getLibroById(libroId: string): Observable<Libro> {
+    return this.http.get<Libro>(`${this.apiUrl}/${libroId}`);
   }
 
   createLibro(libro: Libro): Observable<Libro> {
     return this.http.post<Libro>(this.apiUrl, libro);
   }
 
-  updateLibro(id: string, libro: Libro): Observable<Libro> {
-    return this.http.put<Libro>(`${this.apiUrl}/${id}`, libro);
+  updateLibro(libroId: string, libro: Partial<Libro>): Observable<Libro> {
+    return this.http.put<Libro>(`${this.apiUrl}/${libroId}`, libro);
   }
 
-  deleteLibro(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  softDeleteLibro(libroId: string, libroActual: Libro): Observable<Libro> {
+    return this.http.put<Libro>(`${this.apiUrl}/${libroId}`, {
+      ...libroActual,
+      IsDeleted: true,
+    });
   }
 
-  restoreLibro(id: string): Observable<Libro> {
-    return this.http.put<Libro>(`${this.apiUrl}/${id}/restore`, {});
+  restoreLibro(libroId: string, libroActual: Libro): Observable<Libro> {
+    return this.http.put<Libro>(`${this.apiUrl}/${libroId}`, {
+      ...libroActual,
+      IsDeleted: false,
+    });
   }
 }

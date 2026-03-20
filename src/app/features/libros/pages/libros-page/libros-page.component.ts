@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
+import { Autor } from '../../../../Core/models/autor.model';
 import { Libro } from '../../../../Core/models/libro.model';
+import { AutoresService } from '../../../../Core/services/autores.service';
 import { LibrosService } from '../../../../Core/services/libros.service';
 import { LibroFormComponent } from '../../components/libro-form/libro-form.component';
 import { LibrosListComponent } from '../../components/libros-list/libros-list.component';
@@ -10,119 +12,160 @@ import { LibrosListComponent } from '../../components/libros-list/libros-list.co
 @Component({
   selector: 'app-libros-page',
   standalone: true,
-  imports: [CommonModule, LibrosListComponent, LibroFormComponent],
+  imports: [CommonModule, LibroFormComponent, LibrosListComponent],
   templateUrl: './libros-page.component.html',
   styleUrl: './libros-page.component.css',
 })
 export class LibrosPageComponent implements OnInit {
   private readonly librosService = inject(LibrosService);
+  private readonly autoresService = inject(AutoresService);
 
-  libros: Libro[] = [];
-  selectedLibro: Libro | null = null;
+  readonly libros = signal<Libro[]>([]);
+  readonly autores = signal<Autor[]>([]);
+  readonly selectedLibro = signal<Libro | null>(null);
 
-  isLoading = false;
-  isSaving = false;
-  isDeleting = false;
-  isCreating = false;
+  readonly isLoading = signal(false);
+  readonly isLoadingAutores = signal(false);
+  readonly isSaving = signal(false);
+  readonly isDeleting = signal(false);
+  readonly isCreating = signal(true);
 
-  errorMessage = '';
-  successMessage = '';
+  readonly errorMessage = signal('');
+  readonly successMessage = signal('');
+
+  readonly currentPage = signal(1);
+  readonly pageSize = signal(8);
+
+  readonly totalItems = computed(() => this.libros().length);
+
+  readonly totalPages = computed(() => {
+    const total = Math.ceil(this.totalItems() / this.pageSize());
+    return total > 0 ? total : 1;
+  });
+
+  readonly paginatedLibros = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    const end = start + this.pageSize();
+    return this.libros().slice(start, end);
+  });
 
   ngOnInit(): void {
+    this.loadAutores();
     this.loadLibros();
   }
 
   loadLibros(selectedLibroId?: string): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
     this.librosService
       .getLibros()
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (libros) => {
-          this.libros = libros ?? [];
+          const safeLibros = Array.isArray(libros) ? libros : [];
+          this.libros.set(safeLibros);
+
+          this.ensureValidPage();
 
           if (selectedLibroId) {
-            const createdLibro = this.libros.find(
-              (libro) => libro._id === selectedLibroId
-            );
+            const libroRecienAfectado =
+              safeLibros.find((libro) => libro._id === selectedLibroId) ?? null;
 
-            this.selectedLibro = createdLibro ?? null;
-            this.isCreating = false;
+            this.selectedLibro.set(
+              libroRecienAfectado ? this.mapLibroToFormValue(libroRecienAfectado) : null
+            );
+            this.isCreating.set(false);
             return;
           }
 
-          if (this.selectedLibro?._id) {
-            const refreshedSelectedLibro = this.libros.find(
-              (libro) => libro._id === this.selectedLibro?._id
+          const selectedId = this.selectedLibro()?._id;
+
+          if (selectedId) {
+            const refreshedSelectedLibro =
+              safeLibros.find((libro) => libro._id === selectedId) ?? null;
+
+            this.selectedLibro.set(
+              refreshedSelectedLibro
+                ? this.mapLibroToFormValue(refreshedSelectedLibro)
+                : this.createEmptyLibro()
             );
 
-            this.selectedLibro = refreshedSelectedLibro ?? null;
+            if (!refreshedSelectedLibro) {
+              this.isCreating.set(true);
+            }
+
             return;
           }
 
-          if (!this.isCreating && this.libros.length > 0) {
-            this.selectedLibro = this.libros[0];
-          }
+          this.selectedLibro.set(this.createEmptyLibro());
+          this.isCreating.set(true);
         },
         error: (error) => {
           console.error('Error al cargar libros:', error);
-          this.errorMessage = 'No se pudieron cargar los libros.';
+          this.errorMessage.set('No se pudieron cargar los libros.');
         },
       });
   }
 
-  onSelectLibro(libro: Libro): void {
-    this.isCreating = false;
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.selectedLibro = { ...libro };
+  loadAutores(): void {
+    this.isLoadingAutores.set(true);
+
+    this.autoresService
+      .getAutores()
+      .pipe(finalize(() => this.isLoadingAutores.set(false)))
+      .subscribe({
+        next: (autores) => {
+          this.autores.set(Array.isArray(autores) ? autores : []);
+        },
+        error: (error) => {
+          console.error('Error al cargar autores:', error);
+          this.errorMessage.set('No se pudieron cargar los autores.');
+        },
+      });
   }
 
   onCreateNew(): void {
-    this.isCreating = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.selectedLibro = this.createEmptyLibro();
+    this.isCreating.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.selectedLibro.set(this.createEmptyLibro());
   }
 
-  onCancelForm(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    if (this.libros.length > 0) {
-      this.isCreating = false;
-      this.selectedLibro = this.libros[0];
-      return;
-    }
-
-    this.isCreating = false;
-    this.selectedLibro = null;
+  onSelectLibro(libro: Libro): void {
+    this.isCreating.set(false);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.selectedLibro.set(this.mapLibroToFormValue(libro));
   }
 
   onSaveLibro(libroData: Libro): void {
-    this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.isSaving.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
     const payload = this.buildLibroPayload(libroData);
 
-    if (this.isCreating || !libroData._id) {
+    if (this.isCreating() || !libroData._id) {
       this.librosService
-        .createLibro(payload)
-        .pipe(finalize(() => (this.isSaving = false)))
+        .createLibro({
+          ...payload,
+          IsDeleted: false,
+        })
+        .pipe(finalize(() => this.isSaving.set(false)))
         .subscribe({
           next: (createdLibro) => {
-            this.successMessage = 'Libro creado correctamente.';
+            this.isCreating.set(false);
+            this.successMessage.set('Libro creado correctamente.');
             this.loadLibros(createdLibro._id);
           },
           error: (error) => {
             console.error('Error al crear libro:', error);
-            this.errorMessage =
+            this.errorMessage.set(
               error?.error?.message ||
-              error?.error?.details?.[0]?.message ||
-              'No se pudo crear el libro.';
+                error?.error?.details?.[0]?.message ||
+                'No se pudo crear el libro.'
+            );
           },
         });
 
@@ -131,90 +174,147 @@ export class LibrosPageComponent implements OnInit {
 
     this.librosService
       .updateLibro(libroData._id, payload)
-      .pipe(finalize(() => (this.isSaving = false)))
+      .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: (updatedLibro) => {
-          this.libros = this.libros.map((libro) =>
-            libro._id === updatedLibro._id ? updatedLibro : libro
-          );
-          this.selectedLibro = updatedLibro;
-          this.isCreating = false;
-          this.successMessage = 'Libro actualizado correctamente.';
+          this.isCreating.set(false);
+          this.successMessage.set('Libro actualizado correctamente.');
+          this.loadLibros(updatedLibro._id);
         },
         error: (error) => {
           console.error('Error al actualizar libro:', error);
-          this.errorMessage =
+          this.errorMessage.set(
             error?.error?.message ||
-            error?.error?.details?.[0]?.message ||
-            'No se pudo actualizar el libro.';
+              error?.error?.details?.[0]?.message ||
+              'No se pudo actualizar el libro.'
+          );
         },
       });
   }
 
   onDeleteLibro(libro: Libro): void {
-    if (!libro._id || this.isCreating) {
-      this.selectedLibro = null;
-      this.isCreating = false;
-      this.successMessage = '';
-      this.errorMessage = '';
+    if (!libro._id) {
       return;
     }
 
     const confirmed = window.confirm(
-      `¿Seguro que quieres borrar el libro "${libro.title}"?`
+      `¿Seguro que quieres marcar como eliminado el libro "${libro.title}"?`
     );
 
     if (!confirmed) {
       return;
     }
 
-    this.isDeleting = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    const payload = this.buildLibroPayload({
+      ...libro,
+      IsDeleted: true,
+    });
 
     this.librosService
-      .deleteLibro(libro._id)
-      .pipe(finalize(() => (this.isDeleting = false)))
+      .updateLibro(libro._id, {
+        ...payload,
+        IsDeleted: true,
+      })
+      .pipe(finalize(() => this.isDeleting.set(false)))
       .subscribe({
         next: () => {
-          this.libros = this.libros.filter((item) => item._id !== libro._id);
-
-          if (this.libros.length > 0) {
-            this.selectedLibro = this.libros[0];
-          } else {
-            this.selectedLibro = null;
-          }
-
-          this.isCreating = false;
-          this.successMessage = 'Libro eliminado correctamente.';
+          this.successMessage.set('Libro eliminado correctamente.');
+          this.selectedLibro.set(this.createEmptyLibro());
+          this.isCreating.set(true);
+          this.loadLibros();
         },
         error: (error) => {
           console.error('Error al eliminar libro:', error);
-          this.errorMessage =
+          this.errorMessage.set(
             error?.error?.message ||
-            error?.error?.details?.[0]?.message ||
-            'No se pudo eliminar el libro.';
+              error?.error?.details?.[0]?.message ||
+              'No se pudo eliminar el libro.'
+          );
         },
       });
+  }
+
+  onCancelEdit(): void {
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.selectedLibro.set(this.createEmptyLibro());
+    this.isCreating.set(true);
+  }
+
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages()) {
+      return;
+    }
+
+    this.currentPage.set(page);
+  }
+
+  onNextPage(): void {
+    this.onPageChange(this.currentPage() + 1);
+  }
+
+  onPreviousPage(): void {
+    this.onPageChange(this.currentPage() - 1);
   }
 
   trackByLibroId(index: number, libro: Libro): string | number {
     return libro._id ?? index;
   }
 
+  private ensureValidPage(): void {
+    if (this.currentPage() > this.totalPages()) {
+      this.currentPage.set(this.totalPages());
+    }
+
+    if (this.currentPage() < 1) {
+      this.currentPage.set(1);
+    }
+  }
+
   private createEmptyLibro(): Libro {
     return {
-      isbn: '',
       title: '',
+      isbn: '',
       authors: [],
+      IsDeleted: false,
+    };
+  }
+
+  private mapLibroToFormValue(libro: Libro): Libro {
+    return {
+      _id: libro._id,
+      title: libro.title ?? '',
+      isbn: libro.isbn ?? '',
+      authors: this.extractAuthorIds(libro.authors),
+      IsDeleted: libro.IsDeleted ?? false,
+      createdAt: libro.createdAt,
+      updatedAt: libro.updatedAt,
     };
   }
 
   private buildLibroPayload(libro: Libro): Libro {
     return {
-      isbn: libro.isbn?.trim() ?? '',
+      _id: libro._id,
       title: libro.title?.trim() ?? '',
-      authors: Array.isArray(libro.authors) ? libro.authors : [],
+      isbn: libro.isbn?.trim() ?? '',
+      authors: this.extractAuthorIds(libro.authors),
+      IsDeleted: libro.IsDeleted ?? false,
+      createdAt: libro.createdAt,
+      updatedAt: libro.updatedAt,
     };
+  }
+
+  private extractAuthorIds(authors: Libro['authors']): string[] {
+    if (!Array.isArray(authors)) {
+      return [];
+    }
+
+    return authors
+      .map((author) => (typeof author === 'string' ? author : author._id))
+      .filter((authorId): authorId is string => !!authorId);
   }
 }
