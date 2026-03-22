@@ -45,4 +45,8 @@ export class LibrosService {
       IsDeleted: false,
     });
   }
+
+  createLibroByIsbn(isbn: string) : Observable<Libro> {
+    return this.http.get<Libro>(`${this.apiUrl}/isbn/${isbn}`);
+  }
 }
