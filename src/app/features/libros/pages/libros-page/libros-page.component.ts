@@ -8,17 +8,21 @@ import { AutoresService } from '../../../../Core/services/autores.service';
 import { LibrosService } from '../../../../Core/services/libros.service';
 import { LibroFormComponent } from '../../components/libro-form/libro-form.component';
 import { LibrosListComponent } from '../../components/libros-list/libros-list.component';
+import { LibroModal } from '../../components/libro-modal/libro-modal';
+import { Toast } from '../../../../shared/components/toast/toast';
+import { ToastService } from '../../../../Core/services/toast.service';
 
 @Component({
   selector: 'app-libros-page',
   standalone: true,
-  imports: [CommonModule, LibroFormComponent, LibrosListComponent],
+  imports: [CommonModule, LibroFormComponent, LibrosListComponent, LibroModal,Toast],
   templateUrl: './libros-page.component.html',
   styleUrl: './libros-page.component.css',
 })
 export class LibrosPageComponent implements OnInit {
   private readonly librosService = inject(LibrosService);
   private readonly autoresService = inject(AutoresService);
+  private toastService = inject(ToastService);
 
   readonly libros = signal<Libro[]>([]);
   readonly autores = signal<Autor[]>([]);
@@ -326,4 +330,5 @@ export class LibrosPageComponent implements OnInit {
       .map((author) => (typeof author === 'string' ? author : author._id))
       .filter((authorId): authorId is string => !!authorId);
   }
+
 }

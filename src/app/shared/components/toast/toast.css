@@ -1,0 +1,35 @@
+.toast-wrapper {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast-card {
+  padding: 12px 20px;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  animation: slideIn 0.3s ease-out;
+}
+
+.info {
+  background-color: #4CAF50;
+}
+.error {
+  background-color: #f44336;
+}
+.warning {
+  background-color: #d9ff00;
+}
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

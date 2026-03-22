@@ -1,0 +1,29 @@
+.bubble {
+  position: fixed;
+  top: 50%;
+  max-width: 600px;
+  margin-top: 10px;
+  background: #f2f3f4;
+  border: none;
+  border-radius: 1rem;
+}
+
+dialog::backdrop {
+  background-color: hsla(0, 0%, 50%, 0.25);
+}
+
+#title{
+    font-weight: bold;
+}
+
+#content{
+    display: flex;
+    flex-direction: column;
+}
+
+#bottom{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}

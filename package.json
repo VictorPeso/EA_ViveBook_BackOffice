@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "forward":"ng serve --port 9001",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:mini-spa": "node dist/mini-spa/server/server.mjs"

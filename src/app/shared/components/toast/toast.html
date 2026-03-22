@@ -1,0 +1,10 @@
+<div class="toast-wrapper">
+  @for (toast of toasts(); track toast.id) {
+    <div
+      class="toast-card"
+      [class]="toast.type"
+      (click)="toastService.remove(toast.id)">
+      {{ toast.text }}
+    </div>
+  }
+</div>
