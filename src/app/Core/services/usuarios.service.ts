@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Usuario } from '../models/usuario.model';
 import { environment } from '../../../environments/environment';
 
@@ -12,6 +13,18 @@ export class UsuariosService {
 
   private readonly apiUrl = environment.apiUrl + '/usuarios';
 
+ login(credentials: any): Observable<any> {
+    const loginUrl = `${environment.apiUrl}/auth/signin`; 
+    
+    return this.http.post<any>(loginUrl, credentials).pipe(
+      tap(res => {
+        if (res.token) {
+          localStorage.setItem('token', res.token);
+          localStorage.setItem('rol', res.user.rol);
+        }
+      })
+    );
+  }
   getUsuarios(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(this.apiUrl);
   }
