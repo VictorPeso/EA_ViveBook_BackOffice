@@ -1,40 +1,45 @@
-<header class="topbar">
-  <div class="topbar__container">
-    <div class="topbar__brand">
-      <div class="topbar__logo">LB</div>
-      <div class="topbar__brand-text">
-        <h1>{{ appName }}</h1>
-        <span>Gestión profesional de libros y autores</span>
+@if (isLoggedIn()) {
+  <header class="topbar">
+    <div class="topbar__container">
+      <div class="topbar__brand">
+        <div class="topbar__logo">LB</div>
+        <div class="topbar__brand-text">
+          <h1>{{ appName }}</h1>
+          <span>Gestión profesional de libros y autores</span>
+        </div>
       </div>
-    </div>
-
-    <nav class="topbar__nav" aria-label="Navegación principal">
-      <a
-        routerLink="/libros"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="topbar__link"
-      >
-        Libros
-      </a>
-
-      <a
-        routerLink="/autores"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="topbar__link"
-      >
-        Autores
-      </a>
-      
-      <a
-        routerLink="/usuarios"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="topbar__link"
-      >
-        Usuarios
-      </a>
-    </nav>
+      <div class="topbar__profile">
+  <div class="profile-trigger" (click)="toggleMenu()">
+    <div class="avatar">{{ userProfile?.name?.charAt(0) || 'U' }}</div>
+    <span class="username">{{ userProfile?.name }}</span>
+    <i class="chevron-icon">▼</i>
   </div>
-</header>
+
+  @if (showProfileMenu) {
+    <div class="profile-dropdown">
+      <div class="dropdown-header">
+        <strong>{{ userProfile?.name }}</strong>
+        <span>{{ userProfile?.email }}</span>
+        <span class="badge">{{ userProfile?.rol }}</span>
+      </div>
+      
+      <hr>
+      
+      <a routerLink="/perfil" class="dropdown-item">Mi Perfil</a>
+      <button (click)="onLogout()" class="dropdown-item logout">
+        Cerrar Sesión
+      </button>
+    </div>
+  }
+  
+</div>
+
+      <nav class="topbar__nav" aria-label="Navegación principal">
+        <a routerLink="/libros" routerLinkActive="active" class="topbar__link">Libros</a>
+        <a routerLink="/autores" routerLinkActive="active" class="topbar__link">Autores</a>
+        <a routerLink="/usuarios" routerLinkActive="active" class="topbar__link">Usuarios</a>
+        
+      </nav>
+    </div>
+  </header>
+}

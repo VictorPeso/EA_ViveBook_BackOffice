@@ -111,6 +111,10 @@ export class UsuariosListComponent {
         value: usuario.password || '-',
       },
       {
+        label: 'Rol',
+        value: usuario.rol || '-',
+      },
+      {
         label: 'Libros',
         value: this.getLibrosDisplay(usuario),
       },

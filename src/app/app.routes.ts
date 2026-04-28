@@ -17,7 +17,7 @@ export const routes: Routes = [
   },
   {
     path: 'libros',
-    canActivate: [authGuard], // Todos los logueados entran
+    canActivate: [authGuard], 
     loadComponent: () =>
       import('./features/libros/pages/libros-page/libros-page.component').then(
         (m) => m.LibrosPageComponent

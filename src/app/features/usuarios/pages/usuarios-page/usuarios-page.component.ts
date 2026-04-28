@@ -355,6 +355,7 @@ export class UsuariosPageComponent implements OnInit {
       name: '',
       email: '',
       password: '',
+      rol: 'User',
       libros: [],
       IsDeleted: false,
     };
@@ -366,6 +367,7 @@ export class UsuariosPageComponent implements OnInit {
       name: usuario.name ?? '',
       email: usuario.email ?? '',
       password: usuario.password ?? '',
+      rol: usuario.rol ?? 'User',
       libros: this.extractLibroIds(usuario.libros),
       IsDeleted: usuario.IsDeleted ?? false,
       createdAt: usuario.createdAt,
@@ -378,6 +380,7 @@ export class UsuariosPageComponent implements OnInit {
       name: usuario.name.trim(),
       email: usuario.email.trim(),
       password: usuario.password,
+      rol: usuario.rol || 'User',
       libros: this.extractLibroIds(usuario.libros),
       IsDeleted: usuario.IsDeleted ?? false,
     };
