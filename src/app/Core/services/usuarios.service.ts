@@ -34,6 +34,13 @@ export class UsuariosService {
     this.isAuthenticated.set(this.checkToken());
   }
 
+  //------------------------- AUTENTICACIÓN -------------------------
+
+  signup(userData: any): Observable<any> {
+    const signupUrl = `${environment.apiUrl}/auth/signup`;
+    return this.http.post<any>(signupUrl, userData);
+  }
+  
   login(credentials: any): Observable<any> {
     const loginUrl = `${environment.apiUrl}/auth/signin`; 
     return this.http.post<any>(loginUrl, credentials).pipe(
@@ -58,6 +65,9 @@ export class UsuariosService {
       this.router.navigate(['/auth']);
     }
   }
+
+  //------------------------- CRUD USUARIOS -------------------------
+
   getUsuarios(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(this.apiUrl);
   }

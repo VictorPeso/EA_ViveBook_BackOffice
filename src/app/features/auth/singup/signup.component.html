@@ -1,0 +1,28 @@
+<div class="login-container">
+  <form (ngSubmit)="onSignup()" #signupForm="ngForm">
+    <h2>Crear Cuenta BackOffice</h2>
+    
+    <div class="field">
+      <label>Nombre Completo</label>
+      <input type="text" name="name" [(ngModel)]="newUser.name" required minlength="3">
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" name="email" [(ngModel)]="newUser.email" required email>
+    </div>
+
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" name="password" [(ngModel)]="newUser.password" required minlength="6">
+    </div>
+
+    <button type="submit" [disabled]="signupForm.invalid || isLoading">
+      {{ isLoading ? 'Registrando...' : 'Registrarse' }}
+    </button>
+    
+    <p class="footer-text">
+      ¿Ya tienes cuenta? <a routerLink="/auth/signin">Inicia sesión aquí</a>
+    </p>
+  </form>
+</div>

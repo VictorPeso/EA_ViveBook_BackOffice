@@ -4,6 +4,7 @@ import { UsuariosService } from '../../../Core/services/usuarios.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { error } from 'console';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -11,6 +12,7 @@ import { error } from 'console';
   imports: [
     CommonModule, 
     FormsModule, 
+    RouterLink
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'

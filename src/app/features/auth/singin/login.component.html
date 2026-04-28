@@ -14,6 +14,11 @@
 
     <button type="submit" [disabled]="loginForm.invalid || isLoading">
     {{ isLoading ? 'Cargando...' : 'Entrar' }}
-    </button>  
+    </button>  7
+    
+    <div class="auth-footer">
+      <p>¿No tienes una cuenta?</p>
+      <a routerLink="/auth/signup" class="register-link">Regístrate aquí</a>
+    </div>
   </form>
 </div>

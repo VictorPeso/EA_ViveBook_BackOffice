@@ -10,10 +10,15 @@ export const routes: Routes = [
   {
     path: 'auth',
     loadComponent: () =>
-      import('./features/auth/login/login.component').then(
+      import('./features/auth/singin/login.component').then(
         (m) => m.LoginComponent
       ),
     title: 'BackOffice - Login',
+  },
+  {
+    path: 'auth/signup',
+    loadComponent: () => import('./features/auth/singup/signup.component').then(m => m.SignupComponent),
+    title: 'BackOffice - Registro'
   },
   {
     path: 'libros',
