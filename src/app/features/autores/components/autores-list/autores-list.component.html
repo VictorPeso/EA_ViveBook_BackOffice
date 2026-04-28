@@ -15,6 +15,7 @@
     </div>
 
     <button
+      *ngIf="isAdmin"
       type="button"
       class="autores-list__create-button"
       (click)="onCreateNew()"
@@ -60,6 +61,7 @@
             </span>
 
             <button 
+              *ngIf="isAdmin"
               type="button" 
               class="autores-list__delete-permanent-btn"
               (click)="onDeletePermanent(autor._id!, $event)"

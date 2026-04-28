@@ -20,6 +20,8 @@ export class AutoresListComponent {
   @Input() totalPages = 1;
   @Input() totalItems = 0;
   @Input() pageSize = 8;
+  @Input() isAdmin = false;
+
 
   @Output() selectAutor = new EventEmitter<Autor>();
   @Output() createNew = new EventEmitter<void>();

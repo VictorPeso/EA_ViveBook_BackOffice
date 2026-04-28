@@ -1,5 +1,6 @@
 <section class="libros-page">
   <div class="libros-page__layout">
+    @if (isAdmin()) {
     <aside class="libros-page__form-column">
       <app-libro-form
         [libro]="selectedLibro()"
@@ -19,12 +20,14 @@
       </app-libro-form>
       <app-libro-modal></app-libro-modal>
     </aside>
+  }
 
-    <section class="libros-page__list-column">
-      <app-libros-list
+<section class="libros-page__list-column" [style.grid-column]="isAdmin() ? '' : '1 / -1'">
+        <app-libros-list
         [libros]="paginatedLibros()"
         [selectedLibroId]="selectedLibro()?._id ?? null"
         [isLoading]="isLoading()"
+        [isAdmin]="isAdmin()"
         [currentPage]="currentPage()"
         [totalPages]="totalPages()"
         [totalItems]="totalItems()"

@@ -1,6 +1,7 @@
 <section class="usuarios-page">
   <div class="usuarios-page__layout">
-    <aside class="usuarios-page__form-column" *ngIf="isAdmin()">
+        @if (isAdmin()) {
+    <aside class="usuarios-page__form-column">
       <app-usuario-form
         [usuario]="selectedUsuario()"
         [libros]="libros()"
@@ -19,7 +20,7 @@
       >
       </app-usuario-form>
     </aside>
-
+  }
     <section [ngClass]="isAdmin() ? 'usuarios-page__list-column' : 'usuarios-page__list-full'">
       <app-usuarios-list
         [usuarios]="paginatedUsuarios()"
