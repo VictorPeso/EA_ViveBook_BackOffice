@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { title } from 'process';
 
 export const routes: Routes = [
   {
@@ -30,6 +31,15 @@ export const routes: Routes = [
       ),
     title: 'BackOffice - Usuarios',
   },
+{
+  path: 'posts',
+  loadComponent: () => 
+    import('./features/posts/pages/posts-page/posts-page').then(
+      (m) => m.PostsPage
+    ),
+    title: 'Posts'
+  }
+  ,
   {
     path: '**',
     redirectTo: 'libros',
