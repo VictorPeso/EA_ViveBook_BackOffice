@@ -130,6 +130,7 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       name: rawValue.name.trim(),
       email: rawValue.email.trim(),
       password: rawValue.password,
+      rol: this.usuario?.rol || 'User',
       libros: libroIds,
       IsDeleted: rawValue.IsDeleted ?? false,
     };
@@ -241,6 +242,7 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       name: rawValue.name.trim(),
       email: rawValue.email.trim(),
       password: rawValue.password,
+      rol: this.usuario?.rol || 'User',
       libros: libroIds,
       IsDeleted: rawValue.IsDeleted ?? false,
     };

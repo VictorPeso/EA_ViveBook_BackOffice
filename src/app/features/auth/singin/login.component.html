@@ -1,0 +1,24 @@
+<div class="login-container">
+  <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+    <h2>BackOffice Login</h2>
+    
+    <div class="field">
+      <label>Email</label>
+      <input type="email" name="email" [(ngModel)]="credentials.email" required>
+    </div>
+
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" name="password" [(ngModel)]="credentials.password" required>
+    </div>
+
+    <button type="submit" [disabled]="loginForm.invalid || isLoading">
+    {{ isLoading ? 'Cargando...' : 'Entrar' }}
+    </button>  
+
+    <div class="auth-footer">
+      <p>¿No tienes una cuenta?</p>
+      <a routerLink="/auth/signup" class="register-link">Regístrate aquí</a>
+    </div>
+  </form>
+</div>

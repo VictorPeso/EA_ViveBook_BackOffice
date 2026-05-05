@@ -1,5 +1,6 @@
 <section class="autores-page">
   <div class="autores-page__layout">
+        @if (isAdmin()) {
     <aside class="autores-page__form-column">
       <app-autor-form
         [autor]="selectedAutor()"
@@ -16,12 +17,14 @@
       >
       </app-autor-form>
     </aside>
+  }
 
-    <section class="autores-page__list-column">
+    <section class="autores-page__list-column"[style.grid-column]="isAdmin() ? '' : '1 / -1'">
       <app-autores-list
         [autores]="paginatedAutores()"
         [selectedAutorId]="selectedAutor()?._id ?? null"
         [isLoading]="isLoading()"
+        [isAdmin]="isAdmin()"
         [currentPage]="currentPage()"
         [totalPages]="totalPages()"
         [totalItems]="totalItems()"

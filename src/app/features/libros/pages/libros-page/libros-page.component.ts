@@ -34,6 +34,9 @@ export class LibrosPageComponent implements OnInit {
   readonly isDeleting = signal(false);
   readonly isCreating = signal(true);
 
+  readonly userRol = signal<string>(localStorage.getItem('rol') || 'User');
+  readonly isAdmin = computed(() => this.userRol() === 'Admin');
+
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
 

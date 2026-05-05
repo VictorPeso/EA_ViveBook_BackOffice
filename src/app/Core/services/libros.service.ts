@@ -32,6 +32,10 @@ export class LibrosService {
     return this.http.put<Libro>(`${this.apiUrl}/${libroId}`, libro);
   }
 
+  createLibroByIsbn(isbn: string): Observable<Libro> {
+    return this.http.post<Libro>(`${this.apiUrl}/isbn`, { isbn });
+  }
+  
   softDeleteLibro(libroId: string, libroActual: Libro): Observable<Libro> {
     return this.http.put<Libro>(`${this.apiUrl}/${libroId}`, {
       ...libroActual,
@@ -50,7 +54,7 @@ export class LibrosService {
     return this.http.delete<void>(`${this.apiUrl}/${libroId}`);
   }
   
-    createLibroByIsbn(isbn: string) : Observable<Libro> {
-    return this.http.get<Libro>(`${this.apiUrl}/isbn/${isbn}`);
-  }
+  //   createLibroByIsbn(isbn: string) : Observable<Libro> {
+  //   return this.http.get<Libro>(`${this.apiUrl}/isbn/${isbn}`);
+  // }
 }

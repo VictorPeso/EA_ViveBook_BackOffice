@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { UsuariosService } from '../../../Core/services/usuarios.service';
 
 @Component({
   selector: 'app-topbar',
@@ -9,6 +10,29 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.css',
 })
-export class TopbarComponent {
-  appName = 'ViveBook BackOffice';
+
+export class TopbarComponent implements OnInit {
+    appName = 'ViveBook BackOffice';
+
+  private authService = inject(UsuariosService);
+  
+  isLoggedIn = this.authService.isAuthenticated;
+  showProfileMenu = false; 
+  userProfile: any = null;
+
+  ngOnInit() {
+    if (this.isLoggedIn()) {
+      this.authService.getProfile().subscribe(user => {
+        this.userProfile = user;
+      });
+    }
+  }
+
+  toggleMenu() {
+    this.showProfileMenu = !this.showProfileMenu;
+  }
+
+  onLogout() {
+    this.authService.logout();
+  }
 }

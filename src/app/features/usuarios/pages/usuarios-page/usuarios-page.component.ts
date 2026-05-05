@@ -29,6 +29,7 @@ export class UsuariosPageComponent implements OnInit {
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
   readonly isCreating = signal(true);
+  readonly isAdmin = signal<boolean>(false);
 
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
@@ -69,6 +70,8 @@ export class UsuariosPageComponent implements OnInit {
 
 
   ngOnInit(): void {
+    const rol = localStorage.getItem('rol');
+    this.isAdmin.set(rol === 'Admin');
     this.loadLibros();
     this.loadUsuarios();
   }
@@ -77,8 +80,10 @@ export class UsuariosPageComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.usuariosService
-      .getAllUsuarios()
+    const fetch$ = this.isAdmin()? 
+    this.usuariosService.getAllUsuarios() : this.usuariosService.getUsuarios();
+    
+    fetch$
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (usuarios) => {
@@ -161,6 +166,11 @@ export class UsuariosPageComponent implements OnInit {
   }
 
   onSaveUsuario(usuarioData: Usuario): void {
+    if (!this.isAdmin()) {
+      this.errorMessage.set('No tienes permisos para realizar esta acción.');
+      return;
+    }
+
     this.isSaving.set(true);
     this.errorMessage.set('');
     this.successMessage.set('');
@@ -223,6 +233,11 @@ export class UsuariosPageComponent implements OnInit {
   }
 
   onDeleteUsuario(usuario: Usuario): void {
+    if (!this.isAdmin()) 
+    {
+      this.errorMessage.set('No tienes permisos para realizar esta acción.');
+      return;
+    }
     if (!usuario._id) {
       return;
     }
@@ -340,6 +355,7 @@ export class UsuariosPageComponent implements OnInit {
       name: '',
       email: '',
       password: '',
+      rol: 'User',
       libros: [],
       IsDeleted: false,
     };
@@ -351,6 +367,7 @@ export class UsuariosPageComponent implements OnInit {
       name: usuario.name ?? '',
       email: usuario.email ?? '',
       password: usuario.password ?? '',
+      rol: usuario.rol ?? 'User',
       libros: this.extractLibroIds(usuario.libros),
       IsDeleted: usuario.IsDeleted ?? false,
       createdAt: usuario.createdAt,
@@ -363,6 +380,7 @@ export class UsuariosPageComponent implements OnInit {
       name: usuario.name.trim(),
       email: usuario.email.trim(),
       password: usuario.password,
+      rol: usuario.rol || 'User',
       libros: this.extractLibroIds(usuario.libros),
       IsDeleted: usuario.IsDeleted ?? false,
     };

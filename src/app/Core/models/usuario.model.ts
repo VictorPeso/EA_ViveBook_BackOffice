@@ -8,6 +8,7 @@ export interface Usuario {
   name: string;
   email: string;
   password: string;
+  rol: 'Admin' | 'User';
   libros?: string[] | LibroRef[];
   IsDeleted?: boolean;
   createdAt?: string;

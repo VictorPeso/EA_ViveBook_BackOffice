@@ -20,6 +20,7 @@ export class LibrosListComponent {
   @Input() totalPages = 1;
   @Input() totalItems = 0;
   @Input() pageSize = 8;
+  @Input() isAdmin = false;
 
   @Output() selectLibro = new EventEmitter<Libro>();
   @Output() createNew = new EventEmitter<void>();

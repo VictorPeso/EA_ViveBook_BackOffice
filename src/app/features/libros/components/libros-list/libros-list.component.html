@@ -15,11 +15,7 @@
       />
     </div>
 
-    <button
-      type="button"
-      class="libros-list__create-button"
-      (click)="onCreateNew()"
-    >
+    <button *ngIf="isAdmin" (click)="onCreateNew()">
       + Nuevo libro
     </button>
   </div>
@@ -61,6 +57,7 @@
             </span>
 
             <button 
+            *ngIf="isAdmin"
               type="button" 
               class="libros-list__delete-permanent-btn"
               (click)="onDeletePermanent(libro._id!, $event)"

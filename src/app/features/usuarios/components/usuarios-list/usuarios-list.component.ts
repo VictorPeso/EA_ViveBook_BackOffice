@@ -17,6 +17,7 @@ export class UsuariosListComponent {
   @Input() usuarios: Usuario[] = [];
   @Input() selectedUsuarioId: string | null = null;
   @Input() isLoading = false;
+  @Input() isAdmin = false;
   @Input() currentPage = 1;
   @Input() totalPages = 1;
   @Input() totalItems = 0;
@@ -108,6 +109,10 @@ export class UsuariosListComponent {
       {
         label: 'Password',
         value: usuario.password || '-',
+      },
+      {
+        label: 'Rol',
+        value: usuario.rol || '-',
       },
       {
         label: 'Libros',
