@@ -8,7 +8,7 @@
         
     </div>
   <table>
-    <tr>
+    <!-- <tr>
       <th class="cell">_id</th>
       <th class="cell">description</th>
       <th class="cell">status</th>
@@ -17,9 +17,10 @@
       <th class="cell">ownerId</th>
       <th class="cell">Book title</th>
       <th class="cell">Actions</th>
-    </tr>
+    </tr> -->
     @for (item of posts(); track item._id) {
-      <tr>
+      <app-post-individual [data]="item"/>
+      <!-- <tr>
         <td class="cell">{{ item._id }}</td>
         <td class="cell">
           @if (!editMode()  ){
@@ -64,7 +65,7 @@
           <button class="primary-btn" (click)="onEditBtnClick(item._id)">Editar</button>
         <button class="primary-btn" (click)="onDeleteBtnClick(item._id)">Eliminar</button>
         </td>
-      </tr>
+      </tr> -->
     }
   </table>
 </div>
