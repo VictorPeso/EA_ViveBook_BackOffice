@@ -14,4 +14,5 @@ export interface Post{
     IsDeleted?: boolean;
     ownerId: string;
     bookId: Libro;
+    price: number;
 }

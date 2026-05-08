@@ -20,6 +20,7 @@ export class PostModal {
   status : string = ''; // VENTA ALQUILER NO_DISPONIBLE
   imageUrl : string = '';
   ownerId : string = '';
+  price: number = 0;
 
 
   @ViewChild('dialog') dialog!: ElementRef;
@@ -40,6 +41,7 @@ export class PostModal {
         status: this.status,
         imageUrl: this.imageUrl,
         ownerId: this.ownerId,
+        price: this.price
       }
       this.service.createPostByIsbn(data,this.isbn)
         .subscribe({

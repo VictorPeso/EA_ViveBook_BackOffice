@@ -19,6 +19,7 @@ export class PostIndividual {
   status? : string = undefined;
   image? : string = undefined;
   ownerId? : string = undefined;
+  price? : number = undefined;
 
   onEditBtnClick(id: string){
     if(!this.editMode()) this.editMode.set(true);
@@ -29,7 +30,8 @@ export class PostIndividual {
         description: this.description,
         status: this.status,
         imageUrl: this.image,
-        ownerId: this.ownerId
+        ownerId: this.ownerId,
+        price: this.price,
       }
       this.service.updatePost(id,data)
         .subscribe({

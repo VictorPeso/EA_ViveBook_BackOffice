@@ -6,6 +6,7 @@
     <th class="cell">image</th>
     <th class="cell">IsDeleted</th>
     <th class="cell">ownerId</th>
+    <th class="cell">Price</th>
     <th class="cell">Book title</th>
     <th class="cell">Actions</th>
   </tr>
@@ -40,6 +41,12 @@
         <input type="text" [(ngModel)]="ownerId" />
       }
     </td>
+    <td class="cell">
+      @if (!editMode()) {
+        {{ data()!.price }}
+      } @else {
+        <input type="text" [(ngModel)]="price" />
+      }
     <td class="cell">{{ data()!.bookId.title }}</td>
     <td class="cell">
       <button class="primary-btn" (click)="onEditBtnClick(data()!._id)">Editar</button>

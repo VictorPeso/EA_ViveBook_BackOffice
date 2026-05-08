@@ -6,6 +6,7 @@ import { Usuario } from '../models/usuario.model';
 import { environment } from '../../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
+import { HeadersService } from './headers.service';
 
 @Injectable({
   providedIn: 'root',
@@ -46,6 +47,7 @@ export class UsuariosService {
     return this.http.post<any>(loginUrl, credentials).pipe(
       tap(res => {
         if (res.token) {
+          this.headersService.setToken(res.token);
           localStorage.setItem('token', res.token);
           localStorage.setItem('rol', res.user.rol);
           this.isAuthenticated.set(true); 
@@ -53,6 +55,8 @@ export class UsuariosService {
       })
     );
   }
+
+  headersService = inject(HeadersService);
 
   getProfile() {
     return this.http.get<any>(`${this.apiUrl}/auth/profile`);
@@ -69,11 +73,11 @@ export class UsuariosService {
   //------------------------- CRUD USUARIOS -------------------------
 
   getUsuarios(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(this.apiUrl);
+    return this.http.get<Usuario[]>(this.apiUrl, {headers: this.headersService.getHeader()});
   }
 
   getAllUsuarios(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(`${this.apiUrl}/all`);
+    return this.http.get<Usuario[]>(`${this.apiUrl}/all`, {headers : this.headersService.getHeader()});
   }
 
   getUsuarioById(usuarioId: string): Observable<Usuario> {
