@@ -21,11 +21,12 @@ export class TopbarComponent implements OnInit {
   userProfile: any = null;
 
   ngOnInit() {
-    if (this.isLoggedIn()) {
-      this.authService.getProfile().subscribe(user => {
-        this.userProfile = user;
-      });
-    }
+    //Voy a comentar esto Muye, sino me tira muchos errores
+    // if (this.isLoggedIn()) {
+    //   this.authService.getProfile().subscribe(user => {
+    //     this.userProfile = user;
+    //   });
+    // }
   }
 
   toggleMenu() {

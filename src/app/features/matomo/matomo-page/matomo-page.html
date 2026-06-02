@@ -1,0 +1,49 @@
+<div class="main">
+    <h1 class="title">Matomo Version {{version()}}</h1>
+    <table class="tabla">
+        <tr>
+            <th class="side">nb_uniq_visitors</th>
+            <th>{{summary().nb_uniq_visitors}}</th>
+        </tr>
+        <tr>
+            <th  class="side">nb_users</th>
+            <th>{{summary().nb_users}}</th>
+        </tr>
+        <tr>
+            <th  class="side">nb_visits</th>
+            <th>{{summary().nb_visits}}</th>
+        </tr>
+        <tr>
+            <th  class="side">nb_actions</th>
+            <th>{{summary().nb_actions}}</th>
+        </tr>
+        <tr>
+            <th  class="side">nb_visits_converted</th>
+            <th>{{summary().nb_visits_converted}}</th>
+        </tr>
+        <tr>
+            <th  class="side">bounce_count</th>
+            <th>{{summary().bounce_count}}</th>
+        </tr>
+        <tr>
+            <th  class="side">sum_visit_length</th>
+            <th>{{summary().sum_visit_length}}</th>
+        </tr>
+        <tr>
+            <th  class="side">max_actions</th>
+            <th>{{summary().max_actions}}</th>
+        </tr>
+        <tr>
+            <th  class="side">bounce_rate</th>
+            <th>{{summary().bounce_count}}</th>
+        </tr>
+        <tr>
+            <th  class="side">nb_actions_per_visit</th>
+            <th>{{summary().nb_actions_per_visit}}</th>
+        </tr>
+        <tr>
+            <th  class="side">avg_time_on_site</th>
+            <th>{{summary().avg_time_on_site}}</th>
+        </tr>
+    </table>
+</div>

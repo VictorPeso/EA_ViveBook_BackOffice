@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { UsuariosService } from '../../../Core/services/usuarios.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { error } from 'console';
 import { RouterLink } from '@angular/router';
 
 @Component({

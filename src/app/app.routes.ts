@@ -58,8 +58,15 @@ export const routes: Routes = [
     title: 'Posts'
   }
   ,
-  {
-    path: '**',
-    redirectTo: 'auth',
+{
+  path: 'matomo',
+  loadComponent: () => 
+    import('./features/matomo/matomo-page/matomo-page').then(
+      (m) => m.MatomoPage
+    ),
+    title: 'Matomo'
   },
+
+  
+  
 ];

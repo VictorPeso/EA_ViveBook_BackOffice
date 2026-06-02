@@ -45,6 +45,14 @@
       >
         Posts
       </a>
+      <a
+        routerLink="/matomo"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="topbar__link"
+      >
+        Matomo
+      </a>
     </nav>
       <div class="topbar__profile">
   <div class="profile-trigger" (click)="toggleMenu()">
