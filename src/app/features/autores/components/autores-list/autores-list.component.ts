@@ -22,7 +22,6 @@ export class AutoresListComponent {
   @Input() pageSize = 8;
   @Input() isAdmin = false;
 
-
   @Output() selectAutor = new EventEmitter<Autor>();
   @Output() createNew = new EventEmitter<void>();
   @Output() pageChange = new EventEmitter<number>();
@@ -33,14 +32,14 @@ export class AutoresListComponent {
   @Output() deletePermanent = new EventEmitter<string>();
   searchAutor = new FormControl('');
   private destroy = new Subject<void>();
-  
+
   ngOnInit(): void {
     this.searchAutor.valueChanges.subscribe((value) => {
       this.search.emit(value ?? '');
     });
   }
-  
-  ngOnDestroy(): void {      
+
+  ngOnDestroy(): void {
     this.destroy.next();
     this.destroy.complete();
   }

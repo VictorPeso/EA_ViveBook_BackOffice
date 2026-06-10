@@ -1,12 +1,11 @@
 <div class="tabla">
-    <div class="toolbar">
-        <!-- <button class="primary-btn" (click)="onCrearBtnClick()">Crear</button> -->
-        <!-- @if (addMode()){
+  <div class="toolbar">
+    <!-- <button class="primary-btn" (click)="onCrearBtnClick()">Crear</button> -->
+    <!-- @if (addMode()){
         <input type="text" placeholder="ISBN-10">
         } -->
-        <app-post-modal/>
-        
-    </div>
+    <app-post-modal />
+  </div>
   <table>
     <!-- <tr>
       <th class="cell">_id</th>
@@ -19,7 +18,7 @@
       <th class="cell">Actions</th>
     </tr> -->
     @for (item of posts(); track item._id) {
-      <app-post-individual [data]="item"/>
+      <app-post-individual [data]="item" />
       <!-- <tr>
         <td class="cell">{{ item._id }}</td>
         <td class="cell">

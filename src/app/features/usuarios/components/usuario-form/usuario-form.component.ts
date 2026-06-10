@@ -9,12 +9,7 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormArray,
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Libro } from '../../../../Core/models/libro.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
@@ -155,7 +150,11 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (confirm('¿Estás seguro de que quieres borrar este usuario definitivamente de la base de datos?')) {
+    if (
+      confirm(
+        '¿Estás seguro de que quieres borrar este usuario definitivamente de la base de datos?',
+      )
+    ) {
       this.deletePermanent.emit(currentUsuario);
     }
   }
@@ -164,8 +163,8 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
     this.cancel.emit();
   }
 
-  onRestore(event: MouseEvent, usuario: Usuario): void { 
-    this.restoreUsuario.emit(usuario); 
+  onRestore(event: MouseEvent, usuario: Usuario): void {
+    this.restoreUsuario.emit(usuario);
   }
 
   trackByLibroId(index: number, libro: Libro): string | number {
@@ -250,7 +249,7 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
 
   private getSafeLibroIds(values: Array<string | null | undefined>): string[] {
     return values.filter(
-      (value): value is string => typeof value === 'string' && value.trim().length > 0
+      (value): value is string => typeof value === 'string' && value.trim().length > 0,
     );
   }
 

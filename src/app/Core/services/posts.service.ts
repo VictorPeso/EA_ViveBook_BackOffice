@@ -12,27 +12,27 @@ export class PostsService {
 
   private readonly apiUrl = environment.apiUrl + '/posts';
 
-  createPost( object : Post) : Observable<Post> {
-    return this.http.post<Post>(this.apiUrl,  object);
+  createPost(object: Post): Observable<Post> {
+    return this.http.post<Post>(this.apiUrl, object);
   }
 
-  readAllPost() : Observable<Post[]> {
+  readAllPost(): Observable<Post[]> {
     return this.http.get<Post[]>(this.apiUrl);
   }
 
-  readPostById(id : string) : Observable<Post> {
+  readPostById(id: string): Observable<Post> {
     return this.http.get<Post>(` ${this.apiUrl}/${id}`);
   }
 
-  updatePost(id : string, data: Partial<Post>) : Observable<Post>{
+  updatePost(id: string, data: Partial<Post>): Observable<Post> {
     return this.http.put<Post>(`${this.apiUrl}/${id}`, data);
   }
 
-  deletePost(id : string) : Observable<void> {
+  deletePost(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  createPostByIsbn(data : Partial<Post>, isbn : string) : Observable<Post> {
-    return this.http.post<Post>( `${this.apiUrl}/${isbn}`, data);
+  createPostByIsbn(data: Partial<Post>, isbn: string): Observable<Post> {
+    return this.http.post<Post>(`${this.apiUrl}/${isbn}`, data);
   }
 }

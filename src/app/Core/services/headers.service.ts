@@ -5,8 +5,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class HeadersService {
-
-  token : string = '';
+  token: string = '';
   // Es inmutable
   // headers = {
   //   "Content-Type": "application/json",
@@ -20,7 +19,7 @@ export class HeadersService {
 
   //Lazy initialization
   getHeader(): HttpHeaders {
-    let headers = new HttpHeaders();
+    const headers = new HttpHeaders();
     headers.set('Content-Type', 'application/json');
     headers.set('Authorization', `Bearer ${this.token}`);
 

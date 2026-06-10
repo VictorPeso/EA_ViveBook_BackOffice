@@ -5,10 +5,16 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "forward":"ng serve --port 9001",
+    "forward": "ng serve --port 9001",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:mini-spa": "node dist/mini-spa/server/server.mjs"
+    "serve:ssr:mini-spa": "node dist/mini-spa/server/server.mjs",
+    "prepare": "husky",
+    "lint": "eslint",
+    "lint:quiet": "eslint --quiet",
+    "lint:fix": "eslint --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "private": true,
   "packageManager": "npm@11.8.0",
@@ -32,11 +38,19 @@
     "@angular/cli": "^21.2.0",
     "@angular/compiler-cli": "^21.2.0",
     "@angular/material": "^21.2.0",
+    "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.1",
     "@types/node": "^20.17.19",
+    "eslint": "^10.4.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.6.0",
+    "husky": "^9.1.7",
+    "jiti": "^2.7.0",
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2",
+    "typescript-eslint": "^8.61.0",
     "vitest": "^4.0.8"
   }
 }

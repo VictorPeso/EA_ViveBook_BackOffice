@@ -31,9 +31,7 @@
   </div>
 
   <div class="autores-list__body">
-    <div *ngIf="isLoading" class="autores-list__state">
-      Cargando autores...
-    </div>
+    <div *ngIf="isLoading" class="autores-list__state">Cargando autores...</div>
 
     <div *ngIf="!isLoading && autores.length === 0" class="autores-list__state">
       No hay autores disponibles.
@@ -60,9 +58,9 @@
               {{ autor.IsDeleted ? 'Eliminado' : 'Activo' }}
             </span>
 
-            <button 
+            <button
               *ngIf="isAdmin"
-              type="button" 
+              type="button"
               class="autores-list__delete-permanent-btn"
               (click)="onDeletePermanent(autor._id!, $event)"
               title="Borrado definitivo"
@@ -73,10 +71,7 @@
         </div>
 
         <div class="autores-list__fields">
-          <div
-            class="autores-list__field"
-            *ngFor="let field of getVisibleFields(autor)"
-          >
+          <div class="autores-list__field" *ngFor="let field of getVisibleFields(autor)">
             <span class="autores-list__field-label">{{ field.label }}</span>
             <span class="autores-list__field-value">{{ field.value }}</span>
           </div>
@@ -85,10 +80,7 @@
     </div>
   </div>
 
-  <div
-    class="autores-list__pagination"
-    *ngIf="!isLoading && totalItems > 0 && totalPages > 1"
-  >
+  <div class="autores-list__pagination" *ngIf="!isLoading && totalItems > 0 && totalPages > 1">
     <button
       type="button"
       class="autores-list__page-button"

@@ -1,25 +1,25 @@
 <section class="autores-page">
   <div class="autores-page__layout">
-        @if (isAdmin()) {
-    <aside class="autores-page__form-column">
-      <app-autor-form
-        [autor]="selectedAutor()"
-        [isSaving]="isSaving()"
-        [isDeleting]="isDeleting()"
-        [isCreating]="isCreating()"
-        [errorMessage]="errorMessage()"
-        [successMessage]="successMessage()"
-        (save)="onSaveAutor($event)"
-        (delete)="onDeleteAutor($event)"
-        (deletePermanent)="onDeletePermanent($event._id!)"
-        (cancel)="onCancelEdit()"
-        (restoreAutor)="onRestore($event)"
-      >
-      </app-autor-form>
-    </aside>
-  }
+    @if (isAdmin()) {
+      <aside class="autores-page__form-column">
+        <app-autor-form
+          [autor]="selectedAutor()"
+          [isSaving]="isSaving()"
+          [isDeleting]="isDeleting()"
+          [isCreating]="isCreating()"
+          [errorMessage]="errorMessage()"
+          [successMessage]="successMessage()"
+          (save)="onSaveAutor($event)"
+          (delete)="onDeleteAutor($event)"
+          (deletePermanent)="onDeletePermanent($event._id!)"
+          (cancel)="onCancelEdit()"
+          (restoreAutor)="onRestore($event)"
+        >
+        </app-autor-form>
+      </aside>
+    }
 
-    <section class="autores-page__list-column"[style.grid-column]="isAdmin() ? '' : '1 / -1'">
+    <section class="autores-page__list-column" [style.grid-column]="isAdmin() ? '' : '1 / -1'">
       <app-autores-list
         [autores]="paginatedAutores()"
         [selectedAutorId]="selectedAutor()?._id ?? null"

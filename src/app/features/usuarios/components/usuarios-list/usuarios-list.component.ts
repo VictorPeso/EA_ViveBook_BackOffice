@@ -5,7 +5,6 @@ import { Usuario } from '../../../../Core/models/usuario.model';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 
-
 @Component({
   selector: 'app-usuarios-list',
   standalone: true,
@@ -39,7 +38,7 @@ export class UsuariosListComponent {
       this.search.emit(value ?? '');
     });
   }
-  
+
   ngOnDestroy(): void {
     this.destroy.next();
     this.destroy.complete();

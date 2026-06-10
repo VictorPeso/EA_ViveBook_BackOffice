@@ -1,4 +1,4 @@
-import { Injectable, inject, PLATFORM_ID, signal} from '@angular/core';
+import { Injectable, inject, PLATFORM_ID, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -17,11 +17,11 @@ export class UsuariosService {
   private readonly apiUrl = environment.apiUrl + '/usuarios';
 
   private readonly router = inject(Router);
-  
-  //son señales para manejar el estado de autenticación en toda la aplicación, 
+
+  //son señales para manejar el estado de autenticación en toda la aplicación,
   //permitiendo que el topbar reaccionen a los cambios en el estado de autenticación de manera eficiente.
   private platformId = inject(PLATFORM_ID);
-  
+
   isAuthenticated = signal<boolean>(this.checkToken());
 
   private checkToken(): boolean {
@@ -41,18 +41,18 @@ export class UsuariosService {
     const signupUrl = `${environment.apiUrl}/auth/signup`;
     return this.http.post<any>(signupUrl, userData);
   }
-  
+
   login(credentials: any): Observable<any> {
-    const loginUrl = `${environment.apiUrl}/auth/signin`; 
+    const loginUrl = `${environment.apiUrl}/auth/signin`;
     return this.http.post<any>(loginUrl, credentials).pipe(
-      tap(res => {
+      tap((res) => {
         if (res.token) {
           this.headersService.setToken(res.token);
           localStorage.setItem('token', res.token);
           localStorage.setItem('rol', res.user.rol);
-          this.isAuthenticated.set(true); 
+          this.isAuthenticated.set(true);
         }
-      })
+      }),
     );
   }
 
@@ -73,11 +73,13 @@ export class UsuariosService {
   //------------------------- CRUD USUARIOS -------------------------
 
   getUsuarios(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(this.apiUrl, {headers: this.headersService.getHeader()});
+    return this.http.get<Usuario[]>(this.apiUrl, { headers: this.headersService.getHeader() });
   }
 
   getAllUsuarios(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(`${this.apiUrl}/all`, {headers : this.headersService.getHeader()});
+    return this.http.get<Usuario[]>(`${this.apiUrl}/all`, {
+      headers: this.headersService.getHeader(),
+    });
   }
 
   getUsuarioById(usuarioId: string): Observable<Usuario> {

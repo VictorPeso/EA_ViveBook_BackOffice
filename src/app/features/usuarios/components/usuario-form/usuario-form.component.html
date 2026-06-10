@@ -9,17 +9,11 @@
     </div>
   </div>
 
-  <div
-    class="usuario-form__alert usuario-form__alert--error"
-    *ngIf="errorMessage"
-  >
+  <div class="usuario-form__alert usuario-form__alert--error" *ngIf="errorMessage">
     {{ errorMessage }}
   </div>
 
-  <div
-    class="usuario-form__alert usuario-form__alert--success"
-    *ngIf="successMessage"
-  >
+  <div class="usuario-form__alert usuario-form__alert--success" *ngIf="successMessage">
     {{ successMessage }}
   </div>
 
@@ -112,9 +106,7 @@
       <div class="usuario-form__field usuario-form__field--full">
         <div class="usuario-form__label-row">
           <label class="usuario-form__label">Libros</label>
-          <span class="usuario-form__hint" *ngIf="isLoadingLibros">
-            Cargando libros...
-          </span>
+          <span class="usuario-form__hint" *ngIf="isLoadingLibros"> Cargando libros... </span>
         </div>
 
         <div
@@ -138,9 +130,7 @@
         </div>
 
         <ng-template #librosEmptyState>
-          <div class="usuario-form__empty-libros">
-            No hay libros disponibles para asociar.
-          </div>
+          <div class="usuario-form__empty-libros">No hay libros disponibles para asociar.</div>
         </ng-template>
 
         <p class="usuario-form__hint">
@@ -164,7 +154,7 @@
         class="usuario-form__button usuario-form__button--primary"
         [disabled]="isSaving || isDeleting"
       >
-        {{ isSaving ? 'Guardando...' : (isCreating ? 'Crear usuario' : 'Guardar cambios') }}
+        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear usuario' : 'Guardar cambios' }}
       </button>
 
       <button
@@ -187,10 +177,10 @@
         Eliminar definitivamente
       </button>
 
-      <button 
-        *ngIf="usuario?.IsDeleted" 
-        type="button" 
-        class="usuario-form__button usuario-form__button--success" 
+      <button
+        *ngIf="usuario?.IsDeleted"
+        type="button"
+        class="usuario-form__button usuario-form__button--success"
         (click)="onRestore($event, usuario!)"
       >
         Restaurar Usuario

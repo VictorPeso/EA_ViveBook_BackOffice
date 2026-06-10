@@ -10,14 +10,13 @@ import { UsuariosService } from '../../../Core/services/usuarios.service';
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.css',
 })
-
 export class TopbarComponent implements OnInit {
-    appName = 'ViveBook BackOffice';
+  appName = 'ViveBook BackOffice';
 
   private authService = inject(UsuariosService);
-  
+
   isLoggedIn = this.authService.isAuthenticated;
-  showProfileMenu = false; 
+  showProfileMenu = false;
   userProfile: any = null;
 
   ngOnInit() {

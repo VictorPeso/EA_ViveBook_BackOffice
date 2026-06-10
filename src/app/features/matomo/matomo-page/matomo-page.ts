@@ -27,14 +27,13 @@ export class MatomoPage implements OnInit {
       },
     });
 
-    this.matomoService.readSummary()
-      .subscribe({
-        next: (res) => {
-          this.summary.set(res.data);
-        },
-        error: (error) => { 
-          this.toastService.show('error', `Something went wrong: ${JSON.stringify(error)}`);
-        }
-      });
+    this.matomoService.readSummary().subscribe({
+      next: (res) => {
+        this.summary.set(res.data);
+      },
+      error: (error) => {
+        this.toastService.show('error', `Something went wrong: ${JSON.stringify(error)}`);
+      },
+    });
   }
 }

@@ -326,20 +326,20 @@
   }
 
   .usuarios-list__card--deleted {
-    background-color: #f9fafb; 
+    background-color: #f9fafb;
     border-color: #f3f4f6;
-    opacity: 0.7; 
-    filter: grayscale(0.4); 
+    opacity: 0.7;
+    filter: grayscale(0.4);
   }
 
   .usuarios-list__card--deleted:hover {
     background-color: #f3f4f6;
-    opacity: 0.9; 
+    opacity: 0.9;
   }
 
   .usuarios-list__card--deleted .usuarios-list__card-title,
   .usuarios-list__card--deleted .usuarios-list__field-value {
-    color: #6b7280; 
+    color: #6b7280;
   }
 
   .usuarios-list__card--deleted.active {

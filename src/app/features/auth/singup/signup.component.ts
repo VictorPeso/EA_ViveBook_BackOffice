@@ -10,7 +10,7 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './signup.component.html',
-  styleUrl: './signup.component.css'
+  styleUrl: './signup.component.css',
 })
 export class SignupComponent {
   // El backend suele pedir name, email y password
@@ -25,13 +25,13 @@ export class SignupComponent {
     this.authService.signup(this.newUser).subscribe({
       next: (res) => {
         this.isLoading = false;
-        alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
+        alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
         this.router.navigate(['/auth/signin']); // Redirigimos al login
       },
       error: (err) => {
         this.isLoading = false;
-        alert("Error en el registro: " + (err.error?.message || "Datos inválidos"));
-      }
+        alert('Error en el registro: ' + (err.error?.message || 'Datos inválidos'));
+      },
     });
   }
 }

@@ -11,7 +11,7 @@ export class MatomoService {
   private readonly http = inject(HttpClient);
 
   private readonly apiUrl = environment.apiUrl + '/matomo';
-  
+
   // no puedo poner observable<string>
   readVersion(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/version`);

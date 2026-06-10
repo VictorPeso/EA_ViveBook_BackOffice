@@ -15,7 +15,7 @@ import { ToastService } from '../../../../Core/services/toast.service';
 @Component({
   selector: 'app-libros-page',
   standalone: true,
-  imports: [CommonModule, LibroFormComponent, LibrosListComponent, LibroModal,Toast],
+  imports: [CommonModule, LibroFormComponent, LibrosListComponent, Toast],
   templateUrl: './libros-page.component.html',
   styleUrl: './libros-page.component.css',
 })
@@ -61,12 +61,12 @@ export class LibrosPageComponent implements OnInit {
   readonly filteredLibros = computed(() => {
     const term = this.searchBook().toLowerCase().trim();
     const allLibros = this.libros();
-    
+
     if (!term) return allLibros;
 
-    return allLibros.filter(libro => 
-      libro.title?.toLowerCase().includes(term) || 
-      libro.isbn?.toLowerCase().includes(term)
+    return allLibros.filter(
+      (libro) =>
+        libro.title?.toLowerCase().includes(term) || libro.isbn?.toLowerCase().includes(term),
     );
   });
 
@@ -99,7 +99,7 @@ export class LibrosPageComponent implements OnInit {
               safeLibros.find((libro) => libro._id === selectedLibroId) ?? null;
 
             this.selectedLibro.set(
-              libroRecienAfectado ? this.mapLibroToFormValue(libroRecienAfectado) : null
+              libroRecienAfectado ? this.mapLibroToFormValue(libroRecienAfectado) : null,
             );
             this.isCreating.set(false);
             return;
@@ -114,7 +114,7 @@ export class LibrosPageComponent implements OnInit {
             this.selectedLibro.set(
               refreshedSelectedLibro
                 ? this.mapLibroToFormValue(refreshedSelectedLibro)
-                : this.createEmptyLibro()
+                : this.createEmptyLibro(),
             );
 
             if (!refreshedSelectedLibro) {
@@ -192,7 +192,7 @@ export class LibrosPageComponent implements OnInit {
             this.errorMessage.set(
               error?.error?.message ||
                 error?.error?.details?.[0]?.message ||
-                'No se pudo crear el libro.'
+                'No se pudo crear el libro.',
             );
           },
         });
@@ -221,7 +221,7 @@ export class LibrosPageComponent implements OnInit {
           this.errorMessage.set(
             error?.error?.message ||
               error?.error?.details?.[0]?.message ||
-              'No se pudo actualizar el libro.'
+              'No se pudo actualizar el libro.',
           );
         },
       });
@@ -233,7 +233,7 @@ export class LibrosPageComponent implements OnInit {
     }
 
     const confirmed = window.confirm(
-      `¿Seguro que quieres marcar como eliminado el libro "${libro.title}"?`
+      `¿Seguro que quieres marcar como eliminado el libro "${libro.title}"?`,
     );
 
     if (!confirmed) {
@@ -261,7 +261,7 @@ export class LibrosPageComponent implements OnInit {
           this.errorMessage.set(
             error?.error?.message ||
               error?.error?.details?.[0]?.message ||
-              'No se pudo eliminar el libro.'
+              'No se pudo eliminar el libro.',
           );
         },
       });
@@ -283,7 +283,7 @@ export class LibrosPageComponent implements OnInit {
         error: (error) => {
           console.error('Error al eliminar permanentemente:', error);
           this.errorMessage.set('Error al eliminar permanentemente el libro.');
-        }
+        },
       });
   }
 
@@ -306,7 +306,7 @@ export class LibrosPageComponent implements OnInit {
           this.successMessage.set('Libro restaurado con éxito');
           this.loadLibros(libro._id);
         },
-        error: () => this.errorMessage.set('Error al restaurar el libro.')
+        error: () => this.errorMessage.set('Error al restaurar el libro.'),
       });
   }
   onPageChange(page: number): void {
@@ -387,5 +387,4 @@ export class LibrosPageComponent implements OnInit {
       .map((author) => (typeof author === 'string' ? author : author._id))
       .filter((authorId): authorId is string => !!authorId);
   }
-
 }

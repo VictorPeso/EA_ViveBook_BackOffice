@@ -7,13 +7,12 @@ export interface ToastMessage {
   type: ToastType;
 }
 
-export type ToastType = 'info' | 'error' | 'warning' ;
+export type ToastType = 'info' | 'error' | 'warning';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ToastService {
-
   toasts = signal<ToastMessage[]>([]);
 
   private toastDuration = 3000;
@@ -22,19 +21,19 @@ export class ToastService {
     const id = Date.now();
 
     const toast = {
-      id, type, text
+      id,
+      type,
+      text,
     };
 
     setTimeout(() => {
       this.remove(id);
     }, this.toastDuration);
 
-    this.toasts.update(toasts => [...toasts, toast]);
+    this.toasts.update((toasts) => [...toasts, toast]);
   }
 
   remove(id: number): void {
-    this.toasts.update(currentToasts =>
-      currentToasts.filter(toast => toast.id !== id)
-    );
+    this.toasts.update((currentToasts) => currentToasts.filter((toast) => toast.id !== id));
   }
 }

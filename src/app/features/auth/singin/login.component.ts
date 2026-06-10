@@ -7,37 +7,36 @@ import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
-  standalone: true, 
-  imports: [
-    CommonModule, 
-    FormsModule, 
-    RouterLink
-  ],
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.css',
 })
 export class LoginComponent {
   credentials = { email: '', password: '' };
   isLoading = false;
-  
-  constructor(private authService: UsuariosService, private router: Router) {}
+
+  constructor(
+    private authService: UsuariosService,
+    private router: Router,
+  ) {}
 
   onLogin() {
     this.isLoading = true;
 
     this.authService.login(this.credentials).subscribe({
-        next: (res) => {
+      next: (res) => {
         this.isLoading = false;
         localStorage.setItem('token', res.token);
         this.authService.updateAuthState();
         this.router.navigate(['/libros']);
       },
       error: (err) => {
-        this.isLoading = false; 
+        this.isLoading = false;
         localStorage.removeItem('token');
         this.authService.isAuthenticated.set(false);
-        alert("Error: " + (err.error || "Credenciales incorrectas"));
-      }
+        alert('Error: ' + (err.error || 'Credenciales incorrectas'));
+      },
     });
-    }
+  }
 }

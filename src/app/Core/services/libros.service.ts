@@ -11,7 +11,7 @@ export class LibrosService {
   private readonly http = inject(HttpClient);
 
   private readonly apiUrl = environment.apiUrl + '/libros';
-  
+
   getLibros(): Observable<Libro[]> {
     return this.http.get<Libro[]>(this.apiUrl);
   }
@@ -35,7 +35,7 @@ export class LibrosService {
   createLibroByIsbn(isbn: string): Observable<Libro> {
     return this.http.post<Libro>(`${this.apiUrl}/isbn`, { isbn });
   }
-  
+
   softDeleteLibro(libroId: string, libroActual: Libro): Observable<Libro> {
     return this.http.put<Libro>(`${this.apiUrl}/${libroId}`, {
       ...libroActual,
@@ -53,7 +53,7 @@ export class LibrosService {
   deleteLibro(libroId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${libroId}`);
   }
-  
+
   //   createLibroByIsbn(isbn: string) : Observable<Libro> {
   //   return this.http.get<Libro>(`${this.apiUrl}/isbn/${isbn}`);
   // }

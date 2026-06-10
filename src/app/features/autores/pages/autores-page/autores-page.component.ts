@@ -28,7 +28,6 @@ export class AutoresPageComponent implements OnInit {
   readonly userRol = signal<string>(localStorage.getItem('rol') || 'User');
   readonly isAdmin = computed(() => this.userRol() === 'Admin');
 
-
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
 
@@ -58,17 +57,13 @@ export class AutoresPageComponent implements OnInit {
       return allAutores;
     }
 
-    return allAutores.filter((autor) =>
-      autor.fullName?.toLowerCase().includes(term)
-    );
+    return allAutores.filter((autor) => autor.fullName?.toLowerCase().includes(term));
   });
 
   onSearch(term: string): void {
     this.searchAutor.set(term);
     this.currentPage.set(1);
   }
-
-
 
   ngOnInit(): void {
     this.loadAutores();
@@ -93,7 +88,7 @@ export class AutoresPageComponent implements OnInit {
               safeAutores.find((autor) => autor._id === selectedAutorId) ?? null;
 
             this.selectedAutor.set(
-              autorRecienAfectado ? this.mapAutorToFormValue(autorRecienAfectado) : null
+              autorRecienAfectado ? this.mapAutorToFormValue(autorRecienAfectado) : null,
             );
             this.isCreating.set(false);
             return;
@@ -108,7 +103,7 @@ export class AutoresPageComponent implements OnInit {
             this.selectedAutor.set(
               refreshedSelectedAutor
                 ? this.mapAutorToFormValue(refreshedSelectedAutor)
-                : this.createEmptyAutor()
+                : this.createEmptyAutor(),
             );
 
             if (!refreshedSelectedAutor) {
@@ -169,7 +164,7 @@ export class AutoresPageComponent implements OnInit {
             this.errorMessage.set(
               error?.error?.message ||
                 error?.error?.details?.[0]?.message ||
-                'No se pudo crear el autor.'
+                'No se pudo crear el autor.',
             );
           },
         });
@@ -198,7 +193,7 @@ export class AutoresPageComponent implements OnInit {
           this.errorMessage.set(
             error?.error?.message ||
               error?.error?.details?.[0]?.message ||
-              'No se pudo actualizar el autor.'
+              'No se pudo actualizar el autor.',
           );
         },
       });
@@ -210,7 +205,7 @@ export class AutoresPageComponent implements OnInit {
     }
 
     const confirmed = window.confirm(
-      `¿Seguro que quieres marcar como eliminado al autor "${autor.fullName}"?`
+      `¿Seguro que quieres marcar como eliminado al autor "${autor.fullName}"?`,
     );
 
     if (!confirmed) {
@@ -238,7 +233,7 @@ export class AutoresPageComponent implements OnInit {
           this.errorMessage.set(
             error?.error?.message ||
               error?.error?.details?.[0]?.message ||
-              'No se pudo eliminar el autor.'
+              'No se pudo eliminar el autor.',
           );
         },
       });
@@ -260,7 +255,7 @@ export class AutoresPageComponent implements OnInit {
         error: (error) => {
           console.error('Error al eliminar permanentemente:', error);
           this.errorMessage.set('Error al eliminar permanentemente el autor.');
-        }
+        },
       });
   }
 
@@ -272,19 +267,19 @@ export class AutoresPageComponent implements OnInit {
   }
 
   onRestore(autor: Autor): void {
-      if (!autor || !autor._id) return;
-  
-      this.isLoading.set(true);
-      this.autoresService
-        .restoreAutor(autor._id, autor)
-        .pipe(finalize(() => this.isLoading.set(false)))
-        .subscribe({
-          next: () => {
-            this.successMessage.set('Autor restaurado con éxito');
-            this.loadAutores(autor._id);
-          },
-          error: () => this.errorMessage.set('Error al restaurar el autor.')
-        });
+    if (!autor || !autor._id) return;
+
+    this.isLoading.set(true);
+    this.autoresService
+      .restoreAutor(autor._id, autor)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: () => {
+          this.successMessage.set('Autor restaurado con éxito');
+          this.loadAutores(autor._id);
+        },
+        error: () => this.errorMessage.set('Error al restaurar el autor.'),
+      });
   }
 
   onPageChange(page: number): void {

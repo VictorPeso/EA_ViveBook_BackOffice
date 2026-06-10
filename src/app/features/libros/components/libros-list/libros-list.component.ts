@@ -27,7 +27,7 @@ export class LibrosListComponent {
   @Output() pageChange = new EventEmitter<number>();
   @Output() nextPage = new EventEmitter<void>();
   @Output() previousPage = new EventEmitter<void>();
-  
+
   @Output() search = new EventEmitter<string>();
   @Output() deletePermanent = new EventEmitter<string>();
   searchBook = new FormControl('');

@@ -58,16 +58,13 @@ export class UsuariosPageComponent implements OnInit {
     if (!term) {
       return allUsuarios;
     }
-    return allUsuarios.filter((usuario) =>
-      usuario.name?.toLowerCase().includes(term)
-    );
-  }); 
+    return allUsuarios.filter((usuario) => usuario.name?.toLowerCase().includes(term));
+  });
 
   onSearch(term: string): void {
     this.searchUsuario.set(term);
     this.currentPage.set(1);
   }
-
 
   ngOnInit(): void {
     const rol = localStorage.getItem('rol');
@@ -80,58 +77,55 @@ export class UsuariosPageComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    const fetch$ = this.isAdmin()? 
-    this.usuariosService.getAllUsuarios() : this.usuariosService.getUsuarios();
-    
-    fetch$
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (usuarios) => {
-          const safeUsuarios = Array.isArray(usuarios) ? usuarios : [];
-          this.usuarios.set(safeUsuarios);
+    const fetch$ = this.isAdmin()
+      ? this.usuariosService.getAllUsuarios()
+      : this.usuariosService.getUsuarios();
 
-          this.ensureValidPage();
+    fetch$.pipe(finalize(() => this.isLoading.set(false))).subscribe({
+      next: (usuarios) => {
+        const safeUsuarios = Array.isArray(usuarios) ? usuarios : [];
+        this.usuarios.set(safeUsuarios);
 
-          if (selectedUsuarioId) {
-            const usuarioRecienAfectado =
-              safeUsuarios.find((usuario) => usuario._id === selectedUsuarioId) ?? null;
+        this.ensureValidPage();
 
-            this.selectedUsuario.set(
-              usuarioRecienAfectado
-                ? this.mapUsuarioToFormValue(usuarioRecienAfectado)
-                : null
-            );
-            this.isCreating.set(false);
-            return;
+        if (selectedUsuarioId) {
+          const usuarioRecienAfectado =
+            safeUsuarios.find((usuario) => usuario._id === selectedUsuarioId) ?? null;
+
+          this.selectedUsuario.set(
+            usuarioRecienAfectado ? this.mapUsuarioToFormValue(usuarioRecienAfectado) : null,
+          );
+          this.isCreating.set(false);
+          return;
+        }
+
+        const selectedId = this.selectedUsuario()?._id;
+
+        if (selectedId) {
+          const refreshedSelectedUsuario =
+            safeUsuarios.find((usuario) => usuario._id === selectedId) ?? null;
+
+          this.selectedUsuario.set(
+            refreshedSelectedUsuario
+              ? this.mapUsuarioToFormValue(refreshedSelectedUsuario)
+              : this.createEmptyUsuario(),
+          );
+
+          if (!refreshedSelectedUsuario) {
+            this.isCreating.set(true);
           }
 
-          const selectedId = this.selectedUsuario()?._id;
+          return;
+        }
 
-          if (selectedId) {
-            const refreshedSelectedUsuario =
-              safeUsuarios.find((usuario) => usuario._id === selectedId) ?? null;
-
-            this.selectedUsuario.set(
-              refreshedSelectedUsuario
-                ? this.mapUsuarioToFormValue(refreshedSelectedUsuario)
-                : this.createEmptyUsuario()
-            );
-
-            if (!refreshedSelectedUsuario) {
-              this.isCreating.set(true);
-            }
-
-            return;
-          }
-
-          this.selectedUsuario.set(this.createEmptyUsuario());
-          this.isCreating.set(true);
-        },
-        error: (error) => {
-          console.error('Error al cargar usuarios:', error);
-          this.errorMessage.set('No se pudieron cargar los usuarios.');
-        },
-      });
+        this.selectedUsuario.set(this.createEmptyUsuario());
+        this.isCreating.set(true);
+      },
+      error: (error) => {
+        console.error('Error al cargar usuarios:', error);
+        this.errorMessage.set('No se pudieron cargar los usuarios.');
+      },
+    });
   }
 
   loadLibros(): void {
@@ -197,7 +191,7 @@ export class UsuariosPageComponent implements OnInit {
             this.errorMessage.set(
               error?.error?.message ||
                 error?.error?.details?.[0]?.message ||
-                'No se pudo crear el usuario.'
+                'No se pudo crear el usuario.',
             );
           },
         });
@@ -226,15 +220,14 @@ export class UsuariosPageComponent implements OnInit {
           this.errorMessage.set(
             error?.error?.message ||
               error?.error?.details?.[0]?.message ||
-              'No se pudo actualizar el usuario.'
+              'No se pudo actualizar el usuario.',
           );
         },
       });
   }
 
   onDeleteUsuario(usuario: Usuario): void {
-    if (!this.isAdmin()) 
-    {
+    if (!this.isAdmin()) {
       this.errorMessage.set('No tienes permisos para realizar esta acción.');
       return;
     }
@@ -243,7 +236,7 @@ export class UsuariosPageComponent implements OnInit {
     }
 
     const confirmed = window.confirm(
-      `¿Seguro que quieres marcar como eliminado al usuario "${usuario.name}"?`
+      `¿Seguro que quieres marcar como eliminado al usuario "${usuario.name}"?`,
     );
 
     if (!confirmed) {
@@ -271,7 +264,7 @@ export class UsuariosPageComponent implements OnInit {
           this.errorMessage.set(
             error?.error?.message ||
               error?.error?.details?.[0]?.message ||
-              'No se pudo eliminar el usuario.'
+              'No se pudo eliminar el usuario.',
           );
         },
       });
@@ -293,7 +286,7 @@ export class UsuariosPageComponent implements OnInit {
         error: (error) => {
           console.error('Error al eliminar permanentemente:', error);
           this.errorMessage.set('Error al eliminar permanentemente el usuario.');
-        }
+        },
       });
   }
 
@@ -307,9 +300,9 @@ export class UsuariosPageComponent implements OnInit {
       .subscribe({
         next: () => {
           this.successMessage.set('Usuario restaurado con éxito');
-          this.loadUsuarios(usuario._id); 
+          this.loadUsuarios(usuario._id);
         },
-        error: () => this.errorMessage.set('Error al restaurar el usuario.')
+        error: () => this.errorMessage.set('Error al restaurar el usuario.'),
       });
   }
 

@@ -9,17 +9,11 @@
     </div>
   </div>
 
-  <div
-    class="libro-form__alert libro-form__alert--error"
-    *ngIf="errorMessage"
-  >
+  <div class="libro-form__alert libro-form__alert--error" *ngIf="errorMessage">
     {{ errorMessage }}
   </div>
 
-  <div
-    class="libro-form__alert libro-form__alert--success"
-    *ngIf="successMessage"
-  >
+  <div class="libro-form__alert libro-form__alert--success" *ngIf="successMessage">
     {{ successMessage }}
   </div>
 
@@ -77,9 +71,7 @@
       <div class="libro-form__field libro-form__field--full">
         <div class="libro-form__label-row">
           <label class="libro-form__label">Autores</label>
-          <span class="libro-form__hint" *ngIf="isLoadingAutores">
-            Cargando autores...
-          </span>
+          <span class="libro-form__hint" *ngIf="isLoadingAutores"> Cargando autores... </span>
         </div>
 
         <div
@@ -103,9 +95,7 @@
         </div>
 
         <ng-template #autoresEmptyState>
-          <div class="libro-form__empty-authors">
-            No hay autores disponibles para asociar.
-          </div>
+          <div class="libro-form__empty-authors">No hay autores disponibles para asociar.</div>
         </ng-template>
 
         <p class="libro-form__hint">
@@ -124,7 +114,7 @@
         Cancelar
       </button>
       <div class="libro-form__button">
-        <app-libro-modal/>
+        <app-libro-modal />
       </div>
 
       <button
@@ -132,7 +122,7 @@
         class="libro-form__button libro-form__button--primary"
         [disabled]="isSaving || isDeleting"
       >
-        {{ isSaving ? 'Guardando...' : (isCreating ? 'Crear libro' : 'Guardar cambios') }}
+        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear libro' : 'Guardar cambios' }}
       </button>
 
       <button
@@ -155,10 +145,10 @@
         Eliminar definitivamente
       </button>
 
-      <button 
-        *ngIf="libro?.IsDeleted" 
-        type="button" 
-        class="libro-form__button libro-form__button--success" 
+      <button
+        *ngIf="libro?.IsDeleted"
+        type="button"
+        class="libro-form__button libro-form__button--success"
         (click)="onRestore($event, libro!)"
       >
         Restaurar Libro

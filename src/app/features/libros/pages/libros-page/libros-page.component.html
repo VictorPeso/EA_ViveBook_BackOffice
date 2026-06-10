@@ -1,28 +1,28 @@
 <section class="libros-page">
   <div class="libros-page__layout">
     @if (isAdmin()) {
-    <aside class="libros-page__form-column">
-      <app-libro-form
-        [libro]="selectedLibro()"
-        [autores]="autores()"
-        [isSaving]="isSaving()"
-        [isDeleting]="isDeleting()"
-        [isCreating]="isCreating()"
-        [isLoadingAutores]="isLoadingAutores()"
-        [errorMessage]="errorMessage()"
-        [successMessage]="successMessage()"
-        (save)="onSaveLibro($event)"
-        (delete)="onDeleteLibro($event)"
-        (deletePermanent)="onDeletePermanent($event._id!)"
-        (cancel)="onCancelEdit()"
-        (restoreLibro)="onRestore($event)"
-      >
-      </app-libro-form>
-    </aside>
-  }
+      <aside class="libros-page__form-column">
+        <app-libro-form
+          [libro]="selectedLibro()"
+          [autores]="autores()"
+          [isSaving]="isSaving()"
+          [isDeleting]="isDeleting()"
+          [isCreating]="isCreating()"
+          [isLoadingAutores]="isLoadingAutores()"
+          [errorMessage]="errorMessage()"
+          [successMessage]="successMessage()"
+          (save)="onSaveLibro($event)"
+          (delete)="onDeleteLibro($event)"
+          (deletePermanent)="onDeletePermanent($event._id!)"
+          (cancel)="onCancelEdit()"
+          (restoreLibro)="onRestore($event)"
+        >
+        </app-libro-form>
+      </aside>
+    }
 
-<section class="libros-page__list-column" [style.grid-column]="isAdmin() ? '' : '1 / -1'">
-        <app-libros-list
+    <section class="libros-page__list-column" [style.grid-column]="isAdmin() ? '' : '1 / -1'">
+      <app-libros-list
         [libros]="paginatedLibros()"
         [selectedLibroId]="selectedLibro()?._id ?? null"
         [isLoading]="isLoading()"

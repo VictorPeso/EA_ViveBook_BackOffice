@@ -9,16 +9,11 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormArray,
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Autor } from '../../../../Core/models/autor.model';
 import { Libro } from '../../../../Core/models/libro.model';
-import { LibroModal } from "../libro-modal/libro-modal";
+import { LibroModal } from '../libro-modal/libro-modal';
 
 @Component({
   selector: 'app-libro-form',
@@ -149,7 +144,9 @@ export class LibroFormComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (confirm('¿Estás seguro de que quieres borrar este libro definitivamente de la base de datos?')) {
+    if (
+      confirm('¿Estás seguro de que quieres borrar este libro definitivamente de la base de datos?')
+    ) {
       this.deletePermanent.emit(currentLibro);
     }
   }
@@ -230,7 +227,7 @@ export class LibroFormComponent implements OnInit, OnChanges {
 
   private getSafeAuthorIds(values: Array<string | null | undefined>): string[] {
     return values.filter(
-      (value): value is string => typeof value === 'string' && value.trim().length > 0
+      (value): value is string => typeof value === 'string' && value.trim().length > 0,
     );
   }
 

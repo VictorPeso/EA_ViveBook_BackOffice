@@ -4,9 +4,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
   "include": [
     "src/*.ts",
@@ -14,9 +12,7 @@
     "src/app/Core/**/*.ts",
     "src/app/features/**/*.ts",
     "src/app/shared/**/*.ts",
-    "src/app/*.ts",
+    "src/app/*.ts"
   ],
-  "exclude": [
-    "src/**/*.spec.ts"
-  ]
+  "exclude": ["src/**/*.spec.ts"]
 }

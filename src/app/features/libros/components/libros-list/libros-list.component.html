@@ -11,13 +11,10 @@
         class="libros-list__search"
         [formControl]="searchBook"
         placeholder="Buscar por título..."
-        
       />
     </div>
 
-    <button *ngIf="isAdmin" (click)="onCreateNew()">
-      + Nuevo libro
-    </button>
+    <button *ngIf="isAdmin" (click)="onCreateNew()">+ Nuevo libro</button>
   </div>
 
   <div class="libros-list__toolbar">
@@ -27,9 +24,7 @@
   </div>
 
   <div class="libros-list__body">
-    <div *ngIf="isLoading" class="libros-list__state">
-      Cargando libros...
-    </div>
+    <div *ngIf="isLoading" class="libros-list__state">Cargando libros...</div>
 
     <div *ngIf="!isLoading && libros.length === 0" class="libros-list__state">
       No hay libros disponibles.
@@ -56,9 +51,9 @@
               {{ libro.IsDeleted ? 'Eliminado' : 'Activo' }}
             </span>
 
-            <button 
-            *ngIf="isAdmin"
-              type="button" 
+            <button
+              *ngIf="isAdmin"
+              type="button"
               class="libros-list__delete-permanent-btn"
               (click)="onDeletePermanent(libro._id!, $event)"
               title="Borrado definitivo"
@@ -69,10 +64,7 @@
         </div>
 
         <div class="libros-list__fields">
-          <div
-            class="libros-list__field"
-            *ngFor="let field of getVisibleFields(libro)"
-          >
+          <div class="libros-list__field" *ngFor="let field of getVisibleFields(libro)">
             <span class="libros-list__field-label">{{ field.label }}</span>
             <span class="libros-list__field-value">{{ field.value }}</span>
           </div>
@@ -81,10 +73,7 @@
     </div>
   </div>
 
-  <div
-    class="libros-list__pagination"
-    *ngIf="!isLoading && totalItems > 0 && totalPages > 1"
-  >
+  <div class="libros-list__pagination" *ngIf="!isLoading && totalItems > 0 && totalPages > 1">
     <button
       type="button"
       class="libros-list__page-button"

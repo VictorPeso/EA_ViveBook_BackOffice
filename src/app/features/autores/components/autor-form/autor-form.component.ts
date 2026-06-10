@@ -9,11 +9,7 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Autor } from '../../../../Core/models/autor.model';
 
@@ -110,7 +106,9 @@ export class AutorFormComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (confirm('¿Estás seguro de que quieres borrar este autor definitivamente de la base de datos?')) {
+    if (
+      confirm('¿Estás seguro de que quieres borrar este autor definitivamente de la base de datos?')
+    ) {
       this.deletePermanent.emit(currentAutor);
     }
   }
@@ -120,16 +118,13 @@ export class AutorFormComponent implements OnInit, OnChanges {
   }
 
   onRestore(event: Event, autor: Autor): void {
-      event.stopPropagation();
-      this.restoreAutor.emit(autor);
-    }
+    event.stopPropagation();
+    this.restoreAutor.emit(autor);
+  }
 
   private applyModeValidators(): void {
     if (this.isCreating) {
-      this.fullNameControl.setValidators([
-        Validators.required,
-        Validators.maxLength(200),
-      ]);
+      this.fullNameControl.setValidators([Validators.required, Validators.maxLength(200)]);
     } else {
       this.fullNameControl.setValidators([Validators.maxLength(200)]);
     }

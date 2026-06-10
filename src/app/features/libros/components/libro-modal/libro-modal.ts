@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-libro-modal',
-  imports: [Toast,FormsModule],
+  imports: [Toast, FormsModule],
   templateUrl: './libro-modal.html',
   styleUrl: './libro-modal.css',
 })

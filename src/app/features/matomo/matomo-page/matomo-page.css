@@ -1,13 +1,14 @@
-.main{
-    display: flex;
-    flex-direction: column;
-    padding: 8pt;
+.main {
+  display: flex;
+  flex-direction: column;
+  padding: 8pt;
 }
 
-.tabla{
-    border: solid;
+.tabla {
+  border: solid;
 }
-td, th {
+td,
+th {
   border: 1px solid #dddddd;
   text-align: left;
   padding: 8px;
@@ -17,10 +18,9 @@ tr:nth-child(even) {
   background-color: #dddddd;
 }
 
-.side{
-    background-color: orange;
-    
+.side {
+  background-color: orange;
 }
-.side::nth-child(even){
-    background-color: orangered;
+.side::nth-child(even) {
+  background-color: orangered;
 }

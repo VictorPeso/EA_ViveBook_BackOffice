@@ -47,6 +47,8 @@
       } @else {
         <input type="text" [(ngModel)]="price" />
       }
+    </td>
+
     <td class="cell">{{ data()!.bookId.title }}</td>
     <td class="cell">
       <button class="primary-btn" (click)="onEditBtnClick(data()!._id)">Editar</button>

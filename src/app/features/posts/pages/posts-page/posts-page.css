@@ -2,21 +2,22 @@
   padding: 8pt;
 } */
 
-table,.cell {
+table,
+.cell {
   border: 1px solid black;
   border-collapse: collapse;
 }
 .tabla {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap:8pt;
-    flex-direction: column;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8pt;
+  flex-direction: column;
 }
 
-.toolbar{
-    display: flex;
-    flex-direction: row;
-    gap:8pt;
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  gap: 8pt;
 }

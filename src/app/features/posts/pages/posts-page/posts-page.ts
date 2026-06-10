@@ -13,24 +13,25 @@ import { PostIndividual } from '../../components/post-individual/post-individual
   templateUrl: './posts-page.html',
   styleUrl: './posts-page.css',
 })
-export class PostsPage  implements OnInit{
+export class PostsPage implements OnInit {
   service = inject(PostsService);
   toast = inject(ToastService);
   posts = signal<Post[]>([]);
   // addText : string = '';
 
-
-  
   ngOnInit(): void {
     this.apiCall();
   }
 
-  apiCall(){
-    this.service.readAllPost()
-      .subscribe({
-        next: (res) => {this.posts.set(res);},
-        error: (err) => {this.toast.show('error',err);}
-      })
+  apiCall() {
+    this.service.readAllPost().subscribe({
+      next: (res) => {
+        this.posts.set(res);
+      },
+      error: (err) => {
+        this.toast.show('error', err);
+      },
+    });
   }
 
   // onCrearBtnClick(){
@@ -46,6 +47,4 @@ export class PostsPage  implements OnInit{
   //   }
 
   // }
-
-  
 }

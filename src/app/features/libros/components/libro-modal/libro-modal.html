@@ -1,14 +1,16 @@
 <dialog #dialog class="bubble" title="Add User">
   <div id="content">
     <div id="title">
-      <p>
-        Agregar Libro con OpenLibrary
-      </p>
+      <p>Agregar Libro con OpenLibrary</p>
     </div>
-    <input type="text" [(ngModel)]="isbnInput">
+    <input type="text" [(ngModel)]="isbnInput" />
     <div id="bottom">
-      <button (click)="onCall()" class="libro-form__button libro-form__button--primary">Save</button>
+      <button (click)="onCall()" class="libro-form__button libro-form__button--primary">
+        Save
+      </button>
     </div>
   </div>
 </dialog>
-<button (click)="OpenDialog()" class="libro-form__button libro-form__button--primary">Agregar Libro con OpenLibrary</button>
+<button (click)="OpenDialog()" class="libro-form__button libro-form__button--primary">
+  Agregar Libro con OpenLibrary
+</button>

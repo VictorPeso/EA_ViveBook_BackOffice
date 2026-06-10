@@ -9,17 +9,11 @@
     </div>
   </div>
 
-  <div
-    class="autor-form__alert autor-form__alert--error"
-    *ngIf="errorMessage"
-  >
+  <div class="autor-form__alert autor-form__alert--error" *ngIf="errorMessage">
     {{ errorMessage }}
   </div>
 
-  <div
-    class="autor-form__alert autor-form__alert--success"
-    *ngIf="successMessage"
-  >
+  <div class="autor-form__alert autor-form__alert--success" *ngIf="successMessage">
     {{ successMessage }}
   </div>
 
@@ -69,7 +63,7 @@
         class="autor-form__button autor-form__button--primary"
         [disabled]="isSaving || isDeleting"
       >
-        {{ isSaving ? 'Guardando...' : (isCreating ? 'Crear autor' : 'Guardar cambios') }}
+        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear autor' : 'Guardar cambios' }}
       </button>
 
       <button
@@ -92,10 +86,10 @@
         Eliminar definitivamente
       </button>
 
-      <button 
-        *ngIf="autor?.IsDeleted" 
-        type="button" 
-        class="libro-form__button libro-form__button--success" 
+      <button
+        *ngIf="autor?.IsDeleted"
+        type="button"
+        class="libro-form__button libro-form__button--success"
         (click)="onRestore($event, autor!)"
       >
         Restaurar Autor

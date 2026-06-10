@@ -15,39 +15,44 @@ export class PostIndividual {
   service = inject(PostsService);
   toast = inject(ToastService);
   editMode = signal<boolean>(false);
-  description? : string = undefined;
-  status? : string = undefined;
-  image? : string = undefined;
-  ownerId? : string = undefined;
-  price? : number = undefined;
+  description?: string = undefined;
+  status?: string = undefined;
+  image?: string = undefined;
+  ownerId?: string = undefined;
+  price?: number = undefined;
 
-  onEditBtnClick(id: string){
-    if(!this.editMode()) this.editMode.set(true);
+  onEditBtnClick(id: string) {
+    if (!this.editMode()) this.editMode.set(true);
     else {
       this.editMode.set(false);
-      if(!this.description && !this.status && !this.image && !this.ownerId) return;
-      const data : Partial<Post> = {
+      if (!this.description && !this.status && !this.image && !this.ownerId) return;
+      const data: Partial<Post> = {
         description: this.description,
         status: this.status,
         imageUrl: this.image,
         ownerId: this.ownerId,
         price: this.price,
-      }
-      this.service.updatePost(id,data)
-        .subscribe({
-          next: (res) => {this.toast.show('info',`Data changed! \n ${JSON.stringify(res)}`)},
-          error: (err) => { this.toast.show('error',JSON.stringify(err))}
-        });
-        //this.apiCall(); // Al parecer no lo refresca
-    }
-  }
-  onDeleteBtnClick(id: string){
-    this.service.deletePost(id)
-      .subscribe({
-        next: (res) => {this.toast.show('info',`Post deleted! \n ${JSON.stringify(res)}`)},
-        error: (err) => { this.toast.show('error',JSON.stringify(err))}
+      };
+      this.service.updatePost(id, data).subscribe({
+        next: (res) => {
+          this.toast.show('info', `Data changed! \n ${JSON.stringify(res)}`);
+        },
+        error: (err) => {
+          this.toast.show('error', JSON.stringify(err));
+        },
       });
       //this.apiCall(); // Al parecer no lo refresca
+    }
   }
-
+  onDeleteBtnClick(id: string) {
+    this.service.deletePost(id).subscribe({
+      next: (res) => {
+        this.toast.show('info', `Post deleted! \n ${JSON.stringify(res)}`);
+      },
+      error: (err) => {
+        this.toast.show('error', JSON.stringify(err));
+      },
+    });
+    //this.apiCall(); // Al parecer no lo refresca
+  }
 }
