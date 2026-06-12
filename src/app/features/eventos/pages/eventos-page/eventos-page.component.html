@@ -1,0 +1,35 @@
+<section class="eventos-page">
+  <div class="eventos-page__layout">
+    <aside class="eventos-page__form-column">
+      <app-evento-form
+        [evento]="selectedEvento()"
+        [usuarios]="usuarios()"
+        [isLoadingUsuarios]="isLoadingUsuarios()"
+        [isSaving]="isSaving()"
+        [isDeleting]="isDeleting()"
+        [isCreating]="isCreating()"
+        [errorMessage]="errorMessage()"
+        [successMessage]="successMessage()"
+        (save)="onSave($event)"
+        (delete)="onDelete($event)"
+        (restore)="onRestore($event)"
+        (cancel)="onCancel()"
+      />
+    </aside>
+    <section class="eventos-page__list-column">
+      <app-eventos-list
+        [eventos]="eventos()"
+        [selectedId]="selectedEvento()?._id ?? null"
+        [isLoading]="isLoading()"
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalItems]="totalItems()"
+        [pageSize]="pageSize()"
+        (selectEvento)="onSelect($event)"
+        (createNew)="onCreateNew()"
+        (search)="onSearch($event)"
+        (pageChange)="onPageChange($event)"
+      />
+    </section>
+  </div>
+</section>

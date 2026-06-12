@@ -12,7 +12,6 @@
         [successMessage]="successMessage()"
         (save)="onSaveUsuario($event)"
         (delete)="onDeleteUsuario($event)"
-        (deletePermanent)="onDeletePermanent($event._id!)"
         (cancel)="onCancelEdit()"
         (restoreUsuario)="onRestore($event)"
       >
@@ -21,7 +20,7 @@
 
     <section [ngClass]="isAdmin() ? 'usuarios-page__list-column' : 'usuarios-page__list-full'">
       <app-usuarios-list
-        [usuarios]="paginatedUsuarios()"
+        [usuarios]="usuarios()"
         [selectedUsuarioId]="selectedUsuario()?._id ?? null"
         [isLoading]="isLoading()"
         [isAdmin]="isAdmin()"
@@ -35,7 +34,6 @@
         (nextPage)="onNextPage()"
         (previousPage)="onPreviousPage()"
         (search)="onSearch($event)"
-        (deletePermanent)="onDeletePermanent($event)"
       >
       </app-usuarios-list>
     </section>

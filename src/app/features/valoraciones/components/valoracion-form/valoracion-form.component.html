@@ -1,0 +1,74 @@
+<section class="valoracion-form">
+  <header>
+    <p>Moderación</p>
+    <h2>{{ isCreating ? 'Nueva valoración' : 'Editar valoración' }}</h2>
+  </header>
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <label
+      >Autor<select formControlName="usuarioAutor">
+        <option value="">Selecciona un usuario</option>
+        <option *ngFor="let user of usuarios" [value]="user._id">
+          {{ user.name }} · {{ user.email }}
+        </option>
+      </select></label
+    >
+    <label
+      >Usuario valorado<select formControlName="usuarioValorado">
+        <option value="">Selecciona un usuario</option>
+        <option *ngFor="let user of usuarios" [value]="user._id">
+          {{ user.name }} · {{ user.email }}
+        </option>
+      </select></label
+    >
+    <label
+      >Libro<select formControlName="libro">
+        <option value="">Selecciona un libro</option>
+        <option *ngFor="let libro of libros" [value]="libro._id">
+          {{ libro.title }} · {{ libro.isbn }}
+        </option>
+      </select></label
+    >
+    <label
+      >Operación<select formControlName="tipoOperacion">
+        <option value="VENTA">Venta</option>
+        <option value="ALQUILER">Alquiler</option>
+        <option value="RESERVA">Reserva</option>
+      </select></label
+    >
+    <label>Puntuación<input type="number" min="1" max="5" formControlName="puntuacion" /></label>
+    <label>Comentario<textarea rows="4" formControlName="comentario"></textarea></label>
+    <label
+      >ID de reserva opcional<input
+        formControlName="reservationId"
+        placeholder="ObjectId de 24 caracteres"
+    /></label>
+    <p class="hint" *ngIf="isLoadingRelations">Cargando usuarios y libros...</p>
+    <p class="validation" *ngIf="form.touched && form.invalid">
+      Revisa los campos obligatorios, puntuación e ID de reserva.
+    </p>
+    <div class="actions">
+      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button
+      ><button type="submit" class="primary" [disabled]="isSaving || isDeleting">
+        {{
+          isSaving ? 'Guardando...' : isCreating ? 'Crear valoración' : 'Guardar cambios'
+        }}</button
+      ><button
+        type="button"
+        class="danger"
+        *ngIf="!isCreating && !valoracion?.IsDeleted"
+        (click)="onDelete()"
+      >
+        Desactivar</button
+      ><button
+        type="button"
+        class="restore"
+        *ngIf="!isCreating && valoracion?.IsDeleted"
+        (click)="onRestore()"
+      >
+        Restaurar
+      </button>
+    </div>
+  </form>
+</section>

@@ -1,0 +1,56 @@
+<section class="posts-list">
+  <header>
+    <div>
+      <p>Listado</p>
+      <h2>Posts</h2>
+      <span>Consulta posts activos y desactivados.</span
+      ><input [formControl]="searchControl" placeholder="Buscar por descripción o estado..." />
+    </div>
+    <button (click)="createNew.emit()">+ Nuevo post</button>
+  </header>
+  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
+  <div class="state" *ngIf="isLoading">Cargando posts...</div>
+  <div class="state" *ngIf="!isLoading && !posts.length">No hay posts disponibles.</div>
+  <div class="items" *ngIf="!isLoading">
+    <article
+      *ngFor="let post of posts"
+      [class.active]="post._id === selectedId"
+      [class.deleted]="post.IsDeleted"
+      (click)="selectPost.emit(post)"
+    >
+      <div class="title">
+        <h3>{{ post.description || 'Sin descripción' }}</h3>
+        <span [class.inactive]="post.IsDeleted">{{
+          post.IsDeleted ? 'Desactivado' : 'Activo'
+        }}</span>
+      </div>
+      <div class="fields">
+        <div>
+          <strong>Estado</strong><span>{{ post.status }}</span>
+        </div>
+        <div>
+          <strong>Precio</strong><span>{{ post.price }} €</span>
+        </div>
+        <div>
+          <strong>Propietario</strong><span>{{ owner(post) }}</span>
+        </div>
+        <div>
+          <strong>Libro</strong><span>{{ book(post) }}</span>
+        </div>
+      </div>
+    </article>
+  </div>
+  <nav *ngIf="totalPages > 1">
+    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
+      Anterior</button
+    ><button
+      *ngFor="let page of pages"
+      [class.current]="page === currentPage"
+      (click)="pageChange.emit(page)"
+    >
+      {{ page }}</button
+    ><button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
+      Siguiente
+    </button>
+  </nav>
+</section>

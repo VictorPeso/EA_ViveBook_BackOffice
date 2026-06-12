@@ -35,7 +35,6 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
 
   @Output() save = new EventEmitter<Usuario>();
   @Output() delete = new EventEmitter<Usuario>();
-  @Output() deletePermanent = new EventEmitter<Usuario>();
   @Output() cancel = new EventEmitter<void>();
   @Output() restoreUsuario = new EventEmitter<Usuario>();
 
@@ -44,6 +43,10 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
     name: ['', [Validators.maxLength(150)]],
     email: ['', [Validators.email, Validators.maxLength(200)]],
     password: ['', [Validators.maxLength(200)]],
+    rol: ['User' as Usuario['rol'], Validators.required],
+    avatar: ['', Validators.pattern(/^https?:\/\/.+/i)],
+    description: [''],
+    hasSeenTutorial: [false],
     IsDeleted: [false],
     libros: this.fb.array<string>([]),
   });
@@ -125,8 +128,11 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       name: rawValue.name.trim(),
       email: rawValue.email.trim(),
       password: rawValue.password,
-      rol: this.usuario?.rol || 'User',
+      rol: rawValue.rol,
       libros: libroIds,
+      avatar: rawValue.avatar.trim(),
+      description: rawValue.description.trim(),
+      hasSeenTutorial: rawValue.hasSeenTutorial,
       IsDeleted: rawValue.IsDeleted ?? false,
     };
 
@@ -143,27 +149,12 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
     this.delete.emit(currentUsuario);
   }
 
-  onDeletePermanent(): void {
-    const currentUsuario = this.buildCurrentUsuarioFromForm();
-
-    if (!currentUsuario || !currentUsuario._id) {
-      return;
-    }
-
-    if (
-      confirm(
-        '¿Estás seguro de que quieres borrar este usuario definitivamente de la base de datos?',
-      )
-    ) {
-      this.deletePermanent.emit(currentUsuario);
-    }
-  }
-
   onCancel(): void {
     this.cancel.emit();
   }
 
   onRestore(event: MouseEvent, usuario: Usuario): void {
+    event.stopPropagation();
     this.restoreUsuario.emit(usuario);
   }
 
@@ -202,7 +193,11 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       _id: usuario?._id ?? '',
       name: usuario?.name ?? '',
       email: usuario?.email ?? '',
-      password: usuario?.password ?? '',
+      password: '',
+      rol: usuario?.rol ?? 'User',
+      avatar: usuario?.avatar ?? '',
+      description: usuario?.description ?? '',
+      hasSeenTutorial: usuario?.hasSeenTutorial ?? false,
       IsDeleted: usuario?.IsDeleted ?? false,
       libros: [],
     });
@@ -241,8 +236,11 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       name: rawValue.name.trim(),
       email: rawValue.email.trim(),
       password: rawValue.password,
-      rol: this.usuario?.rol || 'User',
+      rol: rawValue.rol,
       libros: libroIds,
+      avatar: rawValue.avatar.trim(),
+      description: rawValue.description.trim(),
+      hasSeenTutorial: rawValue.hasSeenTutorial,
       IsDeleted: rawValue.IsDeleted ?? false,
     };
   }

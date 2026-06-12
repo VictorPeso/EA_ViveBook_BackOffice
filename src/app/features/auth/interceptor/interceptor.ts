@@ -1,9 +1,9 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('token');
   const isBrowser = typeof window !== 'undefined';
-  // Si hay token, lo clonamos en la cabecera Authorization
+  const token = isBrowser ? localStorage.getItem('token') : null;
+
   if (token) {
     const authReq = req.clone({
       setHeaders: {

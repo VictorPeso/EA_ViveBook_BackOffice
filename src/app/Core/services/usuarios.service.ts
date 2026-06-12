@@ -1,12 +1,21 @@
 import { Injectable, inject, PLATFORM_ID, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { Usuario } from '../models/usuario.model';
+import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 import { environment } from '../../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { HeadersService } from './headers.service';
+
+export interface AdminUsuariosQuery {
+  page: number;
+  limit: number;
+  search?: string;
+  includeDeleted?: boolean;
+  rol?: Usuario['rol'];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -15,6 +24,7 @@ export class UsuariosService {
   private readonly http = inject(HttpClient);
 
   private readonly apiUrl = environment.apiUrl + '/usuarios';
+  private readonly adminApiUrl = environment.apiUrl + '/admin/usuarios';
 
   private readonly router = inject(Router);
 
@@ -37,29 +47,45 @@ export class UsuariosService {
 
   //------------------------- AUTENTICACIÓN -------------------------
 
-  signup(userData: any): Observable<any> {
+  signup(userData: Partial<Usuario>): Observable<{ user: Usuario; token: string }> {
     const signupUrl = `${environment.apiUrl}/auth/signup`;
-    return this.http.post<any>(signupUrl, userData);
+    return this.http
+      .post<ApiResponse<{ user: Usuario; token: string }>>(signupUrl, userData)
+      .pipe(map((response) => response.data));
   }
 
-  login(credentials: any): Observable<any> {
+  login(credentials: {
+    email: string;
+    password: string;
+  }): Observable<{ user: Usuario; token: string }> {
     const loginUrl = `${environment.apiUrl}/auth/signin`;
-    return this.http.post<any>(loginUrl, credentials).pipe(
-      tap((res) => {
-        if (res.token) {
-          this.headersService.setToken(res.token);
-          localStorage.setItem('token', res.token);
-          localStorage.setItem('rol', res.user.rol);
-          this.isAuthenticated.set(true);
-        }
-      }),
-    );
+    return this.http
+      .post<ApiResponse<{ user: Usuario; token: string }>>(loginUrl, credentials)
+      .pipe(
+        map((response) => {
+          if (response.data.user.rol !== 'Admin') {
+            throw new Error('El BackOffice requiere una cuenta con rol Admin.');
+          }
+
+          return response.data;
+        }),
+        tap((res) => {
+          if (res.token) {
+            this.headersService.setToken(res.token);
+            localStorage.setItem('token', res.token);
+            localStorage.setItem('rol', res.user.rol);
+            this.isAuthenticated.set(true);
+          }
+        }),
+      );
   }
 
   headersService = inject(HeadersService);
 
   getProfile() {
-    return this.http.get<any>(`${this.apiUrl}/auth/profile`);
+    return this.http
+      .get<ApiResponse<Usuario>>(`${environment.apiUrl}/auth/profile`)
+      .pipe(map((response) => response.data));
   }
 
   logout() {
@@ -73,42 +99,67 @@ export class UsuariosService {
   //------------------------- CRUD USUARIOS -------------------------
 
   getUsuarios(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(this.apiUrl, { headers: this.headersService.getHeader() });
+    return this.http
+      .get<ApiResponse<PaginatedResult<Usuario>>>(this.apiUrl)
+      .pipe(map((response) => response.data.data));
   }
 
   getAllUsuarios(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(`${this.apiUrl}/all`, {
-      headers: this.headersService.getHeader(),
-    });
+    return this.http
+      .get<ApiResponse<PaginatedResult<Usuario>>>(`${this.apiUrl}/all`)
+      .pipe(map((response) => response.data.data));
+  }
+
+  getAdminUsuarios(query: AdminUsuariosQuery): Observable<PaginatedResult<Usuario>> {
+    let params = new HttpParams()
+      .set('page', query.page)
+      .set('limit', query.limit)
+      .set('includeDeleted', query.includeDeleted ?? true);
+
+    if (query.search?.trim()) {
+      params = params.set('search', query.search.trim());
+    }
+
+    if (query.rol) {
+      params = params.set('rol', query.rol);
+    }
+
+    return this.http
+      .get<ApiResponse<PaginatedResult<Usuario>>>(this.adminApiUrl, { params })
+      .pipe(map((response) => response.data));
   }
 
   getUsuarioById(usuarioId: string): Observable<Usuario> {
-    return this.http.get<Usuario>(`${this.apiUrl}/${usuarioId}`);
+    return this.http
+      .get<ApiResponse<Usuario>>(`${this.adminApiUrl}/${usuarioId}`)
+      .pipe(map((response) => response.data));
   }
 
   createUsuario(usuario: Usuario): Observable<Usuario> {
-    return this.http.post<Usuario>(this.apiUrl, usuario);
+    return this.http
+      .post<ApiResponse<Usuario>>(this.adminApiUrl, usuario)
+      .pipe(map((response) => response.data));
   }
 
   updateUsuario(usuarioId: string, usuario: Partial<Usuario>): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/${usuarioId}`, usuario);
+    return this.http
+      .put<ApiResponse<Usuario>>(`${this.adminApiUrl}/${usuarioId}`, usuario)
+      .pipe(map((response) => response.data));
   }
 
-  softDeleteUsuario(usuarioId: string, usuarioActual: Usuario): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/${usuarioId}`, {
-      ...usuarioActual,
-      IsDeleted: true,
-    });
+  setUsuarioDeleted(usuarioId: string, IsDeleted: boolean): Observable<Usuario> {
+    return this.http
+      .patch<ApiResponse<Usuario>>(`${this.adminApiUrl}/${usuarioId}/status`, { IsDeleted })
+      .pipe(map((response) => response.data));
   }
 
-  restoreUsuario(usuarioId: string, usuarioActual: Usuario): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/restore/${usuarioId}`, {
-      ...usuarioActual,
-      IsDeleted: false,
-    });
+  softDeleteUsuario(usuarioId: string): Observable<Usuario> {
+    return this.http
+      .delete<ApiResponse<Usuario>>(`${this.adminApiUrl}/${usuarioId}`)
+      .pipe(map((response) => response.data));
   }
 
-  permanentDeleteUsuario(usuarioId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/permanent/${usuarioId}`);
+  restoreUsuario(usuarioId: string): Observable<Usuario> {
+    return this.setUsuarioDeleted(usuarioId, false);
   }
 }

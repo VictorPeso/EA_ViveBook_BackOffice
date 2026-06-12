@@ -1,0 +1,62 @@
+<section class="reservas-list">
+  <header>
+    <div>
+      <p>Administración</p>
+      <h2>Reservas</h2>
+      <span>Consulta reservas activas y desactivadas.</span>
+      <input
+        [formControl]="searchControl"
+        placeholder="Buscar por usuario, libro, ISBN o estado..."
+      />
+    </div>
+    <button (click)="createNew.emit()">+ Nueva reserva</button>
+  </header>
+  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
+  <div class="state" *ngIf="isLoading">Cargando reservas...</div>
+  <div class="state" *ngIf="!isLoading && !reservas.length">No hay reservas disponibles.</div>
+  <div class="items" *ngIf="!isLoading">
+    <article
+      *ngFor="let item of reservas"
+      [class.active]="item._id === selectedId"
+      [class.deleted]="item.IsDeleted"
+      (click)="selectReserva.emit(item)"
+    >
+      <div class="title">
+        <h3>{{ book(item.libro) }}</h3>
+        <span [class.inactive]="item.IsDeleted">
+          {{ item.IsDeleted ? 'Desactivada' : item.estado }}
+        </span>
+      </div>
+      <div class="fields">
+        <div>
+          <strong>Solicitante</strong><span>{{ user(item.usuarioSolicitante) }}</span>
+        </div>
+        <div>
+          <strong>Propietario</strong><span>{{ user(item.propietario) }}</span>
+        </div>
+        <div>
+          <strong>Solicitud</strong><span>{{ item.fechaSolicitud | date: 'short' }}</span>
+        </div>
+        <div>
+          <strong>Límite</strong
+          ><span>{{ item.fechaLimite ? (item.fechaLimite | date: 'short') : 'Sin límite' }}</span>
+        </div>
+      </div>
+    </article>
+  </div>
+  <nav *ngIf="totalPages > 1">
+    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
+      Anterior
+    </button>
+    <button
+      *ngFor="let page of pages"
+      [class.current]="page === currentPage"
+      (click)="pageChange.emit(page)"
+    >
+      {{ page }}
+    </button>
+    <button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
+      Siguiente
+    </button>
+  </nav>
+</section>

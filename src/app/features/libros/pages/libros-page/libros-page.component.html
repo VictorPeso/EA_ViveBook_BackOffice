@@ -13,7 +13,6 @@
           [successMessage]="successMessage()"
           (save)="onSaveLibro($event)"
           (delete)="onDeleteLibro($event)"
-          (deletePermanent)="onDeletePermanent($event._id!)"
           (cancel)="onCancelEdit()"
           (restoreLibro)="onRestore($event)"
         >
@@ -23,7 +22,7 @@
 
     <section class="libros-page__list-column" [style.grid-column]="isAdmin() ? '' : '1 / -1'">
       <app-libros-list
-        [libros]="paginatedLibros()"
+        [libros]="libros()"
         [selectedLibroId]="selectedLibro()?._id ?? null"
         [isLoading]="isLoading()"
         [isAdmin]="isAdmin()"
@@ -37,7 +36,6 @@
         (nextPage)="onNextPage()"
         (previousPage)="onPreviousPage()"
         (search)="onSearch($event)"
-        (deletePermanent)="onDeletePermanent($event)"
       >
       </app-libros-list>
     </section>

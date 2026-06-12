@@ -3,7 +3,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-usuarios-list',
@@ -29,14 +29,13 @@ export class UsuariosListComponent {
   @Output() previousPage = new EventEmitter<void>();
 
   @Output() search = new EventEmitter<string>();
-  @Output() deletePermanent = new EventEmitter<string>();
   searchUsuario = new FormControl('');
-  destroy = new Subject<void>();
+  private destroy = new Subject<void>();
 
   ngOnInit(): void {
-    this.searchUsuario.valueChanges.subscribe((value) => {
-      this.search.emit(value ?? '');
-    });
+    this.searchUsuario.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
+      .subscribe((value) => this.search.emit(value ?? ''));
   }
 
   ngOnDestroy(): void {
@@ -62,13 +61,6 @@ export class UsuariosListComponent {
 
   onPreviousPage(): void {
     this.previousPage.emit();
-  }
-
-  onDeletePermanent(usuarioId: string, event: Event): void {
-    event.stopPropagation();
-    if (confirm('¿Estás seguro de que quieres borrar este usuario definitivamente?')) {
-      this.deletePermanent.emit(usuarioId);
-    }
   }
 
   isSelected(usuario: Usuario): boolean {
@@ -106,10 +98,6 @@ export class UsuariosListComponent {
         value: usuario.email || '-',
       },
       {
-        label: 'Password',
-        value: usuario.password || '-',
-      },
-      {
         label: 'Rol',
         value: usuario.rol || '-',
       },
@@ -119,7 +107,7 @@ export class UsuariosListComponent {
       },
       {
         label: 'Estado',
-        value: usuario.IsDeleted ? 'Eliminado' : 'Activo',
+        value: usuario.IsDeleted ? 'Desactivado' : 'Activo',
       },
       {
         label: 'ID',

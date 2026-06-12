@@ -4,13 +4,13 @@
       <p class="libros-list__eyebrow">Listado</p>
       <h2 class="libros-list__title">Libros</h2>
       <p class="libros-list__subtitle">
-        Consulta todos los libros no eliminados y selecciona uno para editarlo.
+        Consulta todos los libros, incluidos los desactivados, y selecciona uno para editarlo.
       </p>
       <input
         type="text"
         class="libros-list__search"
         [formControl]="searchBook"
-        placeholder="Buscar por título..."
+        placeholder="Buscar por título, ISBN, autor, categoría o estado..."
       />
     </div>
 
@@ -48,18 +48,8 @@
               class="libros-list__status"
               [class.libros-list__status--deleted]="libro.IsDeleted"
             >
-              {{ libro.IsDeleted ? 'Eliminado' : 'Activo' }}
+              {{ libro.IsDeleted ? 'Desactivado' : 'Activo' }}
             </span>
-
-            <button
-              *ngIf="isAdmin"
-              type="button"
-              class="libros-list__delete-permanent-btn"
-              (click)="onDeletePermanent(libro._id!, $event)"
-              title="Borrado definitivo"
-            >
-              Eliminar definitivamente
-            </button>
           </div>
         </div>
 

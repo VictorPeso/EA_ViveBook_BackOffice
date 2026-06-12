@@ -3,7 +3,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { Libro } from '../../../../Core/models/libro.model';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-libros-list',
@@ -29,14 +29,13 @@ export class LibrosListComponent {
   @Output() previousPage = new EventEmitter<void>();
 
   @Output() search = new EventEmitter<string>();
-  @Output() deletePermanent = new EventEmitter<string>();
   searchBook = new FormControl('');
   private destroy = new Subject<void>();
 
   ngOnInit(): void {
-    this.searchBook.valueChanges.subscribe((value) => {
-      this.search.emit(value ?? '');
-    });
+    this.searchBook.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
+      .subscribe((value) => this.search.emit(value ?? ''));
   }
 
   ngOnDestroy(): void {
@@ -62,13 +61,6 @@ export class LibrosListComponent {
 
   onPreviousPage(): void {
     this.previousPage.emit();
-  }
-
-  onDeletePermanent(libroId: string, event: Event): void {
-    event.stopPropagation();
-    if (confirm('¿Estás seguro de que quieres borrar este libro definitivamente?')) {
-      this.deletePermanent.emit(libroId);
-    }
   }
 
   isSelected(libro: Libro): boolean {
@@ -110,8 +102,20 @@ export class LibrosListComponent {
         value: this.getAuthorsDisplay(libro),
       },
       {
-        label: 'Estado',
-        value: libro.IsDeleted ? 'Eliminado' : 'Activo',
+        label: 'Tipo',
+        value: libro.type || '-',
+      },
+      {
+        label: 'Precio',
+        value: `${libro.precio ?? 0} €`,
+      },
+      {
+        label: 'Estado del libro',
+        value: libro.estado || '-',
+      },
+      {
+        label: 'Estado administrativo',
+        value: libro.IsDeleted ? 'Desactivado' : 'Activo',
       },
       {
         label: 'ID',

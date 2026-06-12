@@ -1,0 +1,33 @@
+<section class="retos-page">
+  <div class="retos-page__layout">
+    <aside class="retos-page__form-column">
+      <app-reto-form
+        [reto]="selected()"
+        [isSaving]="isSaving()"
+        [isDeleting]="isDeleting()"
+        [isCreating]="isCreating()"
+        [errorMessage]="errorMessage()"
+        [successMessage]="successMessage()"
+        (save)="onSave($event)"
+        (deactivate)="onDeactivate($event)"
+        (activate)="onActivate($event)"
+        (cancel)="onCancel()"
+      />
+    </aside>
+    <section class="retos-page__list-column">
+      <app-retos-list
+        [retos]="retos()"
+        [selectedId]="selected()?._id ?? null"
+        [isLoading]="isLoading()"
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalItems]="totalItems()"
+        [pageSize]="pageSize()"
+        (selectReto)="onSelect($event)"
+        (createNew)="onCreateNew()"
+        (search)="onSearch($event)"
+        (pageChange)="onPageChange($event)"
+      />
+    </section>
+  </div>
+</section>

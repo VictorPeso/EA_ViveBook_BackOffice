@@ -1,0 +1,79 @@
+<section class="reserva-form">
+  <header>
+    <p>Administración</p>
+    <h2>{{ isCreating ? 'Nueva reserva' : 'Editar reserva' }}</h2>
+  </header>
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <label>
+      Libro
+      <select formControlName="libro">
+        <option value="">Selecciona un libro</option>
+        <option *ngFor="let libro of libros" [value]="libro._id">
+          {{ libro.title }} · {{ libro.isbn }}
+        </option>
+      </select>
+    </label>
+    <label>
+      Solicitante
+      <select formControlName="usuarioSolicitante">
+        <option value="">Selecciona un usuario</option>
+        <option *ngFor="let user of usuarios" [value]="user._id">
+          {{ user.name }} · {{ user.email }}
+        </option>
+      </select>
+    </label>
+    <label>
+      Propietario
+      <select formControlName="propietario">
+        <option value="">Selecciona un usuario</option>
+        <option *ngFor="let user of usuarios" [value]="user._id">
+          {{ user.name }} · {{ user.email }}
+        </option>
+      </select>
+    </label>
+    <label>
+      Estado
+      <select formControlName="estado">
+        <option value="PENDIENTE">Pendiente</option>
+        <option value="ACEPTADA">Aceptada</option>
+        <option value="RECHAZADA">Rechazada</option>
+      </select>
+    </label>
+    <label>
+      Fecha de solicitud
+      <input type="datetime-local" formControlName="fechaSolicitud" />
+    </label>
+    <label>
+      Fecha límite
+      <input type="datetime-local" formControlName="fechaLimite" />
+    </label>
+    <p class="hint" *ngIf="isLoadingRelations">Cargando usuarios y libros...</p>
+    <p class="validation" *ngIf="form.touched && form.invalid">
+      Revisa los campos obligatorios. Solicitante y propietario deben ser diferentes.
+    </p>
+    <div class="actions">
+      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button>
+      <button type="submit" class="primary" [disabled]="isSaving || isDeleting">
+        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear reserva' : 'Guardar cambios' }}
+      </button>
+      <button
+        type="button"
+        class="danger"
+        *ngIf="!isCreating && !reserva?.IsDeleted"
+        (click)="onDelete()"
+      >
+        Desactivar
+      </button>
+      <button
+        type="button"
+        class="restore"
+        *ngIf="!isCreating && reserva?.IsDeleted"
+        (click)="onRestore()"
+      >
+        Restaurar
+      </button>
+    </div>
+  </form>
+</section>

@@ -1,50 +1,225 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { PostsService } from '../../../../Core/services/posts.service';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { finalize } from 'rxjs';
+
+import { Libro } from '../../../../Core/models/libro.model';
 import { Post } from '../../../../Core/models/post.model';
-import { ToastService } from '../../../../Core/services/toast.service';
-import { Toast } from '../../../../shared/components/toast/toast';
-import { PostModal } from '../../components/post-modal/post-modal';
-import { FormsModule } from '@angular/forms';
-import { PostIndividual } from '../../components/post-individual/post-individual';
+import { Usuario } from '../../../../Core/models/usuario.model';
+import { LibrosService } from '../../../../Core/services/libros.service';
+import { PostsService } from '../../../../Core/services/posts.service';
+import { UsuariosService } from '../../../../Core/services/usuarios.service';
+import { PostFormComponent } from '../../components/post-form/post-form.component';
+import { PostsListComponent } from '../../components/posts-list/posts-list.component';
 
 @Component({
   selector: 'app-posts-page',
-  imports: [Toast, PostModal, FormsModule, PostIndividual],
+  standalone: true,
+  imports: [CommonModule, PostFormComponent, PostsListComponent],
   templateUrl: './posts-page.html',
   styleUrl: './posts-page.css',
 })
 export class PostsPage implements OnInit {
-  service = inject(PostsService);
-  toast = inject(ToastService);
-  posts = signal<Post[]>([]);
-  // addText : string = '';
+  private readonly postsService = inject(PostsService);
+  private readonly librosService = inject(LibrosService);
+  private readonly usuariosService = inject(UsuariosService);
+  private readonly platformId = inject(PLATFORM_ID);
+
+  readonly posts = signal<Post[]>([]);
+  readonly libros = signal<Libro[]>([]);
+  readonly usuarios = signal<Usuario[]>([]);
+  readonly selectedPost = signal<Post | null>(null);
+  readonly isLoading = signal(false);
+  readonly isLoadingRelations = signal(false);
+  readonly isSaving = signal(false);
+  readonly isDeleting = signal(false);
+  readonly isCreating = signal(true);
+  readonly errorMessage = signal('');
+  readonly successMessage = signal('');
+  readonly currentPage = signal(1);
+  readonly pageSize = signal(5);
+  readonly totalItems = signal(0);
+  readonly totalPages = signal(1);
+  readonly search = signal('');
 
   ngOnInit(): void {
-    this.apiCall();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadRelations();
+      this.loadPosts();
+    }
   }
 
-  apiCall() {
-    this.service.readAllPost().subscribe({
-      next: (res) => {
-        this.posts.set(res);
+  loadPosts(selectedId?: string): void {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+    this.postsService
+      .getAdminPosts({
+        page: this.currentPage(),
+        limit: this.pageSize(),
+        search: this.search(),
+        includeDeleted: true,
+      })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (result) => {
+          this.posts.set(result.data);
+          this.totalItems.set(result.pagination.total);
+          this.totalPages.set(Math.max(result.pagination.totalPages, 1));
+          if (this.currentPage() > this.totalPages()) {
+            this.currentPage.set(this.totalPages());
+            this.loadPosts(selectedId);
+            return;
+          }
+          const currentId = selectedId ?? this.selectedPost()?._id;
+          if (currentId) {
+            const refreshed = result.data.find((post) => post._id === currentId);
+            if (refreshed) this.selectedPost.set(this.mapToForm(refreshed));
+            this.isCreating.set(false);
+            return;
+          }
+          this.selectedPost.set(this.createEmpty());
+          this.isCreating.set(true);
+        },
+        error: () => this.errorMessage.set('No se pudieron cargar los posts.'),
+      });
+  }
+
+  loadRelations(): void {
+    this.isLoadingRelations.set(true);
+    let pending = 2;
+    const done = () => {
+      pending -= 1;
+      if (pending === 0) this.isLoadingRelations.set(false);
+    };
+    this.librosService.getAdminLibros({ page: 1, limit: 100, includeDeleted: false }).subscribe({
+      next: (result) => this.libros.set(result.data),
+      error: () => this.errorMessage.set('No se pudieron cargar los libros.'),
+      complete: done,
+    });
+    this.usuariosService
+      .getAdminUsuarios({ page: 1, limit: 100, includeDeleted: false })
+      .subscribe({
+        next: (result) => this.usuarios.set(result.data),
+        error: () => this.errorMessage.set('No se pudieron cargar los usuarios.'),
+        complete: done,
+      });
+  }
+
+  onSearch(term: string): void {
+    this.search.set(term.trim());
+    this.currentPage.set(1);
+    this.loadPosts();
+  }
+
+  onCreateNew(): void {
+    this.selectedPost.set(this.createEmpty());
+    this.isCreating.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+  }
+
+  onSelect(post: Post): void {
+    this.selectedPost.set(this.mapToForm(post));
+    this.isCreating.set(false);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+  }
+
+  onSave(post: Post): void {
+    this.isSaving.set(true);
+    this.errorMessage.set('');
+    const creating = this.isCreating() || !post._id;
+    const payload = this.buildPayload(post);
+    const request = creating
+      ? this.postsService.createPost(payload as Post)
+      : this.postsService.updatePost(post._id as string, payload);
+    request.pipe(finalize(() => this.isSaving.set(false))).subscribe({
+      next: (saved) => {
+        this.selectedPost.set(this.mapToForm(saved));
+        this.isCreating.set(false);
+        this.successMessage.set(
+          creating ? 'Post creado correctamente.' : 'Post actualizado correctamente.',
+        );
+        this.loadPosts(saved._id);
       },
-      error: (err) => {
-        this.toast.show('error', err);
-      },
+      error: (error) =>
+        this.errorMessage.set(error?.error?.message || 'No se pudo guardar el post.'),
     });
   }
 
-  // onCrearBtnClick(){
-  //   if(this.addMode() === false) this.addMode.set(true);
-  //   else {
-  //     if(this.addText === '')
-  //       this.toast.show('error',"Isbn cannot be empty!");
-  //     else this.service.createPostByIsbn(,this.addText)
-  //       .subscribe({
-  //         next: (res) => {this.buffer.set(res)},
-  //         error: (err) => { console.log(err)}
-  //       });
-  //   }
+  onDelete(post: Post): void {
+    if (!post._id || !window.confirm('¿Desactivar este post?')) return;
+    this.isDeleting.set(true);
+    this.postsService
+      .softDeletePost(post._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: (updated) => {
+          this.selectedPost.set(this.mapToForm(updated));
+          this.successMessage.set('Post desactivado correctamente.');
+          this.loadPosts(updated._id);
+        },
+        error: () => this.errorMessage.set('No se pudo desactivar el post.'),
+      });
+  }
 
-  // }
+  onRestore(post: Post): void {
+    if (!post._id) return;
+    this.isDeleting.set(true);
+    this.postsService
+      .restorePost(post._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: (updated) => {
+          this.selectedPost.set(this.mapToForm(updated));
+          this.successMessage.set('Post restaurado correctamente.');
+          this.loadPosts(updated._id);
+        },
+        error: () => this.errorMessage.set('No se pudo restaurar el post.'),
+      });
+  }
+
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadPosts();
+  }
+
+  onCancel(): void {
+    this.selectedPost.set(this.createEmpty());
+    this.isCreating.set(true);
+  }
+
+  private createEmpty(): Post {
+    return {
+      description: '',
+      status: 'VENTA',
+      imageUrl: '',
+      IsDeleted: false,
+      ownerId: '',
+      bookId: '',
+      price: 0,
+    };
+  }
+
+  private mapToForm(post: Post): Post {
+    return {
+      ...post,
+      ownerId: typeof post.ownerId === 'string' ? post.ownerId : (post.ownerId._id ?? ''),
+      bookId: typeof post.bookId === 'string' ? post.bookId : (post.bookId._id ?? ''),
+      imageUrl: post.imageUrl ?? '',
+      IsDeleted: post.IsDeleted ?? false,
+    };
+  }
+
+  private buildPayload(post: Post): Partial<Post> {
+    return {
+      description: post.description.trim(),
+      status: post.status,
+      imageUrl: post.imageUrl?.trim() ?? '',
+      IsDeleted: post.IsDeleted ?? false,
+      ownerId: typeof post.ownerId === 'string' ? post.ownerId : (post.ownerId._id ?? ''),
+      bookId: typeof post.bookId === 'string' ? post.bookId : (post.bookId._id ?? ''),
+      price: Number(post.price),
+    };
+  }
 }

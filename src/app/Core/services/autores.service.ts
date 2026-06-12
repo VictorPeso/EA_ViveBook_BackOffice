@@ -1,8 +1,17 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Autor } from '../models/autor.model';
 import { environment } from '../../../environments/environment';
+import { ApiResponse, PaginatedResult } from '../models/api-response.model';
+
+export interface AdminAutoresQuery {
+  page: number;
+  limit: number;
+  search?: string;
+  includeDeleted?: boolean;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -11,42 +20,66 @@ export class AutoresService {
   private readonly http = inject(HttpClient);
 
   private readonly apiUrl = environment.apiUrl + '/autores';
+  private readonly adminApiUrl = environment.apiUrl + '/admin/autores';
 
   getAutores(): Observable<Autor[]> {
-    return this.http.get<Autor[]>(this.apiUrl);
+    return this.http
+      .get<ApiResponse<PaginatedResult<Autor>>>(this.apiUrl)
+      .pipe(map((response) => response.data.data));
   }
 
   getAllAutores(): Observable<Autor[]> {
-    return this.http.get<Autor[]>(`${this.apiUrl}/all`);
+    return this.http
+      .get<ApiResponse<PaginatedResult<Autor>>>(`${this.apiUrl}/all`)
+      .pipe(map((response) => response.data.data));
   }
 
   getAutorById(autorId: string): Observable<Autor> {
-    return this.http.get<Autor>(`${this.apiUrl}/${autorId}`);
+    return this.http
+      .get<ApiResponse<Autor>>(`${this.adminApiUrl}/${autorId}`)
+      .pipe(map((response) => response.data));
+  }
+
+  getAdminAutores(query: AdminAutoresQuery): Observable<PaginatedResult<Autor>> {
+    let params = new HttpParams()
+      .set('page', query.page)
+      .set('limit', query.limit)
+      .set('includeDeleted', query.includeDeleted ?? true);
+
+    if (query.search?.trim()) {
+      params = params.set('search', query.search.trim());
+    }
+
+    return this.http
+      .get<ApiResponse<PaginatedResult<Autor>>>(this.adminApiUrl, { params })
+      .pipe(map((response) => response.data));
   }
 
   createAutor(autor: Autor): Observable<Autor> {
-    return this.http.post<Autor>(this.apiUrl, autor);
+    return this.http
+      .post<ApiResponse<Autor>>(this.adminApiUrl, autor)
+      .pipe(map((response) => response.data));
   }
 
   updateAutor(autorId: string, autor: Partial<Autor>): Observable<Autor> {
-    return this.http.put<Autor>(`${this.apiUrl}/${autorId}`, autor);
+    return this.http
+      .put<ApiResponse<Autor>>(`${this.adminApiUrl}/${autorId}`, autor)
+      .pipe(map((response) => response.data));
   }
 
-  softDeleteAutor(autorId: string, autorActual: Autor): Observable<Autor> {
-    return this.http.put<Autor>(`${this.apiUrl}/${autorId}`, {
-      ...autorActual,
-      IsDeleted: true,
-    });
+  setAutorDeleted(autorId: string, IsDeleted: boolean): Observable<Autor> {
+    return this.http
+      .patch<ApiResponse<Autor>>(`${this.adminApiUrl}/${autorId}/status`, { IsDeleted })
+      .pipe(map((response) => response.data));
   }
 
-  restoreAutor(autorId: string, autorActual: Autor): Observable<Autor> {
-    return this.http.put<Autor>(`${this.apiUrl}/restore/${autorId}`, {
-      ...autorActual,
-      IsDeleted: false,
-    });
+  softDeleteAutor(autorId: string): Observable<Autor> {
+    return this.http
+      .delete<ApiResponse<Autor>>(`${this.adminApiUrl}/${autorId}`)
+      .pipe(map((response) => response.data));
   }
 
-  deleteAutor(autorId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${autorId}`);
+  restoreAutor(autorId: string): Observable<Autor> {
+    return this.setAutorDeleted(autorId, false);
   }
 }

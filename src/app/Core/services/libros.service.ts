@@ -1,8 +1,19 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Libro } from '../models/libro.model';
 import { environment } from '../../../environments/environment';
+import { ApiResponse, PaginatedResult } from '../models/api-response.model';
+
+export interface AdminLibrosQuery {
+  page: number;
+  limit: number;
+  search?: string;
+  includeDeleted?: boolean;
+  type?: Libro['type'];
+  estado?: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -11,50 +22,80 @@ export class LibrosService {
   private readonly http = inject(HttpClient);
 
   private readonly apiUrl = environment.apiUrl + '/libros';
+  private readonly adminApiUrl = environment.apiUrl + '/admin/libros';
 
   getLibros(): Observable<Libro[]> {
-    return this.http.get<Libro[]>(this.apiUrl);
+    return this.http
+      .get<ApiResponse<PaginatedResult<Libro>>>(this.apiUrl)
+      .pipe(map((response) => response.data.data));
   }
 
   getAllLibros(): Observable<Libro[]> {
-    return this.http.get<Libro[]>(`${this.apiUrl}/all`);
+    return this.http
+      .get<ApiResponse<PaginatedResult<Libro>>>(`${this.apiUrl}/all`)
+      .pipe(map((response) => response.data.data));
   }
 
   getLibroById(libroId: string): Observable<Libro> {
-    return this.http.get<Libro>(`${this.apiUrl}/${libroId}`);
+    return this.http
+      .get<ApiResponse<Libro>>(`${this.adminApiUrl}/${libroId}`)
+      .pipe(map((response) => response.data));
+  }
+
+  getAdminLibros(query: AdminLibrosQuery): Observable<PaginatedResult<Libro>> {
+    let params = new HttpParams()
+      .set('page', query.page)
+      .set('limit', query.limit)
+      .set('includeDeleted', query.includeDeleted ?? true);
+
+    if (query.search?.trim()) {
+      params = params.set('search', query.search.trim());
+    }
+
+    if (query.type) {
+      params = params.set('type', query.type);
+    }
+
+    if (query.estado?.trim()) {
+      params = params.set('estado', query.estado.trim());
+    }
+
+    return this.http
+      .get<ApiResponse<PaginatedResult<Libro>>>(this.adminApiUrl, { params })
+      .pipe(map((response) => response.data));
   }
 
   createLibro(libro: Libro): Observable<Libro> {
-    return this.http.post<Libro>(this.apiUrl, libro);
+    return this.http
+      .post<ApiResponse<Libro>>(this.adminApiUrl, libro)
+      .pipe(map((response) => response.data));
   }
 
   updateLibro(libroId: string, libro: Partial<Libro>): Observable<Libro> {
-    return this.http.put<Libro>(`${this.apiUrl}/${libroId}`, libro);
+    return this.http
+      .put<ApiResponse<Libro>>(`${this.adminApiUrl}/${libroId}`, libro)
+      .pipe(map((response) => response.data));
   }
 
   createLibroByIsbn(isbn: string): Observable<Libro> {
-    return this.http.post<Libro>(`${this.apiUrl}/isbn`, { isbn });
+    return this.http
+      .get<ApiResponse<Libro>>(`${this.apiUrl}/isbn/${encodeURIComponent(isbn)}`)
+      .pipe(map((response) => response.data));
   }
 
-  softDeleteLibro(libroId: string, libroActual: Libro): Observable<Libro> {
-    return this.http.put<Libro>(`${this.apiUrl}/${libroId}`, {
-      ...libroActual,
-      IsDeleted: true,
-    });
+  setLibroDeleted(libroId: string, IsDeleted: boolean): Observable<Libro> {
+    return this.http
+      .patch<ApiResponse<Libro>>(`${this.adminApiUrl}/${libroId}/status`, { IsDeleted })
+      .pipe(map((response) => response.data));
   }
 
-  restoreLibro(libroId: string, libroActual: Libro): Observable<Libro> {
-    return this.http.put<Libro>(`${this.apiUrl}/restore/${libroId}`, {
-      ...libroActual,
-      IsDeleted: false,
-    });
+  softDeleteLibro(libroId: string): Observable<Libro> {
+    return this.http
+      .delete<ApiResponse<Libro>>(`${this.adminApiUrl}/${libroId}`)
+      .pipe(map((response) => response.data));
   }
 
-  deleteLibro(libroId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${libroId}`);
+  restoreLibro(libroId: string): Observable<Libro> {
+    return this.setLibroDeleted(libroId, false);
   }
-
-  //   createLibroByIsbn(isbn: string) : Observable<Libro> {
-  //   return this.http.get<Libro>(`${this.apiUrl}/isbn/${isbn}`);
-  // }
 }

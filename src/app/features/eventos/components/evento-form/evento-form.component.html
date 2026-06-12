@@ -1,0 +1,60 @@
+<section class="evento-form">
+  <header>
+    <p>Formulario</p>
+    <h2>{{ isCreating ? 'Nuevo evento' : 'Editar evento' }}</h2>
+  </header>
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <label>Título<input formControlName="title" /></label>
+    <label>Descripción<textarea rows="4" formControlName="description"></textarea></label>
+    <label
+      >Creador<select formControlName="creator">
+        <option value="">Selecciona un usuario</option>
+        <option *ngFor="let user of usuarios" [value]="user._id">
+          {{ user.name }} · {{ user.email }}
+        </option>
+      </select></label
+    >
+    <label>Fecha del evento<input type="datetime-local" formControlName="eventDate" /></label>
+    <label>Dirección exacta<input formControlName="direccionExacta" /></label>
+    <div class="coordinates">
+      <label>Longitud<input type="number" step="any" formControlName="longitude" /></label
+      ><label>Latitud<input type="number" step="any" formControlName="latitude" /></label>
+    </div>
+    <fieldset>
+      <legend>Participantes</legend>
+      <span *ngIf="isLoadingUsuarios">Cargando usuarios...</span
+      ><label class="check" *ngFor="let user of usuarios"
+        ><input
+          type="checkbox"
+          [checked]="user._id ? selected(user._id) : false"
+          (change)="user._id && toggle(user._id, $any($event.target).checked)"
+        />{{ user.name }}</label
+      >
+    </fieldset>
+    <p class="validation" *ngIf="form.touched && form.invalid">
+      Revisa los campos obligatorios y las coordenadas.
+    </p>
+    <div class="actions">
+      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button
+      ><button type="submit" class="primary" [disabled]="isSaving || isDeleting">
+        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear evento' : 'Guardar cambios' }}</button
+      ><button
+        type="button"
+        class="danger"
+        *ngIf="!isCreating && !evento?.IsDeleted"
+        (click)="onDelete()"
+      >
+        Desactivar</button
+      ><button
+        type="button"
+        class="restore"
+        *ngIf="!isCreating && evento?.IsDeleted"
+        (click)="onRestore()"
+      >
+        Restaurar
+      </button>
+    </div>
+  </form>
+</section>

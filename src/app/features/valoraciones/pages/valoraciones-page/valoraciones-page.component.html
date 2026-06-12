@@ -1,0 +1,36 @@
+<section class="valoraciones-page">
+  <div class="valoraciones-page__layout">
+    <aside class="valoraciones-page__form-column">
+      <app-valoracion-form
+        [valoracion]="selected()"
+        [usuarios]="usuarios()"
+        [libros]="libros()"
+        [isLoadingRelations]="isLoadingRelations()"
+        [isSaving]="isSaving()"
+        [isDeleting]="isDeleting()"
+        [isCreating]="isCreating()"
+        [errorMessage]="errorMessage()"
+        [successMessage]="successMessage()"
+        (save)="onSave($event)"
+        (delete)="onDelete($event)"
+        (restore)="onRestore($event)"
+        (cancel)="onCancel()"
+      />
+    </aside>
+    <section class="valoraciones-page__list-column">
+      <app-valoraciones-list
+        [valoraciones]="valoraciones()"
+        [selectedId]="selected()?._id ?? null"
+        [isLoading]="isLoading()"
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalItems]="totalItems()"
+        [pageSize]="pageSize()"
+        (selectValoracion)="onSelect($event)"
+        (createNew)="onCreateNew()"
+        (search)="onSearch($event)"
+        (pageChange)="onPageChange($event)"
+      />
+    </section>
+  </div>
+</section>

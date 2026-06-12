@@ -3,7 +3,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { Autor } from '../../../../Core/models/autor.model';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-autores-list',
@@ -29,14 +29,15 @@ export class AutoresListComponent {
   @Output() previousPage = new EventEmitter<void>();
 
   @Output() search = new EventEmitter<string>();
-  @Output() deletePermanent = new EventEmitter<string>();
   searchAutor = new FormControl('');
   private destroy = new Subject<void>();
 
   ngOnInit(): void {
-    this.searchAutor.valueChanges.subscribe((value) => {
-      this.search.emit(value ?? '');
-    });
+    this.searchAutor.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
+      .subscribe((value) => {
+        this.search.emit(value ?? '');
+      });
   }
 
   ngOnDestroy(): void {
@@ -62,13 +63,6 @@ export class AutoresListComponent {
 
   onPreviousPage(): void {
     this.previousPage.emit();
-  }
-
-  onDeletePermanent(autorId: string, event: Event): void {
-    event.stopPropagation();
-    if (confirm('¿Estás seguro de que quieres borrar este autor definitivamente?')) {
-      this.deletePermanent.emit(autorId);
-    }
   }
 
   isSelected(autor: Autor): boolean {

@@ -1,18 +1,13 @@
 <section class="libro-form">
   <div class="libro-form__header">
-    <div>
-      <p class="libro-form__eyebrow">Formulario</p>
-      <h2 class="libro-form__title">{{ formTitle }}</h2>
-      <p class="libro-form__subtitle">
-        {{ formSubtitle }}
-      </p>
-    </div>
+    <p class="libro-form__eyebrow">Formulario</p>
+    <h2 class="libro-form__title">{{ formTitle }}</h2>
+    <p class="libro-form__subtitle">{{ formSubtitle }}</p>
   </div>
 
   <div class="libro-form__alert libro-form__alert--error" *ngIf="errorMessage">
     {{ errorMessage }}
   </div>
-
   <div class="libro-form__alert libro-form__alert--success" *ngIf="successMessage">
     {{ successMessage }}
   </div>
@@ -22,61 +17,70 @@
     <input type="hidden" formControlName="IsDeleted" />
 
     <div class="libro-form__grid">
-      <div class="libro-form__field">
-        <label class="libro-form__label" for="title">Título</label>
-        <input
-          id="title"
-          type="text"
-          class="libro-form__input"
-          formControlName="title"
-          placeholder="Introduce el título del libro"
-        />
+      <div class="libro-form__field libro-form__field--full">
+        <label class="libro-form__label" for="title">Título *</label>
+        <input id="title" class="libro-form__input" formControlName="title" />
         <p
           class="libro-form__error"
-          *ngIf="titleControl.touched && titleControl.errors?.['required']"
+          *ngIf="form.controls.title.touched && form.controls.title.invalid"
         >
-          El título es obligatorio para crear un libro.
-        </p>
-        <p
-          class="libro-form__error"
-          *ngIf="titleControl.touched && titleControl.errors?.['maxlength']"
-        >
-          El título es demasiado largo.
+          El título es obligatorio.
         </p>
       </div>
 
       <div class="libro-form__field">
-        <label class="libro-form__label" for="isbn">ISBN</label>
+        <label class="libro-form__label" for="isbn">ISBN *</label>
+        <input id="isbn" class="libro-form__input" formControlName="isbn" />
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="type">Tipo *</label>
+        <select id="type" class="libro-form__input" formControlName="type">
+          <option value="VENTA">Venta</option>
+          <option value="ALQUILER">Alquiler</option>
+        </select>
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="precio">Precio *</label>
         <input
-          id="isbn"
-          type="text"
+          id="precio"
+          type="number"
+          min="0"
+          step="0.01"
           class="libro-form__input"
-          formControlName="isbn"
-          placeholder="Introduce el ISBN"
+          formControlName="precio"
         />
-        <p
-          class="libro-form__error"
-          *ngIf="isbnControl.touched && isbnControl.errors?.['required']"
-        >
-          El ISBN es obligatorio para crear un libro.
-        </p>
-        <p
-          class="libro-form__error"
-          *ngIf="isbnControl.touched && isbnControl.errors?.['maxlength']"
-        >
-          El ISBN es demasiado largo.
-        </p>
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="estado">Estado *</label>
+        <input
+          id="estado"
+          class="libro-form__input"
+          formControlName="estado"
+          placeholder="DISPONIBLE"
+        />
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="autor">Autor descriptivo</label>
+        <input id="autor" class="libro-form__input" formControlName="autor" />
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="categoria">Categoría</label>
+        <input id="categoria" class="libro-form__input" formControlName="categoria" />
       </div>
 
       <div class="libro-form__field libro-form__field--full">
         <div class="libro-form__label-row">
-          <label class="libro-form__label">Autores</label>
-          <span class="libro-form__hint" *ngIf="isLoadingAutores"> Cargando autores... </span>
+          <label class="libro-form__label">Autores relacionados</label>
+          <span class="libro-form__hint" *ngIf="isLoadingAutores">Cargando autores...</span>
         </div>
-
         <div
           class="libro-form__authors"
-          *ngIf="!isLoadingAutores && autores.length > 0; else autoresEmptyState"
+          *ngIf="!isLoadingAutores && autores.length; else autoresEmpty"
         >
           <label
             class="libro-form__author-option"
@@ -88,21 +92,78 @@
               [checked]="autor._id ? isAuthorSelected(autor._id) : false"
               (change)="autor._id && onToggleAuthor(autor._id, $any($event.target).checked)"
             />
-            <span class="libro-form__author-name">
-              {{ autor.fullName }}
-            </span>
+            <span class="libro-form__author-name">{{ autor.fullName }}</span>
           </label>
         </div>
-
-        <ng-template #autoresEmptyState>
-          <div class="libro-form__empty-authors">No hay autores disponibles para asociar.</div>
+        <ng-template #autoresEmpty>
+          <div class="libro-form__empty-authors">No hay autores activos disponibles.</div>
         </ng-template>
-
-        <p class="libro-form__hint">
-          La selección de autores es opcional según la validación actual del backend.
-        </p>
       </div>
+
+      <div class="libro-form__field libro-form__field--full">
+        <label class="libro-form__label" for="imageUrl">URL de imagen</label>
+        <input id="imageUrl" type="url" class="libro-form__input" formControlName="imageUrl" />
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="owner">ID del propietario</label>
+        <input
+          id="owner"
+          class="libro-form__input"
+          formControlName="owner"
+          placeholder="ObjectId de 24 caracteres"
+        />
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="reservedBy">ID de quien reserva</label>
+        <input
+          id="reservedBy"
+          class="libro-form__input"
+          formControlName="reservedBy"
+          placeholder="ObjectId de 24 caracteres"
+        />
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="rentalStartDate">Inicio de alquiler</label>
+        <input
+          id="rentalStartDate"
+          type="datetime-local"
+          class="libro-form__input"
+          formControlName="rentalStartDate"
+        />
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="rentalEndDate">Fin de alquiler</label>
+        <input
+          id="rentalEndDate"
+          type="datetime-local"
+          class="libro-form__input"
+          formControlName="rentalEndDate"
+        />
+      </div>
+
+      <div class="libro-form__field">
+        <label class="libro-form__label" for="reservationExpiry">Caducidad de reserva</label>
+        <input
+          id="reservationExpiry"
+          type="datetime-local"
+          class="libro-form__input"
+          formControlName="reservationExpiry"
+        />
+      </div>
+
+      <label class="libro-form__author-option">
+        <input type="checkbox" class="libro-form__checkbox" formControlName="isReserved" />
+        <span class="libro-form__author-name">Libro reservado</span>
+      </label>
     </div>
+
+    <p class="libro-form__error" *ngIf="form.touched && form.invalid">
+      Revisa los campos obligatorios, las URLs y los identificadores de usuario.
+    </p>
 
     <div class="libro-form__actions">
       <button
@@ -113,10 +174,6 @@
       >
         Cancelar
       </button>
-      <div class="libro-form__button">
-        <app-libro-modal />
-      </div>
-
       <button
         type="submit"
         class="libro-form__button libro-form__button--primary"
@@ -124,34 +181,23 @@
       >
         {{ isSaving ? 'Guardando...' : isCreating ? 'Crear libro' : 'Guardar cambios' }}
       </button>
-
       <button
-        *ngIf="!isCreating && libro?._id"
+        *ngIf="!isCreating && libro?._id && !libro?.IsDeleted"
         type="button"
         class="libro-form__button libro-form__button--danger"
         (click)="onDelete()"
         [disabled]="isSaving || isDeleting"
       >
-        {{ isDeleting ? 'Eliminando...' : 'Marcar como eliminado' }}
+        {{ isDeleting ? 'Desactivando...' : 'Desactivar libro' }}
       </button>
-
       <button
-        *ngIf="!isCreating && libro?._id"
-        type="button"
-        class="libro-form__button libro-form__button--danger-outline"
-        (click)="onDeletePermanent()"
-        [disabled]="isSaving || isDeleting"
-      >
-        Eliminar definitivamente
-      </button>
-
-      <button
-        *ngIf="libro?.IsDeleted"
+        *ngIf="!isCreating && libro?._id && libro?.IsDeleted"
         type="button"
         class="libro-form__button libro-form__button--success"
-        (click)="onRestore($event, libro!)"
+        (click)="onRestore($event)"
+        [disabled]="isSaving || isDeleting"
       >
-        Restaurar Libro
+        {{ isDeleting ? 'Restaurando...' : 'Restaurar libro' }}
       </button>
     </div>
   </form>

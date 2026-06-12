@@ -1,0 +1,59 @@
+<section class="valoraciones-list">
+  <header>
+    <div>
+      <p>Moderación</p>
+      <h2>Valoraciones</h2>
+      <span>Consulta valoraciones activas y desactivadas.</span
+      ><input [formControl]="searchControl" placeholder="Buscar por comentario u operación..." />
+    </div>
+    <button (click)="createNew.emit()">+ Nueva valoración</button>
+  </header>
+  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
+  <div class="state" *ngIf="isLoading">Cargando valoraciones...</div>
+  <div class="state" *ngIf="!isLoading && !valoraciones.length">
+    No hay valoraciones disponibles.
+  </div>
+  <div class="items" *ngIf="!isLoading">
+    <article
+      *ngFor="let item of valoraciones"
+      [class.active]="item._id === selectedId"
+      [class.deleted]="item.IsDeleted"
+      (click)="selectValoracion.emit(item)"
+    >
+      <div class="title">
+        <h3>{{ item.puntuacion }} / 5 · {{ item.tipoOperacion }}</h3>
+        <span [class.inactive]="item.IsDeleted">{{
+          item.IsDeleted ? 'Desactivada' : 'Activa'
+        }}</span>
+      </div>
+      <p>{{ item.comentario || 'Sin comentario' }}</p>
+      <div class="fields">
+        <div>
+          <strong>Autor</strong><span>{{ user(item.usuarioAutor) }}</span>
+        </div>
+        <div>
+          <strong>Valorado</strong><span>{{ user(item.usuarioValorado) }}</span>
+        </div>
+        <div>
+          <strong>Libro</strong><span>{{ book(item.libro) }}</span>
+        </div>
+        <div>
+          <strong>Fecha</strong><span>{{ item.createdAt | date: 'short' }}</span>
+        </div>
+      </div>
+    </article>
+  </div>
+  <nav *ngIf="totalPages > 1">
+    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
+      Anterior</button
+    ><button
+      *ngFor="let page of pages"
+      [class.current]="page === currentPage"
+      (click)="pageChange.emit(page)"
+    >
+      {{ page }}</button
+    ><button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
+      Siguiente
+    </button>
+  </nav>
+</section>

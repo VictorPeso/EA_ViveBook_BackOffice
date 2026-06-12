@@ -75,13 +75,15 @@
       </div>
 
       <div class="usuario-form__field usuario-form__field--full">
-        <label class="usuario-form__label" for="password">Password</label>
+        <label class="usuario-form__label" for="password">
+          {{ isCreating ? 'Contraseña' : 'Nueva contraseña' }}
+        </label>
         <input
           id="password"
-          type="text"
+          type="password"
           class="usuario-form__input"
           formControlName="password"
-          placeholder="Introduce la contraseña"
+          [placeholder]="isCreating ? 'Introduce la contraseña' : 'Déjala vacía para conservarla'"
         />
         <p
           class="usuario-form__error"
@@ -102,6 +104,34 @@
           La contraseña es demasiado larga.
         </p>
       </div>
+
+      <div class="usuario-form__field">
+        <label class="usuario-form__label" for="rol">Rol</label>
+        <select id="rol" class="usuario-form__input" formControlName="rol">
+          <option value="User">User</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="usuario-form__field">
+        <label class="usuario-form__label" for="avatar">URL del avatar</label>
+        <input id="avatar" type="url" class="usuario-form__input" formControlName="avatar" />
+      </div>
+
+      <div class="usuario-form__field usuario-form__field--full">
+        <label class="usuario-form__label" for="description">Descripción</label>
+        <textarea
+          id="description"
+          class="usuario-form__input"
+          formControlName="description"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <label class="usuario-form__libro-option">
+        <input type="checkbox" class="usuario-form__checkbox" formControlName="hasSeenTutorial" />
+        <span class="usuario-form__libro-name">Ha completado el tutorial</span>
+      </label>
 
       <div class="usuario-form__field usuario-form__field--full">
         <div class="usuario-form__label-row">
@@ -158,32 +188,22 @@
       </button>
 
       <button
-        *ngIf="!isCreating && usuario?._id"
+        *ngIf="!isCreating && usuario?._id && !usuario?.IsDeleted"
         type="button"
         class="usuario-form__button usuario-form__button--danger"
         (click)="onDelete()"
         [disabled]="isSaving || isDeleting"
       >
-        {{ isDeleting ? 'Eliminando...' : 'Marcar como eliminado' }}
+        {{ isDeleting ? 'Desactivando...' : 'Desactivar usuario' }}
       </button>
 
       <button
-        *ngIf="!isCreating && usuario?._id"
-        type="button"
-        class="usuario-form__button usuario-form__button--danger-outline"
-        (click)="onDeletePermanent()"
-        [disabled]="isSaving || isDeleting"
-      >
-        Eliminar definitivamente
-      </button>
-
-      <button
-        *ngIf="usuario?.IsDeleted"
+        *ngIf="!isCreating && usuario?._id && usuario?.IsDeleted"
         type="button"
         class="usuario-form__button usuario-form__button--success"
         (click)="onRestore($event, usuario!)"
       >
-        Restaurar Usuario
+        {{ isDeleting ? 'Restaurando...' : 'Restaurar usuario' }}
       </button>
     </div>
   </form>

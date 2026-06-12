@@ -1,0 +1,61 @@
+<section class="reto-form">
+  <header>
+    <p>Administración</p>
+    <h2>{{ isCreating ? 'Nuevo reto' : 'Editar reto' }}</h2>
+  </header>
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <label>
+      Título
+      <input formControlName="title" maxlength="150" />
+    </label>
+    <label>
+      Descripción
+      <textarea formControlName="description" rows="4" maxlength="1000"></textarea>
+    </label>
+    <label>
+      Tipo
+      <select formControlName="type">
+        <option value="COMPRAR_LIBROS">Comprar libros</option>
+        <option value="ALQUILAR_LIBROS">Alquilar libros</option>
+        <option value="SEGUIR_USUARIOS">Seguir usuarios</option>
+        <option value="RECIBIR_VALORACIONES">Recibir valoraciones</option>
+        <option value="ASISTIR_EVENTOS">Asistir a eventos</option>
+        <option value="SUBIR_LIBROS">Subir libros</option>
+      </select>
+    </label>
+    <label>
+      Objetivo
+      <input type="number" min="1" formControlName="objetivo" />
+    </label>
+    <p class="hint" *ngIf="!isCreating">
+      Cambiar el objetivo actualiza los progresos existentes de los usuarios.
+    </p>
+    <p class="validation" *ngIf="form.touched && form.invalid">
+      Revisa el título, la descripción, el tipo y el objetivo.
+    </p>
+    <div class="actions">
+      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button>
+      <button type="submit" class="primary" [disabled]="isSaving || isDeleting">
+        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear reto' : 'Guardar cambios' }}
+      </button>
+      <button
+        type="button"
+        class="danger"
+        *ngIf="!isCreating && reto?.activo"
+        (click)="onDeactivate()"
+      >
+        Desactivar
+      </button>
+      <button
+        type="button"
+        class="restore"
+        *ngIf="!isCreating && !reto?.activo"
+        (click)="onActivate()"
+      >
+        Activar
+      </button>
+    </div>
+  </form>
+</section>

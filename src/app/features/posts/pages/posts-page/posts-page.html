@@ -1,71 +1,36 @@
-<div class="tabla">
-  <div class="toolbar">
-    <!-- <button class="primary-btn" (click)="onCrearBtnClick()">Crear</button> -->
-    <!-- @if (addMode()){
-        <input type="text" placeholder="ISBN-10">
-        } -->
-    <app-post-modal />
+<section class="posts-page">
+  <div class="posts-page__layout">
+    <aside class="posts-page__form-column">
+      <app-post-form
+        [post]="selectedPost()"
+        [libros]="libros()"
+        [usuarios]="usuarios()"
+        [isLoadingRelations]="isLoadingRelations()"
+        [isSaving]="isSaving()"
+        [isDeleting]="isDeleting()"
+        [isCreating]="isCreating()"
+        [errorMessage]="errorMessage()"
+        [successMessage]="successMessage()"
+        (save)="onSave($event)"
+        (delete)="onDelete($event)"
+        (restore)="onRestore($event)"
+        (cancel)="onCancel()"
+      />
+    </aside>
+    <section class="posts-page__list-column">
+      <app-posts-list
+        [posts]="posts()"
+        [selectedId]="selectedPost()?._id ?? null"
+        [isLoading]="isLoading()"
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalItems]="totalItems()"
+        [pageSize]="pageSize()"
+        (selectPost)="onSelect($event)"
+        (createNew)="onCreateNew()"
+        (search)="onSearch($event)"
+        (pageChange)="onPageChange($event)"
+      />
+    </section>
   </div>
-  <table>
-    <!-- <tr>
-      <th class="cell">_id</th>
-      <th class="cell">description</th>
-      <th class="cell">status</th>
-      <th class="cell">image</th>
-      <th class="cell">IsDeleted</th>
-      <th class="cell">ownerId</th>
-      <th class="cell">Book title</th>
-      <th class="cell">Actions</th>
-    </tr> -->
-    @for (item of posts(); track item._id) {
-      <app-post-individual [data]="item" />
-      <!-- <tr>
-        <td class="cell">{{ item._id }}</td>
-        <td class="cell">
-          @if (!editMode()  ){
-          
-            {{ item.description }}
-          }
-          @else {
-            <input type="text" [(ngModel)]="description">
-          }
-
-        </td>
-        <td class="cell">
-          @if (!editMode()  ){
-          
-            {{ item.status }}
-          }
-          @else {
-            <input type="text" [(ngModel)]="status">
-          }
-        </td>
-        <td class="cell">
-          @if (!editMode()  ){
-          
-            {{ item.imageUrl }}
-          }
-          @else {
-            <input type="text" [(ngModel)]="image">
-          }
-        </td>
-        <td class="cell">{{ item.IsDeleted }}</td>
-        <td class="cell">
-          @if (!editMode()  ){
-          
-            {{ item.ownerId }}
-          }
-          @else {
-            <input type="text" [(ngModel)]="ownerId">
-          }
-        </td>
-        <td class="cell">{{ item.bookId.title }}</td>
-        <td class="cell">
-          <button class="primary-btn" (click)="onEditBtnClick(item._id)">Editar</button>
-        <button class="primary-btn" (click)="onDeleteBtnClick(item._id)">Eliminar</button>
-        </td>
-      </tr> -->
-    }
-  </table>
-</div>
-<app-toast />
+</section>

@@ -3,7 +3,22 @@ import { inject, PLATFORM_ID } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 
-export const authGuard: CanActivateFn = (route, state) => {
+type JwtPayload = {
+  rol?: string;
+  exp?: number;
+};
+
+const readJwtPayload = (token: string): JwtPayload | null => {
+  try {
+    const encodedPayload = token.split('.')[1];
+    const normalizedPayload = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(normalizedPayload)) as JwtPayload;
+  } catch {
+    return null;
+  }
+};
+
+export const authGuard: CanActivateFn = () => {
   const platformId = inject(PLATFORM_ID);
 
   if (!isPlatformBrowser(platformId)) {
@@ -12,11 +27,14 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   const router = inject(Router);
   const token = localStorage.getItem('token');
+  const payload = token ? readJwtPayload(token) : null;
+  const isExpired = payload?.exp ? payload.exp * 1000 <= Date.now() : true;
 
-  if (token) {
+  if (token && payload?.rol === 'Admin' && !isExpired) {
     return true;
   }
 
-  router.navigate(['/auth']);
-  return false;
+  localStorage.removeItem('token');
+  localStorage.removeItem('rol');
+  return router.createUrlTree(['/auth']);
 };

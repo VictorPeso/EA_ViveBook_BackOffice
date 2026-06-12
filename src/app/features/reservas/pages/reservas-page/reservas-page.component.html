@@ -1,0 +1,36 @@
+<section class="reservas-page">
+  <div class="reservas-page__layout">
+    <aside class="reservas-page__form-column">
+      <app-reserva-form
+        [reserva]="selected()"
+        [usuarios]="usuarios()"
+        [libros]="libros()"
+        [isLoadingRelations]="isLoadingRelations()"
+        [isSaving]="isSaving()"
+        [isDeleting]="isDeleting()"
+        [isCreating]="isCreating()"
+        [errorMessage]="errorMessage()"
+        [successMessage]="successMessage()"
+        (save)="onSave($event)"
+        (delete)="onDelete($event)"
+        (restore)="onRestore($event)"
+        (cancel)="onCancel()"
+      />
+    </aside>
+    <section class="reservas-page__list-column">
+      <app-reservas-list
+        [reservas]="reservas()"
+        [selectedId]="selected()?._id ?? null"
+        [isLoading]="isLoading()"
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalItems]="totalItems()"
+        [pageSize]="pageSize()"
+        (selectReserva)="onSelect($event)"
+        (createNew)="onCreateNew()"
+        (search)="onSearch($event)"
+        (pageChange)="onPageChange($event)"
+      />
+    </section>
+  </div>
+</section>

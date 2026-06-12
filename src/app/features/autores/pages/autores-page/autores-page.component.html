@@ -11,7 +11,6 @@
           [successMessage]="successMessage()"
           (save)="onSaveAutor($event)"
           (delete)="onDeleteAutor($event)"
-          (deletePermanent)="onDeletePermanent($event._id!)"
           (cancel)="onCancelEdit()"
           (restoreAutor)="onRestore($event)"
         >
@@ -21,7 +20,7 @@
 
     <section class="autores-page__list-column" [style.grid-column]="isAdmin() ? '' : '1 / -1'">
       <app-autores-list
-        [autores]="paginatedAutores()"
+        [autores]="autores()"
         [selectedAutorId]="selectedAutor()?._id ?? null"
         [isLoading]="isLoading()"
         [isAdmin]="isAdmin()"
@@ -35,7 +34,6 @@
         (nextPage)="onNextPage()"
         (previousPage)="onPreviousPage()"
         (search)="onSearch($event)"
-        (deletePermanent)="onDeletePermanent($event)"
       >
       </app-autores-list>
     </section>

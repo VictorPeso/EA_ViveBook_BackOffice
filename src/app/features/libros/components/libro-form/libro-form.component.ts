@@ -3,7 +3,6 @@ import {
   EventEmitter,
   Input,
   OnChanges,
-  OnInit,
   Output,
   SimpleChanges,
   inject,
@@ -13,16 +12,15 @@ import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angula
 
 import { Autor } from '../../../../Core/models/autor.model';
 import { Libro } from '../../../../Core/models/libro.model';
-import { LibroModal } from '../libro-modal/libro-modal';
 
 @Component({
   selector: 'app-libro-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LibroModal],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './libro-form.component.html',
   styleUrl: './libro-form.component.css',
 })
-export class LibroFormComponent implements OnInit, OnChanges {
+export class LibroFormComponent implements OnChanges {
   private readonly fb = inject(FormBuilder);
 
   @Input() libro: Libro | null = null;
@@ -36,38 +34,33 @@ export class LibroFormComponent implements OnInit, OnChanges {
 
   @Output() save = new EventEmitter<Libro>();
   @Output() delete = new EventEmitter<Libro>();
-  @Output() deletePermanent = new EventEmitter<Libro>();
   @Output() cancel = new EventEmitter<void>();
   @Output() restoreLibro = new EventEmitter<Libro>();
 
   readonly form = this.fb.nonNullable.group({
     _id: [''],
-    title: ['', [Validators.maxLength(200)]],
-    isbn: ['', [Validators.maxLength(100)]],
+    title: ['', [Validators.required, Validators.maxLength(200)]],
+    isbn: ['', [Validators.required, Validators.maxLength(100)]],
+    autor: [''],
+    categoria: [''],
+    type: ['VENTA' as Libro['type'], Validators.required],
+    precio: [0, [Validators.required, Validators.min(0)]],
+    estado: ['DISPONIBLE', Validators.required],
+    owner: ['', Validators.pattern(/^[0-9a-fA-F]{24}$/)],
     IsDeleted: [false],
+    rentalStartDate: [''],
+    rentalEndDate: [''],
+    imageUrl: ['', Validators.pattern(/^https?:\/\/.+/i)],
+    isReserved: [false],
+    reservedBy: ['', Validators.pattern(/^[0-9a-fA-F]{24}$/)],
+    reservationExpiry: [''],
     authors: this.fb.array<string>([]),
   });
-
-  ngOnInit(): void {
-    this.applyModeValidators();
-  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['libro']) {
       this.patchForm(this.libro);
     }
-
-    if (changes['isCreating']) {
-      this.applyModeValidators();
-    }
-  }
-
-  get titleControl() {
-    return this.form.controls.title;
-  }
-
-  get isbnControl() {
-    return this.form.controls.isbn;
   }
 
   get authorsControl(): FormArray {
@@ -85,153 +78,113 @@ export class LibroFormComponent implements OnInit, OnChanges {
   }
 
   isAuthorSelected(authorId: string): boolean {
-    return this.authorsArrayValues.includes(authorId);
+    return this.authorsControl.getRawValue().includes(authorId);
   }
 
   onToggleAuthor(authorId: string, checked: boolean): void {
-    if (checked) {
-      if (!this.isAuthorSelected(authorId)) {
-        this.authorsControl.push(this.fb.control(authorId, { nonNullable: true }));
-      }
-    } else {
-      const index = this.authorsArrayValues.findIndex((id) => id === authorId);
+    const index = this.authorsControl.getRawValue().indexOf(authorId);
 
-      if (index >= 0) {
-        this.authorsControl.removeAt(index);
-      }
+    if (checked && index < 0) {
+      this.authorsControl.push(this.fb.control(authorId, { nonNullable: true }));
+    } else if (!checked && index >= 0) {
+      this.authorsControl.removeAt(index);
     }
-
-    this.authorsControl.markAsTouched();
-    this.authorsControl.updateValueAndValidity();
   }
 
   onSubmit(): void {
-    this.applyModeValidators();
-
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const rawValue = this.form.getRawValue();
-    const authorIds = this.getSafeAuthorIds(rawValue.authors);
-
-    const payload: Libro = {
-      _id: rawValue._id || undefined,
-      title: rawValue.title.trim(),
-      isbn: rawValue.isbn.trim(),
-      authors: authorIds,
-      IsDeleted: rawValue.IsDeleted ?? false,
-    };
-
-    this.save.emit(payload);
+    this.save.emit(this.buildCurrentLibroFromForm());
   }
 
   onDelete(): void {
     const currentLibro = this.buildCurrentLibroFromForm();
-
-    if (!currentLibro || !currentLibro._id) {
-      return;
-    }
-
-    this.delete.emit(currentLibro);
-  }
-
-  onDeletePermanent(): void {
-    const currentLibro = this.buildCurrentLibroFromForm();
-
-    if (!currentLibro || !currentLibro._id) {
-      return;
-    }
-
-    if (
-      confirm('¿Estás seguro de que quieres borrar este libro definitivamente de la base de datos?')
-    ) {
-      this.deletePermanent.emit(currentLibro);
-    }
+    if (currentLibro._id) this.delete.emit(currentLibro);
   }
 
   onCancel(): void {
     this.cancel.emit();
   }
-  onRestore(event: Event, libro: Libro): void {
+
+  onRestore(event: Event): void {
     event.stopPropagation();
-    this.restoreLibro.emit(libro);
+    const currentLibro = this.buildCurrentLibroFromForm();
+    if (currentLibro._id) this.restoreLibro.emit(currentLibro);
   }
 
   trackByAutorId(index: number, autor: Autor): string | number {
     return autor._id ?? index;
   }
 
-  private applyModeValidators(): void {
-    if (this.isCreating) {
-      this.titleControl.setValidators([Validators.required, Validators.maxLength(200)]);
-      this.isbnControl.setValidators([Validators.required, Validators.maxLength(100)]);
-    } else {
-      this.titleControl.setValidators([Validators.maxLength(200)]);
-      this.isbnControl.setValidators([Validators.maxLength(100)]);
-    }
-
-    this.titleControl.updateValueAndValidity({ emitEvent: false });
-    this.isbnControl.updateValueAndValidity({ emitEvent: false });
-  }
-
   private patchForm(libro: Libro | null): void {
-    const authorIds = this.extractAuthorIds(libro?.authors);
-
     this.form.reset({
       _id: libro?._id ?? '',
       title: libro?.title ?? '',
       isbn: libro?.isbn ?? '',
+      autor: libro?.autor ?? '',
+      categoria: libro?.categoria ?? '',
+      type: libro?.type ?? 'VENTA',
+      precio: libro?.precio ?? 0,
+      estado: libro?.estado ?? 'DISPONIBLE',
+      owner: typeof libro?.owner === 'string' ? libro.owner : (libro?.owner?._id ?? ''),
       IsDeleted: libro?.IsDeleted ?? false,
+      rentalStartDate: this.toDateTimeLocal(libro?.rentalStartDate),
+      rentalEndDate: this.toDateTimeLocal(libro?.rentalEndDate),
+      imageUrl: libro?.imageUrl ?? '',
+      isReserved: libro?.isReserved ?? false,
+      reservedBy:
+        typeof libro?.reservedBy === 'string' ? libro.reservedBy : (libro?.reservedBy?._id ?? ''),
+      reservationExpiry: this.toDateTimeLocal(libro?.reservationExpiry),
       authors: [],
     });
 
     this.authorsControl.clear();
-
-    authorIds.forEach((authorId) => {
+    this.extractAuthorIds(libro?.authors).forEach((authorId) => {
       this.authorsControl.push(this.fb.control(authorId, { nonNullable: true }));
     });
-
     this.form.markAsPristine();
     this.form.markAsUntouched();
-    this.authorsControl.updateValueAndValidity();
   }
 
-  private extractAuthorIds(authors: Libro['authors'] | undefined): string[] {
-    if (!Array.isArray(authors)) {
-      return [];
-    }
-
-    return authors
-      .map((author) => (typeof author === 'string' ? author : author._id))
-      .filter((authorId): authorId is string => !!authorId);
-  }
-
-  private buildCurrentLibroFromForm(): Libro | null {
-    const rawValue = this.form.getRawValue();
-    const authorIds = this.getSafeAuthorIds(rawValue.authors);
-
-    if (!rawValue._id && !rawValue.title.trim() && !rawValue.isbn.trim()) {
-      return null;
-    }
-
+  private buildCurrentLibroFromForm(): Libro {
+    const value = this.form.getRawValue();
     return {
-      _id: rawValue._id || undefined,
-      title: rawValue.title.trim(),
-      isbn: rawValue.isbn.trim(),
-      authors: authorIds,
-      IsDeleted: rawValue.IsDeleted ?? false,
+      _id: value._id || undefined,
+      title: value.title.trim(),
+      isbn: value.isbn.trim(),
+      autor: value.autor.trim(),
+      categoria: value.categoria.trim(),
+      authors: value.authors.filter((authorId): authorId is string => !!authorId),
+      type: value.type,
+      precio: Number(value.precio),
+      estado: value.estado.trim(),
+      owner: value.owner.trim() || undefined,
+      IsDeleted: value.IsDeleted,
+      rentalStartDate: value.rentalStartDate || undefined,
+      rentalEndDate: value.rentalEndDate || undefined,
+      imageUrl: value.imageUrl.trim(),
+      isReserved: value.isReserved,
+      reservedBy: value.reservedBy.trim() || undefined,
+      reservationExpiry: value.reservationExpiry || undefined,
     };
   }
 
-  private getSafeAuthorIds(values: Array<string | null | undefined>): string[] {
-    return values.filter(
-      (value): value is string => typeof value === 'string' && value.trim().length > 0,
-    );
+  private extractAuthorIds(authors: Libro['authors'] | undefined): string[] {
+    return Array.isArray(authors)
+      ? authors
+          .map((author) => (typeof author === 'string' ? author : author._id))
+          .filter((id): id is string => !!id)
+      : [];
   }
 
-  private get authorsArrayValues(): string[] {
-    return this.authorsControl.getRawValue() as string[];
+  private toDateTimeLocal(value: string | null | undefined): string {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const offset = date.getTimezoneOffset() * 60_000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
   }
 }

@@ -4,13 +4,13 @@
       <p class="usuarios-list__eyebrow">Listado</p>
       <h2 class="usuarios-list__title">Usuarios</h2>
       <p class="usuarios-list__subtitle">
-        Consulta todos los usuarios no eliminados y selecciona uno para editarlo.
+        Consulta todos los usuarios, incluidos los desactivados, y selecciona uno para editarlo.
       </p>
       <input
         type="text"
         class="usuarios-list__search"
         [formControl]="searchUsuario"
-        placeholder="Buscar por nombre..."
+        placeholder="Buscar por nombre, email o descripción..."
       />
     </div>
 
@@ -55,18 +55,8 @@
               class="usuarios-list__status"
               [class.usuarios-list__status--deleted]="usuario.IsDeleted"
             >
-              {{ usuario.IsDeleted ? 'Eliminado' : 'Activo' }}
+              {{ usuario.IsDeleted ? 'Desactivado' : 'Activo' }}
             </span>
-
-            <button
-              *ngIf="isAdmin"
-              type="button"
-              class="usuarios-list__delete-permanent-btn"
-              (click)="onDeletePermanent(usuario._id!, $event)"
-              title="Borrado definitivo"
-            >
-              Eliminar definitivamente
-            </button>
           </div>
         </div>
 

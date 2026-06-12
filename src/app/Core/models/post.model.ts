@@ -1,18 +1,17 @@
 import { Libro } from './libro.model';
+import { Usuario } from './usuario.model';
 
-export enum PostStatus {
-  'VENTA',
-  'ALQUILER',
-  'NO_DISPONIBLE',
-}
+export type PostStatus = 'VENTA' | 'ALQUILER' | 'NO_DISPONIBLE';
 
 export interface Post {
-  _id: string;
+  _id?: string;
   description: string;
-  status: string; //PostStatus; // nunca he probado a hacer un enum en typescript
-  imageUrl?: string; // opcional, si no sube nada entonces le ponemos un imagen default
+  status: PostStatus;
+  imageUrl?: string | null;
   IsDeleted?: boolean;
-  ownerId: string;
-  bookId: Libro;
+  ownerId: string | Usuario;
+  bookId: string | Libro;
   price: number;
+  createdAt?: string;
+  updatedAt?: string;
 }

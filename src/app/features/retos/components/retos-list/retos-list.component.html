@@ -1,0 +1,51 @@
+<section class="retos-list">
+  <header>
+    <div>
+      <p>Administración</p>
+      <h2>Retos</h2>
+      <span>Gestiona el catálogo de retos activos e inactivos.</span>
+      <input [formControl]="searchControl" placeholder="Buscar por título, descripción o tipo..." />
+    </div>
+    <button (click)="createNew.emit()">+ Nuevo reto</button>
+  </header>
+  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
+  <div class="state" *ngIf="isLoading">Cargando retos...</div>
+  <div class="state" *ngIf="!isLoading && !retos.length">No hay retos disponibles.</div>
+  <div class="items" *ngIf="!isLoading">
+    <article
+      *ngFor="let item of retos"
+      [class.active]="item._id === selectedId"
+      [class.deleted]="!item.activo"
+      (click)="selectReto.emit(item)"
+    >
+      <div class="title">
+        <h3>{{ item.title }}</h3>
+        <span [class.inactive]="!item.activo">{{ item.activo ? 'Activo' : 'Inactivo' }}</span>
+      </div>
+      <p>{{ item.description }}</p>
+      <div class="fields">
+        <div>
+          <strong>Tipo</strong><span>{{ typeLabel(item.type) }}</span>
+        </div>
+        <div>
+          <strong>Objetivo</strong><span>{{ item.objetivo }}</span>
+        </div>
+      </div>
+    </article>
+  </div>
+  <nav *ngIf="totalPages > 1">
+    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
+      Anterior
+    </button>
+    <button
+      *ngFor="let page of pages"
+      [class.current]="page === currentPage"
+      (click)="pageChange.emit(page)"
+    >
+      {{ page }}
+    </button>
+    <button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
+      Siguiente
+    </button>
+  </nav>
+</section>

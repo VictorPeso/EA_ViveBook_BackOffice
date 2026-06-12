@@ -48,10 +48,56 @@ export const routes: Routes = [
     title: 'BackOffice - Usuarios',
   },
   {
+    path: 'librerias',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/librerias/pages/librerias-page/librerias-page.component').then(
+        (m) => m.LibreriasPageComponent,
+      ),
+    title: 'BackOffice - Librerías',
+  },
+  {
     path: 'posts',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/posts/pages/posts-page/posts-page').then((m) => m.PostsPage),
     title: 'Posts',
+  },
+  {
+    path: 'eventos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/eventos/pages/eventos-page/eventos-page.component').then(
+        (m) => m.EventosPageComponent,
+      ),
+    title: 'BackOffice - Eventos',
+  },
+  {
+    path: 'valoraciones',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/valoraciones/pages/valoraciones-page/valoraciones-page.component').then(
+        (m) => m.ValoracionesPageComponent,
+      ),
+    title: 'BackOffice - Valoraciones',
+  },
+  {
+    path: 'reservas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/reservas/pages/reservas-page/reservas-page.component').then(
+        (m) => m.ReservasPageComponent,
+      ),
+    title: 'BackOffice - Reservas',
+  },
+  {
+    path: 'retos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/retos/pages/retos-page/retos-page.component').then(
+        (m) => m.RetosPageComponent,
+      ),
+    title: 'BackOffice - Retos',
   },
   {
     path: 'matomo',

@@ -1,0 +1,34 @@
+<section class="librerias-page">
+  <div class="librerias-page__layout">
+    <aside class="librerias-page__form-column">
+      <app-libreria-form
+        [libreria]="selectedLibreria()"
+        [isSaving]="isSaving()"
+        [isDeleting]="isDeleting()"
+        [isCreating]="isCreating()"
+        [errorMessage]="errorMessage()"
+        [successMessage]="successMessage()"
+        (save)="onSave($event)"
+        (delete)="onDelete($event)"
+        (restore)="onRestore($event)"
+        (cancel)="onCancel()"
+      />
+    </aside>
+
+    <section class="librerias-page__list-column">
+      <app-librerias-list
+        [librerias]="librerias()"
+        [selectedId]="selectedLibreria()?._id ?? null"
+        [isLoading]="isLoading()"
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalItems]="totalItems()"
+        [pageSize]="pageSize()"
+        (selectLibreria)="onSelect($event)"
+        (createNew)="onCreateNew()"
+        (search)="onSearch($event)"
+        (pageChange)="onPageChange($event)"
+      />
+    </section>
+  </div>
+</section>

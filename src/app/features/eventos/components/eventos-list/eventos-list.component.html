@@ -1,0 +1,59 @@
+<section class="eventos-list">
+  <header>
+    <div>
+      <p>Listado</p>
+      <h2>Eventos</h2>
+      <span>Consulta eventos activos, pasados y desactivados.</span
+      ><input
+        [formControl]="searchControl"
+        placeholder="Buscar por título, descripción o dirección..."
+      />
+    </div>
+    <button (click)="createNew.emit()">+ Nuevo evento</button>
+  </header>
+  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
+  <div class="state" *ngIf="isLoading">Cargando eventos...</div>
+  <div class="state" *ngIf="!isLoading && !eventos.length">No hay eventos disponibles.</div>
+  <div class="items" *ngIf="!isLoading">
+    <article
+      *ngFor="let evento of eventos"
+      [class.active]="evento._id === selectedId"
+      [class.deleted]="evento.IsDeleted"
+      (click)="selectEvento.emit(evento)"
+    >
+      <div class="title">
+        <h3>{{ evento.title }}</h3>
+        <span [class.inactive]="evento.IsDeleted">{{
+          evento.IsDeleted ? 'Desactivado' : 'Activo'
+        }}</span>
+      </div>
+      <div class="fields">
+        <div>
+          <strong>Fecha</strong><span>{{ evento.eventDate | date: 'medium' }}</span>
+        </div>
+        <div>
+          <strong>Creador</strong><span>{{ creator(evento) }}</span>
+        </div>
+        <div>
+          <strong>Dirección</strong><span>{{ evento.direccionExacta }}</span>
+        </div>
+        <div>
+          <strong>Participantes</strong><span>{{ evento.participant.length }}</span>
+        </div>
+      </div>
+    </article>
+  </div>
+  <nav *ngIf="totalPages > 1">
+    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
+      Anterior</button
+    ><button
+      *ngFor="let page of pages"
+      [class.current]="page === currentPage"
+      (click)="pageChange.emit(page)"
+    >
+      {{ page }}</button
+    ><button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
+      Siguiente
+    </button>
+  </nav>
+</section>

@@ -35,7 +35,7 @@ export class LoginComponent {
         this.isLoading = false;
         localStorage.removeItem('token');
         this.authService.isAuthenticated.set(false);
-        alert('Error: ' + (err.error || 'Credenciales incorrectas'));
+        alert('Error: ' + (err?.error?.message || err?.message || 'Credenciales incorrectas'));
       },
     });
   }

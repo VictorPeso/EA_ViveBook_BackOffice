@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Autor } from '../../../../Core/models/autor.model';
@@ -16,6 +16,7 @@ import { AutoresListComponent } from '../../components/autores-list/autores-list
 })
 export class AutoresPageComponent implements OnInit {
   private readonly autoresService = inject(AutoresService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   readonly autores = signal<Autor[]>([]);
   readonly selectedAutor = signal<Autor | null>(null);
@@ -24,49 +25,27 @@ export class AutoresPageComponent implements OnInit {
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
   readonly isCreating = signal(true);
-
-  readonly userRol = signal<string>(localStorage.getItem('rol') || 'User');
-  readonly isAdmin = computed(() => this.userRol() === 'Admin');
+  readonly isAdmin = signal(true);
 
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
 
   readonly currentPage = signal(1);
   readonly pageSize = signal(5);
-
-  readonly totalItems = computed(() => this.filteredAutores().length);
-
-  readonly totalPages = computed(() => {
-    const total = Math.ceil(this.totalItems() / this.pageSize());
-    return total > 0 ? total : 1;
-  });
-
-  readonly paginatedAutores = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize();
-    const end = start + this.pageSize();
-    return this.filteredAutores().slice(start, end);
-  });
-
+  readonly totalItems = signal(0);
+  readonly totalPages = signal(1);
   readonly searchAutor = signal('');
 
-  readonly filteredAutores = computed(() => {
-    const term = this.searchAutor().toLowerCase().trim();
-    const allAutores = this.autores();
-
-    if (!term) {
-      return allAutores;
-    }
-
-    return allAutores.filter((autor) => autor.fullName?.toLowerCase().includes(term));
-  });
-
   onSearch(term: string): void {
-    this.searchAutor.set(term);
+    this.searchAutor.set(term.trim());
     this.currentPage.set(1);
+    this.loadAutores();
   }
 
   ngOnInit(): void {
-    this.loadAutores();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadAutores();
+    }
   }
 
   loadAutores(selectedAutorId?: string): void {
@@ -74,22 +53,33 @@ export class AutoresPageComponent implements OnInit {
     this.errorMessage.set('');
 
     this.autoresService
-      .getAllAutores()
+      .getAdminAutores({
+        page: this.currentPage(),
+        limit: this.pageSize(),
+        search: this.searchAutor(),
+        includeDeleted: true,
+      })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (autores) => {
-          const safeAutores = Array.isArray(autores) ? autores : [];
+        next: (result) => {
+          const safeAutores = result.data;
           this.autores.set(safeAutores);
+          this.totalItems.set(result.pagination.total);
+          this.totalPages.set(Math.max(result.pagination.totalPages, 1));
 
-          this.ensureValidPage();
+          if (this.currentPage() > this.totalPages()) {
+            this.currentPage.set(this.totalPages());
+            this.loadAutores(selectedAutorId);
+            return;
+          }
 
           if (selectedAutorId) {
             const autorRecienAfectado =
               safeAutores.find((autor) => autor._id === selectedAutorId) ?? null;
 
-            this.selectedAutor.set(
-              autorRecienAfectado ? this.mapAutorToFormValue(autorRecienAfectado) : null,
-            );
+            if (autorRecienAfectado) {
+              this.selectedAutor.set(this.mapAutorToFormValue(autorRecienAfectado));
+            }
             this.isCreating.set(false);
             return;
           }
@@ -100,14 +90,8 @@ export class AutoresPageComponent implements OnInit {
             const refreshedSelectedAutor =
               safeAutores.find((autor) => autor._id === selectedId) ?? null;
 
-            this.selectedAutor.set(
-              refreshedSelectedAutor
-                ? this.mapAutorToFormValue(refreshedSelectedAutor)
-                : this.createEmptyAutor(),
-            );
-
-            if (!refreshedSelectedAutor) {
-              this.isCreating.set(true);
+            if (refreshedSelectedAutor) {
+              this.selectedAutor.set(this.mapAutorToFormValue(refreshedSelectedAutor));
             }
 
             return;
@@ -151,6 +135,7 @@ export class AutoresPageComponent implements OnInit {
         .subscribe({
           next: (createdAutor) => {
             this.isCreating.set(false);
+            this.selectedAutor.set(this.mapAutorToFormValue(createdAutor));
             this.successMessage.set('Autor creado correctamente.');
 
             if (createdAutor._id) {
@@ -180,6 +165,7 @@ export class AutoresPageComponent implements OnInit {
       .subscribe({
         next: (updatedAutor) => {
           this.isCreating.set(false);
+          this.selectedAutor.set(this.mapAutorToFormValue(updatedAutor));
           this.successMessage.set('Autor actualizado correctamente.');
 
           if (updatedAutor._id) {
@@ -217,9 +203,7 @@ export class AutoresPageComponent implements OnInit {
     this.successMessage.set('');
 
     this.autoresService
-      .updateAutor(autor._id, {
-        IsDeleted: true,
-      })
+      .softDeleteAutor(autor._id)
       .pipe(finalize(() => this.isDeleting.set(false)))
       .subscribe({
         next: () => {
@@ -239,26 +223,6 @@ export class AutoresPageComponent implements OnInit {
       });
   }
 
-  onDeletePermanent(autorId: string): void {
-    this.isLoading.set(true);
-    this.errorMessage.set('');
-    this.successMessage.set('');
-
-    this.autoresService
-      .deleteAutor(autorId)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: () => {
-          this.successMessage.set('Autor eliminado permanentemente.');
-          this.loadAutores();
-        },
-        error: (error) => {
-          console.error('Error al eliminar permanentemente:', error);
-          this.errorMessage.set('Error al eliminar permanentemente el autor.');
-        },
-      });
-  }
-
   onCancelEdit(): void {
     this.errorMessage.set('');
     this.successMessage.set('');
@@ -271,12 +235,14 @@ export class AutoresPageComponent implements OnInit {
 
     this.isLoading.set(true);
     this.autoresService
-      .restoreAutor(autor._id, autor)
+      .restoreAutor(autor._id)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: () => {
+        next: (updatedAutor) => {
+          this.selectedAutor.set(this.mapAutorToFormValue(updatedAutor));
+          this.isCreating.set(false);
           this.successMessage.set('Autor restaurado con éxito');
-          this.loadAutores(autor._id);
+          this.loadAutores(updatedAutor._id);
         },
         error: () => this.errorMessage.set('Error al restaurar el autor.'),
       });
@@ -288,6 +254,7 @@ export class AutoresPageComponent implements OnInit {
     }
 
     this.currentPage.set(page);
+    this.loadAutores();
   }
 
   onNextPage(): void {
@@ -300,16 +267,6 @@ export class AutoresPageComponent implements OnInit {
 
   trackByAutorId(index: number, autor: Autor): string | number {
     return autor._id ?? index;
-  }
-
-  private ensureValidPage(): void {
-    if (this.currentPage() > this.totalPages()) {
-      this.currentPage.set(this.totalPages());
-    }
-
-    if (this.currentPage() < 1) {
-      this.currentPage.set(1);
-    }
   }
 
   private createEmptyAutor(): Autor {

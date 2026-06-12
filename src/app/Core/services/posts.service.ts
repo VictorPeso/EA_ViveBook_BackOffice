@@ -1,38 +1,58 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
-import { Post } from '../models/post.model';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, map } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root',
-})
+import { environment } from '../../../environments/environment';
+import { ApiResponse, PaginatedResult } from '../models/api-response.model';
+import { Post, PostStatus } from '../models/post.model';
+
+export interface AdminPostsQuery {
+  page: number;
+  limit: number;
+  search?: string;
+  includeDeleted?: boolean;
+  status?: PostStatus;
+}
+
+@Injectable({ providedIn: 'root' })
 export class PostsService {
   private readonly http = inject(HttpClient);
+  private readonly adminApiUrl = environment.apiUrl + '/admin/posts';
 
-  private readonly apiUrl = environment.apiUrl + '/posts';
+  getAdminPosts(query: AdminPostsQuery): Observable<PaginatedResult<Post>> {
+    let params = new HttpParams()
+      .set('page', query.page)
+      .set('limit', query.limit)
+      .set('includeDeleted', query.includeDeleted ?? true);
+    if (query.search?.trim()) params = params.set('search', query.search.trim());
+    if (query.status) params = params.set('status', query.status);
 
-  createPost(object: Post): Observable<Post> {
-    return this.http.post<Post>(this.apiUrl, object);
+    return this.http
+      .get<ApiResponse<PaginatedResult<Post>>>(this.adminApiUrl, { params })
+      .pipe(map((response) => response.data));
   }
 
-  readAllPost(): Observable<Post[]> {
-    return this.http.get<Post[]>(this.apiUrl);
+  createPost(post: Post): Observable<Post> {
+    return this.http
+      .post<ApiResponse<Post>>(this.adminApiUrl, post)
+      .pipe(map((response) => response.data));
   }
 
-  readPostById(id: string): Observable<Post> {
-    return this.http.get<Post>(` ${this.apiUrl}/${id}`);
+  updatePost(id: string, post: Partial<Post>): Observable<Post> {
+    return this.http
+      .put<ApiResponse<Post>>(`${this.adminApiUrl}/${id}`, post)
+      .pipe(map((response) => response.data));
   }
 
-  updatePost(id: string, data: Partial<Post>): Observable<Post> {
-    return this.http.put<Post>(`${this.apiUrl}/${id}`, data);
+  softDeletePost(id: string): Observable<Post> {
+    return this.http
+      .delete<ApiResponse<Post>>(`${this.adminApiUrl}/${id}`)
+      .pipe(map((response) => response.data));
   }
 
-  deletePost(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
-  createPostByIsbn(data: Partial<Post>, isbn: string): Observable<Post> {
-    return this.http.post<Post>(`${this.apiUrl}/${isbn}`, data);
+  restorePost(id: string): Observable<Post> {
+    return this.http
+      .patch<ApiResponse<Post>>(`${this.adminApiUrl}/${id}/status`, { IsDeleted: false })
+      .pipe(map((response) => response.data));
   }
 }

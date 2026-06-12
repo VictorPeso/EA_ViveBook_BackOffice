@@ -1,0 +1,65 @@
+<section class="post-form">
+  <header>
+    <p>Formulario</p>
+    <h2>{{ isCreating ? 'Nuevo post' : 'Editar post' }}</h2>
+  </header>
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <label>Descripción<textarea rows="4" formControlName="description"></textarea></label>
+    <label
+      >Estado
+      <select formControlName="status">
+        <option value="VENTA">Venta</option>
+        <option value="ALQUILER">Alquiler</option>
+        <option value="NO_DISPONIBLE">No disponible</option>
+      </select>
+    </label>
+    <label>Precio<input type="number" min="0" step="0.01" formControlName="price" /></label>
+    <label>Imagen<input type="url" formControlName="imageUrl" /></label>
+    <label
+      >Propietario
+      <select formControlName="ownerId">
+        <option value="">Selecciona un usuario</option>
+        <option *ngFor="let usuario of usuarios" [value]="usuario._id">
+          {{ usuario.name }} · {{ usuario.email }}
+        </option>
+      </select>
+    </label>
+    <label
+      >Libro
+      <select formControlName="bookId">
+        <option value="">Selecciona un libro</option>
+        <option *ngFor="let libro of libros" [value]="libro._id">
+          {{ libro.title }} · {{ libro.isbn }}
+        </option>
+      </select>
+    </label>
+    <p class="hint" *ngIf="isLoadingRelations">Cargando usuarios y libros...</p>
+    <p class="validation" *ngIf="form.touched && form.invalid">
+      Revisa los campos obligatorios, precio e imagen.
+    </p>
+    <div class="actions">
+      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button>
+      <button type="submit" class="primary" [disabled]="isSaving || isDeleting">
+        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear post' : 'Guardar cambios' }}
+      </button>
+      <button
+        type="button"
+        class="danger"
+        *ngIf="!isCreating && !post?.IsDeleted"
+        (click)="onDelete()"
+      >
+        Desactivar
+      </button>
+      <button
+        type="button"
+        class="restore"
+        *ngIf="!isCreating && post?.IsDeleted"
+        (click)="onRestore()"
+      >
+        Restaurar
+      </button>
+    </div>
+  </form>
+</section>

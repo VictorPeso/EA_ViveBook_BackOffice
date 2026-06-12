@@ -1,16 +1,14 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Autor } from '../../../../Core/models/autor.model';
-import { Libro } from '../../../../Core/models/libro.model';
+import { Libro, UsuarioRef } from '../../../../Core/models/libro.model';
 import { AutoresService } from '../../../../Core/services/autores.service';
 import { LibrosService } from '../../../../Core/services/libros.service';
 import { LibroFormComponent } from '../../components/libro-form/libro-form.component';
 import { LibrosListComponent } from '../../components/libros-list/libros-list.component';
-import { LibroModal } from '../../components/libro-modal/libro-modal';
 import { Toast } from '../../../../shared/components/toast/toast';
-import { ToastService } from '../../../../Core/services/toast.service';
 
 @Component({
   selector: 'app-libros-page',
@@ -22,61 +20,35 @@ import { ToastService } from '../../../../Core/services/toast.service';
 export class LibrosPageComponent implements OnInit {
   private readonly librosService = inject(LibrosService);
   private readonly autoresService = inject(AutoresService);
-  private toastService = inject(ToastService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   readonly libros = signal<Libro[]>([]);
   readonly autores = signal<Autor[]>([]);
   readonly selectedLibro = signal<Libro | null>(null);
-
   readonly isLoading = signal(false);
   readonly isLoadingAutores = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
   readonly isCreating = signal(true);
-
-  readonly userRol = signal<string>(localStorage.getItem('rol') || 'User');
-  readonly isAdmin = computed(() => this.userRol() === 'Admin');
-
+  readonly isAdmin = signal(true);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
-
   readonly currentPage = signal(1);
   readonly pageSize = signal(5);
-
-  readonly totalItems = computed(() => this.filteredLibros().length);
-
-  readonly totalPages = computed(() => {
-    const total = Math.ceil(this.totalItems() / this.pageSize());
-    return total > 0 ? total : 1;
-  });
-
-  readonly paginatedLibros = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize();
-    const end = start + this.pageSize();
-    return this.filteredLibros().slice(start, end);
-  });
-
+  readonly totalItems = signal(0);
+  readonly totalPages = signal(1);
   readonly searchBook = signal('');
 
-  readonly filteredLibros = computed(() => {
-    const term = this.searchBook().toLowerCase().trim();
-    const allLibros = this.libros();
-
-    if (!term) return allLibros;
-
-    return allLibros.filter(
-      (libro) =>
-        libro.title?.toLowerCase().includes(term) || libro.isbn?.toLowerCase().includes(term),
-    );
-  });
-
-  onSearch(term: string): void {
-    this.searchBook.set(term);
-    this.currentPage.set(1);
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadAutores();
+      this.loadLibros();
+    }
   }
 
-  ngOnInit(): void {
-    this.loadAutores();
+  onSearch(term: string): void {
+    this.searchBook.set(term.trim());
+    this.currentPage.set(1);
     this.loadLibros();
   }
 
@@ -85,42 +57,34 @@ export class LibrosPageComponent implements OnInit {
     this.errorMessage.set('');
 
     this.librosService
-      .getAllLibros()
+      .getAdminLibros({
+        page: this.currentPage(),
+        limit: this.pageSize(),
+        search: this.searchBook(),
+        includeDeleted: true,
+      })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (libros) => {
-          const safeLibros = Array.isArray(libros) ? libros : [];
+        next: (result) => {
+          const safeLibros = result.data;
           this.libros.set(safeLibros);
+          this.totalItems.set(result.pagination.total);
+          this.totalPages.set(Math.max(result.pagination.totalPages, 1));
 
-          this.ensureValidPage();
-
-          if (selectedLibroId) {
-            const libroRecienAfectado =
-              safeLibros.find((libro) => libro._id === selectedLibroId) ?? null;
-
-            this.selectedLibro.set(
-              libroRecienAfectado ? this.mapLibroToFormValue(libroRecienAfectado) : null,
-            );
-            this.isCreating.set(false);
+          if (this.currentPage() > this.totalPages()) {
+            this.currentPage.set(this.totalPages());
+            this.loadLibros(selectedLibroId);
             return;
           }
 
-          const selectedId = this.selectedLibro()?._id;
+          const selectedId = selectedLibroId ?? this.selectedLibro()?._id;
 
           if (selectedId) {
-            const refreshedSelectedLibro =
-              safeLibros.find((libro) => libro._id === selectedId) ?? null;
-
-            this.selectedLibro.set(
-              refreshedSelectedLibro
-                ? this.mapLibroToFormValue(refreshedSelectedLibro)
-                : this.createEmptyLibro(),
-            );
-
-            if (!refreshedSelectedLibro) {
-              this.isCreating.set(true);
+            const refreshed = safeLibros.find((libro) => libro._id === selectedId);
+            if (refreshed) {
+              this.selectedLibro.set(this.mapLibroToFormValue(refreshed));
             }
-
+            this.isCreating.set(false);
             return;
           }
 
@@ -138,12 +102,10 @@ export class LibrosPageComponent implements OnInit {
     this.isLoadingAutores.set(true);
 
     this.autoresService
-      .getAutores()
+      .getAdminAutores({ page: 1, limit: 100, includeDeleted: false })
       .pipe(finalize(() => this.isLoadingAutores.set(false)))
       .subscribe({
-        next: (autores) => {
-          this.autores.set(Array.isArray(autores) ? autores : []);
-        },
+        next: (result) => this.autores.set(result.data),
         error: (error) => {
           console.error('Error al cargar autores:', error);
           this.errorMessage.set('No se pudieron cargar los autores.');
@@ -170,73 +132,33 @@ export class LibrosPageComponent implements OnInit {
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    if (this.isCreating() || !libroData._id) {
-      const createPayload = this.buildCreateLibroPayload(libroData);
+    const request =
+      this.isCreating() || !libroData._id
+        ? this.librosService.createLibro(this.buildCreateLibroPayload(libroData))
+        : this.librosService.updateLibro(libroData._id, this.buildUpdateLibroPayload(libroData));
 
-      this.librosService
-        .createLibro(createPayload)
-        .pipe(finalize(() => this.isSaving.set(false)))
-        .subscribe({
-          next: (createdLibro) => {
-            this.isCreating.set(false);
-            this.successMessage.set('Libro creado correctamente.');
-
-            if (createdLibro._id) {
-              this.loadLibros(createdLibro._id);
-            } else {
-              this.loadLibros();
-            }
-          },
-          error: (error) => {
-            console.error('Error al crear libro:', error);
-            this.errorMessage.set(
-              error?.error?.message ||
-                error?.error?.details?.[0]?.message ||
-                'No se pudo crear el libro.',
-            );
-          },
-        });
-
-      return;
-    }
-
-    const updatePayload = this.buildUpdateLibroPayload(libroData);
-
-    this.librosService
-      .updateLibro(libroData._id, updatePayload)
-      .pipe(finalize(() => this.isSaving.set(false)))
-      .subscribe({
-        next: (updatedLibro) => {
-          this.isCreating.set(false);
-          this.successMessage.set('Libro actualizado correctamente.');
-
-          if (updatedLibro._id) {
-            this.loadLibros(updatedLibro._id);
-          } else {
-            this.loadLibros();
-          }
-        },
-        error: (error) => {
-          console.error('Error al actualizar libro:', error);
-          this.errorMessage.set(
-            error?.error?.message ||
-              error?.error?.details?.[0]?.message ||
-              'No se pudo actualizar el libro.',
-          );
-        },
-      });
+    request.pipe(finalize(() => this.isSaving.set(false))).subscribe({
+      next: (savedLibro) => {
+        this.isCreating.set(false);
+        this.selectedLibro.set(this.mapLibroToFormValue(savedLibro));
+        this.successMessage.set(
+          libroData._id ? 'Libro actualizado correctamente.' : 'Libro creado correctamente.',
+        );
+        this.loadLibros(savedLibro._id);
+      },
+      error: (error) => {
+        console.error('Error al guardar libro:', error);
+        this.errorMessage.set(
+          error?.error?.message ||
+            error?.error?.details?.[0]?.message ||
+            'No se pudo guardar el libro.',
+        );
+      },
+    });
   }
 
   onDeleteLibro(libro: Libro): void {
-    if (!libro._id) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `¿Seguro que quieres marcar como eliminado el libro "${libro.title}"?`,
-    );
-
-    if (!confirmed) {
+    if (!libro._id || !window.confirm(`¿Desactivar el libro "${libro.title}"?`)) {
       return;
     }
 
@@ -245,45 +167,38 @@ export class LibrosPageComponent implements OnInit {
     this.successMessage.set('');
 
     this.librosService
-      .updateLibro(libro._id, {
-        IsDeleted: true,
-      })
+      .softDeleteLibro(libro._id)
       .pipe(finalize(() => this.isDeleting.set(false)))
       .subscribe({
-        next: () => {
-          this.successMessage.set('Libro eliminado correctamente.');
-          this.selectedLibro.set(this.createEmptyLibro());
-          this.isCreating.set(true);
-          this.loadLibros();
+        next: (updatedLibro) => {
+          this.selectedLibro.set(this.mapLibroToFormValue(updatedLibro));
+          this.isCreating.set(false);
+          this.successMessage.set('Libro desactivado correctamente.');
+          this.loadLibros(updatedLibro._id);
         },
         error: (error) => {
-          console.error('Error al eliminar libro:', error);
-          this.errorMessage.set(
-            error?.error?.message ||
-              error?.error?.details?.[0]?.message ||
-              'No se pudo eliminar el libro.',
-          );
+          console.error('Error al desactivar libro:', error);
+          this.errorMessage.set(error?.error?.message || 'No se pudo desactivar el libro.');
         },
       });
   }
 
-  onDeletePermanent(libroId: string): void {
-    this.isLoading.set(true);
+  onRestore(libro: Libro): void {
+    if (!libro._id) return;
+
+    this.isDeleting.set(true);
     this.errorMessage.set('');
-    this.successMessage.set('');
 
     this.librosService
-      .deleteLibro(libroId)
-      .pipe(finalize(() => this.isLoading.set(false)))
+      .restoreLibro(libro._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
       .subscribe({
-        next: () => {
-          this.successMessage.set('Libro eliminado permanentemente.');
-          this.loadLibros();
+        next: (updatedLibro) => {
+          this.selectedLibro.set(this.mapLibroToFormValue(updatedLibro));
+          this.successMessage.set('Libro restaurado correctamente.');
+          this.loadLibros(updatedLibro._id);
         },
-        error: (error) => {
-          console.error('Error al eliminar permanentemente:', error);
-          this.errorMessage.set('Error al eliminar permanentemente el libro.');
-        },
+        error: () => this.errorMessage.set('No se pudo restaurar el libro.'),
       });
   }
 
@@ -294,27 +209,10 @@ export class LibrosPageComponent implements OnInit {
     this.isCreating.set(true);
   }
 
-  onRestore(libro: Libro): void {
-    if (!libro || !libro._id) return;
-
-    this.isLoading.set(true);
-    this.librosService
-      .restoreLibro(libro._id, libro)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: () => {
-          this.successMessage.set('Libro restaurado con éxito');
-          this.loadLibros(libro._id);
-        },
-        error: () => this.errorMessage.set('Error al restaurar el libro.'),
-      });
-  }
   onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) {
-      return;
-    }
-
+    if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.loadLibros();
   }
 
   onNextPage(): void {
@@ -325,66 +223,82 @@ export class LibrosPageComponent implements OnInit {
     this.onPageChange(this.currentPage() - 1);
   }
 
-  trackByLibroId(index: number, libro: Libro): string | number {
-    return libro._id ?? index;
-  }
-
-  private ensureValidPage(): void {
-    if (this.currentPage() > this.totalPages()) {
-      this.currentPage.set(this.totalPages());
-    }
-
-    if (this.currentPage() < 1) {
-      this.currentPage.set(1);
-    }
-  }
-
   private createEmptyLibro(): Libro {
     return {
       title: '',
       isbn: '',
       authors: [],
+      type: 'VENTA',
+      precio: 0,
+      estado: 'DISPONIBLE',
       IsDeleted: false,
+      isReserved: false,
     };
   }
 
   private mapLibroToFormValue(libro: Libro): Libro {
     return {
-      _id: libro._id,
+      ...libro,
       title: libro.title ?? '',
       isbn: libro.isbn ?? '',
       authors: this.extractAuthorIds(libro.authors),
+      autor: libro.autor ?? '',
+      categoria: libro.categoria ?? '',
+      type: libro.type ?? 'VENTA',
+      precio: libro.precio ?? 0,
+      estado: libro.estado ?? '',
+      owner: this.extractUserId(libro.owner),
       IsDeleted: libro.IsDeleted ?? false,
-      createdAt: libro.createdAt,
-      updatedAt: libro.updatedAt,
+      imageUrl: libro.imageUrl ?? '',
+      isReserved: libro.isReserved ?? false,
+      reservedBy: this.extractUserId(libro.reservedBy),
     };
   }
 
   private buildCreateLibroPayload(libro: Libro): Libro {
-    return {
-      title: libro.title.trim(),
-      isbn: (libro.isbn ?? '').trim(),
-      authors: this.extractAuthorIds(libro.authors),
-      IsDeleted: libro.IsDeleted ?? false,
-    };
+    return this.buildLibroPayload(libro) as Libro;
   }
 
   private buildUpdateLibroPayload(libro: Libro): Partial<Libro> {
+    return this.buildLibroPayload(libro);
+  }
+
+  private buildLibroPayload(libro: Libro): Partial<Libro> {
     return {
       title: libro.title.trim(),
-      isbn: (libro.isbn ?? '').trim(),
+      isbn: libro.isbn.trim(),
       authors: this.extractAuthorIds(libro.authors),
+      autor: libro.autor?.trim() ?? '',
+      categoria: libro.categoria?.trim() ?? '',
+      type: libro.type,
+      precio: Number(libro.precio),
+      estado: libro.estado.trim(),
+      owner: this.optionalString(this.extractUserId(libro.owner)),
       IsDeleted: libro.IsDeleted ?? false,
+      rentalStartDate: this.optionalString(libro.rentalStartDate),
+      rentalEndDate: this.optionalString(libro.rentalEndDate),
+      imageUrl: libro.imageUrl?.trim() ?? '',
+      isReserved: libro.isReserved ?? false,
+      reservedBy: this.optionalString(this.extractUserId(libro.reservedBy)),
+      reservationExpiry: this.optionalString(libro.reservationExpiry),
     };
   }
 
   private extractAuthorIds(authors: Libro['authors']): string[] {
-    if (!Array.isArray(authors)) {
-      return [];
-    }
+    return Array.isArray(authors)
+      ? authors
+          .map((author) => (typeof author === 'string' ? author : author._id))
+          .filter((id): id is string => !!id)
+      : [];
+  }
 
-    return authors
-      .map((author) => (typeof author === 'string' ? author : author._id))
-      .filter((authorId): authorId is string => !!authorId);
+  private extractUserId(user: string | UsuarioRef | null | undefined): string | undefined {
+    if (!user) return undefined;
+    return typeof user === 'string' ? user : user._id;
+  }
+
+  private optionalString(value: string | null | undefined): string | undefined {
+    const normalized = value?.trim();
+    return normalized || undefined;
   }
 }

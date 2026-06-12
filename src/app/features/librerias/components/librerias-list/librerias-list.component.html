@@ -1,0 +1,48 @@
+<section class="librerias-list">
+  <header>
+    <div>
+      <p>Listado</p>
+      <h2>Librerías</h2>
+      <span>Consulta librerías activas y desactivadas.</span>
+      <input [formControl]="searchControl" placeholder="Buscar por nombre o dirección..." />
+    </div>
+    <button (click)="createNew.emit()">+ Nueva librería</button>
+  </header>
+  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
+  <div class="state" *ngIf="isLoading">Cargando librerías...</div>
+  <div class="state" *ngIf="!isLoading && !librerias.length">No hay librerías disponibles.</div>
+  <div class="items" *ngIf="!isLoading">
+    <article
+      *ngFor="let libreria of librerias"
+      [class.active]="libreria._id === selectedId"
+      [class.deleted]="libreria.IsDeleted"
+      (click)="selectLibreria.emit(libreria)"
+    >
+      <div class="card-title">
+        <h3>{{ libreria.name }}</h3>
+        <span [class.inactive]="libreria.IsDeleted">
+          {{ libreria.IsDeleted ? 'Desactivada' : 'Activa' }}
+        </span>
+      </div>
+      <strong>Dirección</strong>
+      <p>{{ libreria.address }}</p>
+      <strong>ID</strong>
+      <p>{{ libreria._id }}</p>
+    </article>
+  </div>
+  <nav *ngIf="totalPages > 1">
+    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
+      Anterior
+    </button>
+    <button
+      *ngFor="let page of pages"
+      [class.current]="page === currentPage"
+      (click)="pageChange.emit(page)"
+    >
+      {{ page }}
+    </button>
+    <button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
+      Siguiente
+    </button>
+  </nav>
+</section>

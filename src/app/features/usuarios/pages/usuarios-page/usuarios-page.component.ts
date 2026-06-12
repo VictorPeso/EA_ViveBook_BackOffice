@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Libro } from '../../../../Core/models/libro.model';
@@ -19,57 +19,35 @@ import { UsuariosListComponent } from '../../components/usuarios-list/usuarios-l
 export class UsuariosPageComponent implements OnInit {
   private readonly usuariosService = inject(UsuariosService);
   private readonly librosService = inject(LibrosService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   readonly usuarios = signal<Usuario[]>([]);
   readonly libros = signal<Libro[]>([]);
   readonly selectedUsuario = signal<Usuario | null>(null);
-
   readonly isLoading = signal(false);
   readonly isLoadingLibros = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
   readonly isCreating = signal(true);
-  readonly isAdmin = signal<boolean>(false);
-
+  readonly isAdmin = signal(true);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
-
   readonly currentPage = signal(1);
   readonly pageSize = signal(5);
-
-  readonly totalItems = computed(() => this.filteredUsuarios().length);
-
-  readonly totalPages = computed(() => {
-    const total = Math.ceil(this.totalItems() / this.pageSize());
-    return total > 0 ? total : 1;
-  });
-
-  readonly paginatedUsuarios = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize();
-    const end = start + this.pageSize();
-    return this.filteredUsuarios().slice(start, end);
-  });
-
+  readonly totalItems = signal(0);
+  readonly totalPages = signal(1);
   readonly searchUsuario = signal('');
-  readonly filteredUsuarios = computed(() => {
-    const term = this.searchUsuario().toLowerCase().trim();
-    const allUsuarios = this.usuarios();
-
-    if (!term) {
-      return allUsuarios;
-    }
-    return allUsuarios.filter((usuario) => usuario.name?.toLowerCase().includes(term));
-  });
-
-  onSearch(term: string): void {
-    this.searchUsuario.set(term);
-    this.currentPage.set(1);
-  }
 
   ngOnInit(): void {
-    const rol = localStorage.getItem('rol');
-    this.isAdmin.set(rol === 'Admin');
-    this.loadLibros();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadLibros();
+      this.loadUsuarios();
+    }
+  }
+
+  onSearch(term: string): void {
+    this.searchUsuario.set(term.trim());
+    this.currentPage.set(1);
     this.loadUsuarios();
   }
 
@@ -77,71 +55,52 @@ export class UsuariosPageComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    const fetch$ = this.isAdmin()
-      ? this.usuariosService.getAllUsuarios()
-      : this.usuariosService.getUsuarios();
+    this.usuariosService
+      .getAdminUsuarios({
+        page: this.currentPage(),
+        limit: this.pageSize(),
+        search: this.searchUsuario(),
+        includeDeleted: true,
+      })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (result) => {
+          this.usuarios.set(result.data);
+          this.totalItems.set(result.pagination.total);
+          this.totalPages.set(Math.max(result.pagination.totalPages, 1));
 
-    fetch$.pipe(finalize(() => this.isLoading.set(false))).subscribe({
-      next: (usuarios) => {
-        const safeUsuarios = Array.isArray(usuarios) ? usuarios : [];
-        this.usuarios.set(safeUsuarios);
-
-        this.ensureValidPage();
-
-        if (selectedUsuarioId) {
-          const usuarioRecienAfectado =
-            safeUsuarios.find((usuario) => usuario._id === selectedUsuarioId) ?? null;
-
-          this.selectedUsuario.set(
-            usuarioRecienAfectado ? this.mapUsuarioToFormValue(usuarioRecienAfectado) : null,
-          );
-          this.isCreating.set(false);
-          return;
-        }
-
-        const selectedId = this.selectedUsuario()?._id;
-
-        if (selectedId) {
-          const refreshedSelectedUsuario =
-            safeUsuarios.find((usuario) => usuario._id === selectedId) ?? null;
-
-          this.selectedUsuario.set(
-            refreshedSelectedUsuario
-              ? this.mapUsuarioToFormValue(refreshedSelectedUsuario)
-              : this.createEmptyUsuario(),
-          );
-
-          if (!refreshedSelectedUsuario) {
-            this.isCreating.set(true);
+          if (this.currentPage() > this.totalPages()) {
+            this.currentPage.set(this.totalPages());
+            this.loadUsuarios(selectedUsuarioId);
+            return;
           }
 
-          return;
-        }
+          const selectedId = selectedUsuarioId ?? this.selectedUsuario()?._id;
+          if (selectedId) {
+            const refreshed = result.data.find((usuario) => usuario._id === selectedId);
+            if (refreshed) this.selectedUsuario.set(this.mapUsuarioToFormValue(refreshed));
+            this.isCreating.set(false);
+            return;
+          }
 
-        this.selectedUsuario.set(this.createEmptyUsuario());
-        this.isCreating.set(true);
-      },
-      error: (error) => {
-        console.error('Error al cargar usuarios:', error);
-        this.errorMessage.set('No se pudieron cargar los usuarios.');
-      },
-    });
+          this.selectedUsuario.set(this.createEmptyUsuario());
+          this.isCreating.set(true);
+        },
+        error: (error) => {
+          console.error('Error al cargar usuarios:', error);
+          this.errorMessage.set('No se pudieron cargar los usuarios.');
+        },
+      });
   }
 
   loadLibros(): void {
     this.isLoadingLibros.set(true);
-
     this.librosService
-      .getLibros()
+      .getAdminLibros({ page: 1, limit: 100, includeDeleted: false })
       .pipe(finalize(() => this.isLoadingLibros.set(false)))
       .subscribe({
-        next: (libros) => {
-          this.libros.set(Array.isArray(libros) ? libros : []);
-        },
-        error: (error) => {
-          console.error('Error al cargar libros:', error);
-          this.errorMessage.set('No se pudieron cargar los libros.');
-        },
+        next: (result) => this.libros.set(result.data),
+        error: () => this.errorMessage.set('No se pudieron cargar los libros.'),
       });
   }
 
@@ -160,149 +119,71 @@ export class UsuariosPageComponent implements OnInit {
   }
 
   onSaveUsuario(usuarioData: Usuario): void {
-    if (!this.isAdmin()) {
-      this.errorMessage.set('No tienes permisos para realizar esta acción.');
-      return;
-    }
-
     this.isSaving.set(true);
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    if (this.isCreating() || !usuarioData._id) {
-      const createPayload = this.buildCreateUsuarioPayload(usuarioData);
+    const creating = this.isCreating() || !usuarioData._id;
+    const request = creating
+      ? this.usuariosService.createUsuario(this.buildCreateUsuarioPayload(usuarioData))
+      : this.usuariosService.updateUsuario(
+          usuarioData._id as string,
+          this.buildUpdateUsuarioPayload(usuarioData),
+        );
 
-      this.usuariosService
-        .createUsuario(createPayload)
-        .pipe(finalize(() => this.isSaving.set(false)))
-        .subscribe({
-          next: (createdUsuario) => {
-            this.isCreating.set(false);
-            this.successMessage.set('Usuario creado correctamente.');
-
-            if (createdUsuario._id) {
-              this.loadUsuarios(createdUsuario._id);
-            } else {
-              this.loadUsuarios();
-            }
-          },
-          error: (error) => {
-            console.error('Error al crear usuario:', error);
-            this.errorMessage.set(
-              error?.error?.message ||
-                error?.error?.details?.[0]?.message ||
-                'No se pudo crear el usuario.',
-            );
-          },
-        });
-
-      return;
-    }
-
-    const updatePayload = this.buildUpdateUsuarioPayload(usuarioData);
-
-    this.usuariosService
-      .updateUsuario(usuarioData._id, updatePayload)
-      .pipe(finalize(() => this.isSaving.set(false)))
-      .subscribe({
-        next: (updatedUsuario) => {
-          this.isCreating.set(false);
-          this.successMessage.set('Usuario actualizado correctamente.');
-
-          if (updatedUsuario._id) {
-            this.loadUsuarios(updatedUsuario._id);
-          } else {
-            this.loadUsuarios();
-          }
-        },
-        error: (error) => {
-          console.error('Error al actualizar usuario:', error);
-          this.errorMessage.set(
-            error?.error?.message ||
-              error?.error?.details?.[0]?.message ||
-              'No se pudo actualizar el usuario.',
-          );
-        },
-      });
+    request.pipe(finalize(() => this.isSaving.set(false))).subscribe({
+      next: (savedUsuario) => {
+        this.isCreating.set(false);
+        this.selectedUsuario.set(this.mapUsuarioToFormValue(savedUsuario));
+        this.successMessage.set(
+          creating ? 'Usuario creado correctamente.' : 'Usuario actualizado correctamente.',
+        );
+        this.loadUsuarios(savedUsuario._id);
+      },
+      error: (error) => {
+        console.error('Error al guardar usuario:', error);
+        this.errorMessage.set(
+          error?.error?.message ||
+            error?.error?.details?.[0]?.message ||
+            'No se pudo guardar el usuario.',
+        );
+      },
+    });
   }
 
   onDeleteUsuario(usuario: Usuario): void {
-    if (!this.isAdmin()) {
-      this.errorMessage.set('No tienes permisos para realizar esta acción.');
-      return;
-    }
-    if (!usuario._id) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `¿Seguro que quieres marcar como eliminado al usuario "${usuario.name}"?`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
+    if (!usuario._id || !window.confirm(`¿Desactivar al usuario "${usuario.name}"?`)) return;
 
     this.isDeleting.set(true);
     this.errorMessage.set('');
-    this.successMessage.set('');
-
     this.usuariosService
-      .updateUsuario(usuario._id, {
-        IsDeleted: true,
-      })
+      .softDeleteUsuario(usuario._id)
       .pipe(finalize(() => this.isDeleting.set(false)))
       .subscribe({
-        next: () => {
-          this.successMessage.set('Usuario eliminado correctamente.');
-          this.selectedUsuario.set(this.createEmptyUsuario());
-          this.isCreating.set(true);
-          this.loadUsuarios();
+        next: (updatedUsuario) => {
+          this.selectedUsuario.set(this.mapUsuarioToFormValue(updatedUsuario));
+          this.successMessage.set('Usuario desactivado correctamente.');
+          this.loadUsuarios(updatedUsuario._id);
         },
-        error: (error) => {
-          console.error('Error al eliminar usuario:', error);
-          this.errorMessage.set(
-            error?.error?.message ||
-              error?.error?.details?.[0]?.message ||
-              'No se pudo eliminar el usuario.',
-          );
-        },
-      });
-  }
-
-  onDeletePermanent(usuarioId: string): void {
-    this.isLoading.set(true);
-    this.errorMessage.set('');
-    this.successMessage.set('');
-
-    this.usuariosService
-      .permanentDeleteUsuario(usuarioId)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: () => {
-          this.successMessage.set('Usuario eliminado permanentemente.');
-          this.loadUsuarios();
-        },
-        error: (error) => {
-          console.error('Error al eliminar permanentemente:', error);
-          this.errorMessage.set('Error al eliminar permanentemente el usuario.');
-        },
+        error: () => this.errorMessage.set('No se pudo desactivar el usuario.'),
       });
   }
 
   onRestore(usuario: Usuario): void {
-    if (!usuario || !usuario._id) return;
+    if (!usuario._id) return;
 
-    this.isLoading.set(true);
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
     this.usuariosService
-      .restoreUsuario(usuario._id, usuario)
-      .pipe(finalize(() => this.isLoading.set(false)))
+      .restoreUsuario(usuario._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
       .subscribe({
-        next: () => {
-          this.successMessage.set('Usuario restaurado con éxito');
-          this.loadUsuarios(usuario._id);
+        next: (updatedUsuario) => {
+          this.selectedUsuario.set(this.mapUsuarioToFormValue(updatedUsuario));
+          this.successMessage.set('Usuario restaurado correctamente.');
+          this.loadUsuarios(updatedUsuario._id);
         },
-        error: () => this.errorMessage.set('Error al restaurar el usuario.'),
+        error: () => this.errorMessage.set('No se pudo restaurar el usuario.'),
       });
   }
 
@@ -314,11 +195,9 @@ export class UsuariosPageComponent implements OnInit {
   }
 
   onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) {
-      return;
-    }
-
+    if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.loadUsuarios();
   }
 
   onNextPage(): void {
@@ -329,20 +208,6 @@ export class UsuariosPageComponent implements OnInit {
     this.onPageChange(this.currentPage() - 1);
   }
 
-  trackByUsuarioId(index: number, usuario: Usuario): string | number {
-    return usuario._id ?? index;
-  }
-
-  private ensureValidPage(): void {
-    if (this.currentPage() > this.totalPages()) {
-      this.currentPage.set(this.totalPages());
-    }
-
-    if (this.currentPage() < 1) {
-      this.currentPage.set(1);
-    }
-  }
-
   private createEmptyUsuario(): Usuario {
     return {
       name: '',
@@ -350,52 +215,59 @@ export class UsuariosPageComponent implements OnInit {
       password: '',
       rol: 'User',
       libros: [],
+      avatar: '',
+      description: '',
       IsDeleted: false,
+      hasSeenTutorial: false,
     };
   }
 
   private mapUsuarioToFormValue(usuario: Usuario): Usuario {
     return {
-      _id: usuario._id,
+      ...usuario,
       name: usuario.name ?? '',
       email: usuario.email ?? '',
-      password: usuario.password ?? '',
+      password: '',
       rol: usuario.rol ?? 'User',
       libros: this.extractLibroIds(usuario.libros),
+      avatar: usuario.avatar ?? '',
+      description: usuario.description ?? '',
       IsDeleted: usuario.IsDeleted ?? false,
-      createdAt: usuario.createdAt,
-      updatedAt: usuario.updatedAt,
+      hasSeenTutorial: usuario.hasSeenTutorial ?? false,
     };
   }
 
   private buildCreateUsuarioPayload(usuario: Usuario): Usuario {
     return {
-      name: usuario.name.trim(),
-      email: usuario.email.trim(),
-      password: usuario.password,
-      rol: usuario.rol || 'User',
-      libros: this.extractLibroIds(usuario.libros),
-      IsDeleted: usuario.IsDeleted ?? false,
-    };
+      ...this.buildCommonPayload(usuario),
+      password: usuario.password ?? '',
+    } as Usuario;
   }
 
   private buildUpdateUsuarioPayload(usuario: Usuario): Partial<Usuario> {
+    const payload = this.buildCommonPayload(usuario);
+    if (usuario.password?.trim()) payload.password = usuario.password;
+    return payload;
+  }
+
+  private buildCommonPayload(usuario: Usuario): Partial<Usuario> {
     return {
       name: usuario.name.trim(),
       email: usuario.email.trim(),
-      password: usuario.password,
+      rol: usuario.rol,
       libros: this.extractLibroIds(usuario.libros),
+      avatar: usuario.avatar?.trim() ?? '',
+      description: usuario.description?.trim() ?? '',
       IsDeleted: usuario.IsDeleted ?? false,
+      hasSeenTutorial: usuario.hasSeenTutorial ?? false,
     };
   }
 
   private extractLibroIds(libros: Usuario['libros']): string[] {
-    if (!Array.isArray(libros)) {
-      return [];
-    }
-
-    return libros
-      .map((libro) => (typeof libro === 'string' ? libro : libro._id))
-      .filter((libroId): libroId is string => !!libroId);
+    return Array.isArray(libros)
+      ? libros
+          .map((libro) => (typeof libro === 'string' ? libro : libro._id))
+          .filter((id): id is string => !!id)
+      : [];
   }
 }

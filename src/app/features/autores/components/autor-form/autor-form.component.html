@@ -67,23 +67,13 @@
       </button>
 
       <button
-        *ngIf="!isCreating && autor?._id"
+        *ngIf="!isCreating && autor?._id && !autor?.IsDeleted"
         type="button"
         class="autor-form__button autor-form__button--danger"
         (click)="onDelete()"
         [disabled]="isSaving || isDeleting"
       >
-        {{ isDeleting ? 'Eliminando...' : 'Marcar como eliminado' }}
-      </button>
-
-      <button
-        *ngIf="!isCreating && autor?._id"
-        type="button"
-        class="autor-form__button autor-form__button--danger-outline"
-        (click)="onDeletePermanent()"
-        [disabled]="isSaving || isDeleting"
-      >
-        Eliminar definitivamente
+        {{ isDeleting ? 'Desactivando...' : 'Desactivar' }}
       </button>
 
       <button
@@ -92,7 +82,7 @@
         class="libro-form__button libro-form__button--success"
         (click)="onRestore($event, autor!)"
       >
-        Restaurar Autor
+        Activar
       </button>
     </div>
   </form>
