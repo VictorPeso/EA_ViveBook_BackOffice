@@ -4,10 +4,10 @@
 }
 
 .usuarios-list {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: #fff9f7;
+  border: 1px solid #dfa196;
   border-radius: 24px;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 16px 40px rgba(123, 20, 30, 0.06);
   overflow: hidden;
   min-height: 560px;
 }
@@ -18,8 +18,8 @@
   justify-content: space-between;
   gap: 16px;
   padding: 24px 24px 20px;
-  border-bottom: 1px solid #eef2f7;
-  background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+  border-bottom: 1px solid #f3c7bd;
+  background: linear-gradient(180deg, #fff9f7 0%, #f3c7bd 100%);
 }
 
 .usuarios-list__eyebrow {
@@ -28,20 +28,20 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6366f1;
+  color: #a33c3c;
 }
 
 .usuarios-list__title {
   margin: 0;
   font-size: 1.45rem;
   font-weight: 700;
-  color: #111827;
+  color: #7b141e;
   line-height: 1.2;
 }
 
 .usuarios-list__subtitle {
   margin: 8px 0 0;
-  color: #6b7280;
+  color: #b75b56;
   line-height: 1.55;
   font-size: 0.95rem;
   max-width: 720px;
@@ -52,8 +52,8 @@
   border: 0;
   border-radius: 14px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #111827, #1f2937);
-  color: #ffffff;
+  background: linear-gradient(135deg, #7b141e, #8f262b);
+  color: #fff9f7;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
@@ -62,7 +62,7 @@
     transform 0.2s ease,
     box-shadow 0.2s ease,
     opacity 0.2s ease;
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.18);
+  box-shadow: 0 10px 24px rgba(123, 20, 30, 0.18);
 }
 
 .usuarios-list__create-button:hover {
@@ -74,7 +74,7 @@
 }
 
 .usuarios-list__create-button:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.28);
+  outline: 3px solid rgba(163, 60, 60, 0.28);
   outline-offset: 2px;
 }
 
@@ -84,14 +84,14 @@
   justify-content: space-between;
   gap: 12px;
   padding: 16px 24px;
-  border-bottom: 1px solid #eef2f7;
-  background: #fcfcfd;
+  border-bottom: 1px solid #f3c7bd;
+  background: #fff9f7;
 }
 
 .usuarios-list__results {
   margin: 0;
   font-size: 0.92rem;
-  color: #4b5563;
+  color: #a33c3c;
   font-weight: 500;
 }
 
@@ -102,7 +102,7 @@
 .usuarios-list__state {
   padding: 48px 20px;
   text-align: center;
-  color: #6b7280;
+  color: #b75b56;
   font-size: 0.96rem;
 }
 
@@ -112,9 +112,9 @@
 }
 
 .usuarios-list__card {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #dfa196;
   border-radius: 16px;
-  background: #ffffff;
+  background: #fff9f7;
   padding: 14px;
   cursor: pointer;
   transition:
@@ -126,14 +126,14 @@
 
 .usuarios-list__card:hover {
   transform: translateY(-2px);
-  border-color: #c7d2fe;
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+  border-color: #dfa196;
+  box-shadow: 0 14px 28px rgba(123, 20, 30, 0.08);
 }
 
 .usuarios-list__card.active {
-  border-color: #6366f1;
-  background: #f8faff;
-  box-shadow: 0 14px 28px rgba(99, 102, 241, 0.12);
+  border-color: #a33c3c;
+  background: #f3c7bd;
+  box-shadow: 0 14px 28px rgba(163, 60, 60, 0.12);
 }
 
 .usuarios-list__card-top {
@@ -148,7 +148,7 @@
   margin: 0;
   font-size: 0.96rem;
   font-weight: 700;
-  color: #111827;
+  color: #7b141e;
   line-height: 1.3;
 }
 
@@ -162,23 +162,23 @@
 .usuarios-list__status {
   padding: 5px 9px;
   border-radius: 999px;
-  background: #ecfdf5;
-  color: #047857;
+  background: #f3c7bd;
+  color: #8f262b;
   font-size: 0.74rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .usuarios-list__status--deleted {
-  background: #fef2f2;
-  color: #b91c1c;
+  background: #f3c7bd;
+  color: #7b141e;
 }
 
 .usuarios-list__delete-permanent-btn {
   appearance: none;
-  border: 1px solid #fee2e2;
+  border: 1px solid #f3c7bd;
   border-radius: 10px;
-  background: #ffffff;
+  background: #fff9f7;
   padding: 6px 12px;
   display: inline-flex;
   align-items: center;
@@ -186,15 +186,15 @@
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #b91c1c;
+  color: #7b141e;
   transition: all 0.2s ease;
 }
 
 .usuarios-list__delete-permanent-btn:hover {
-  background: #fef2f2;
-  border-color: #fecaca;
+  background: #f3c7bd;
+  border-color: #dfa196;
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);
+  box-shadow: 0 4px 12px rgba(163, 60, 60, 0.12);
 }
 
 .usuarios-list__delete-permanent-btn:active {
@@ -219,12 +219,12 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #6b7280;
+  color: #b75b56;
 }
 
 .usuarios-list__field-value {
   font-size: 0.88rem;
-  color: #111827;
+  color: #7b141e;
   line-height: 1.4;
   word-break: break-word;
 }
@@ -235,8 +235,8 @@
   justify-content: space-between;
   gap: 16px;
   padding: 18px 24px 24px;
-  border-top: 1px solid #eef2f7;
-  background: #ffffff;
+  border-top: 1px solid #f3c7bd;
+  background: #fff9f7;
 }
 
 .usuarios-list__page-numbers {
@@ -250,9 +250,9 @@
 .usuarios-list__page-button,
 .usuarios-list__page-number {
   appearance: none;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #111827;
+  border: 1px solid #dfa196;
+  background: #fff9f7;
+  color: #7b141e;
   border-radius: 12px;
   padding: 10px 14px;
   font-size: 0.9rem;
@@ -268,8 +268,8 @@
 
 .usuarios-list__page-button:hover:not(:disabled),
 .usuarios-list__page-number:hover:not(:disabled) {
-  border-color: #818cf8;
-  background: #f8faff;
+  border-color: #b75b56;
+  background: #f3c7bd;
   transform: translateY(-1px);
 }
 
@@ -280,9 +280,9 @@
 }
 
 .usuarios-list__page-number.active {
-  border-color: #4f46e5;
-  background: #4f46e5;
-  color: #ffffff;
+  border-color: #8f262b;
+  background: #8f262b;
+  color: #fff9f7;
 }
 
 @media (max-width: 1100px) {
@@ -326,25 +326,25 @@
   }
 
   .usuarios-list__card--deleted {
-    background-color: #f9fafb;
-    border-color: #f3f4f6;
+    background-color: #f3c7bd;
+    border-color: #f3c7bd;
     opacity: 0.7;
     filter: grayscale(0.4);
   }
 
   .usuarios-list__card--deleted:hover {
-    background-color: #f3f4f6;
+    background-color: #f3c7bd;
     opacity: 0.9;
   }
 
   .usuarios-list__card--deleted .usuarios-list__card-title,
   .usuarios-list__card--deleted .usuarios-list__field-value {
-    color: #6b7280;
+    color: #b75b56;
   }
 
   .usuarios-list__card--deleted.active {
-    background-color: #f0f2ff;
-    border-color: #a5b4fc;
+    background-color: #f3c7bd;
+    border-color: #cb7d74;
     opacity: 0.85;
   }
 }

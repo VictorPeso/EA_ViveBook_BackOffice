@@ -21,6 +21,11 @@ export const routes: Routes = [
     title: 'BackOffice - Registro',
   },
   {
+    path: 'auth/signin',
+    redirectTo: 'auth',
+    pathMatch: 'full',
+  },
+  {
     path: 'libros',
     canActivate: [authGuard],
     loadComponent: () =>

@@ -2,25 +2,3 @@
   display: block;
   min-width: 0;
 }
-.posts-page__layout {
-  display: grid;
-  grid-template-columns: minmax(340px, 1fr) minmax(640px, 2fr);
-  gap: 24px;
-  align-items: start;
-}
-.posts-page__form-column {
-  position: sticky;
-  top: 96px;
-  min-width: 0;
-}
-.posts-page__list-column {
-  min-width: 0;
-}
-@media (max-width: 960px) {
-  .posts-page__layout {
-    grid-template-columns: 1fr;
-  }
-  .posts-page__form-column {
-    position: static;
-  }
-}

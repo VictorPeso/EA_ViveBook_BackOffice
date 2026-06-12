@@ -1,22 +1,40 @@
-<section class="eventos-page">
-  <div class="eventos-page__layout">
-    <aside class="eventos-page__form-column">
-      <app-evento-form
-        [evento]="selectedEvento()"
-        [usuarios]="usuarios()"
-        [isLoadingUsuarios]="isLoadingUsuarios()"
-        [isSaving]="isSaving()"
-        [isDeleting]="isDeleting()"
-        [isCreating]="isCreating()"
-        [errorMessage]="errorMessage()"
-        [successMessage]="successMessage()"
-        (save)="onSave($event)"
-        (delete)="onDelete($event)"
-        (restore)="onRestore($event)"
-        (cancel)="onCancel()"
-      />
-    </aside>
-    <section class="eventos-page__list-column">
+<section class="eventos-page admin-page">
+  <div class="eventos-page__layout admin-page__layout">
+    <div
+      class="admin-modal"
+      *ngIf="selectedEvento()"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Detalle de evento"
+    >
+      <button
+        class="admin-modal__backdrop"
+        type="button"
+        (click)="onCancel()"
+        aria-label="Cerrar"
+      ></button>
+      <aside class="eventos-page__form-column admin-modal__dialog">
+        <button class="admin-modal__close" type="button" (click)="onCancel()" aria-label="Cerrar">
+          ×
+        </button>
+        <app-evento-form
+          [evento]="selectedEvento()"
+          [usuarios]="usuarios()"
+          [isLoadingUsuarios]="isLoadingUsuarios()"
+          [isSaving]="isSaving()"
+          [isDeleting]="isDeleting()"
+          [isCreating]="isCreating()"
+          [errorMessage]="errorMessage()"
+          [successMessage]="successMessage()"
+          (save)="onSave($event)"
+          (delete)="onDelete($event)"
+          (restore)="onRestore($event)"
+          (cancel)="onCancel()"
+        />
+      </aside>
+    </div>
+
+    <section class="eventos-page__list-column admin-page__list">
       <app-eventos-list
         [eventos]="eventos()"
         [selectedId]="selectedEvento()?._id ?? null"

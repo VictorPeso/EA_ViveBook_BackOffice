@@ -3,6 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Reto } from '../../../../Core/models/reto.model';
+import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { RetosService } from '../../../../Core/services/retos.service';
 import { RetoFormComponent } from '../../components/reto-form/reto-form.component';
 import { RetosListComponent } from '../../components/retos-list/retos-list.component';
@@ -23,7 +24,7 @@ export class RetosPageComponent implements OnInit {
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly isCreating = signal(true);
+  readonly isCreating = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly currentPage = signal(1);
@@ -64,10 +65,11 @@ export class RetosPageComponent implements OnInit {
             this.isCreating.set(false);
             return;
           }
-          this.selected.set(this.createEmpty());
-          this.isCreating.set(true);
+          this.selected.set(null);
+          this.isCreating.set(false);
         },
-        error: () => this.errorMessage.set('No se pudieron cargar los retos.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los retos.')),
       });
   }
 
@@ -78,8 +80,8 @@ export class RetosPageComponent implements OnInit {
   }
 
   onCreateNew(): void {
-    this.selected.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selected.set(null);
+    this.isCreating.set(false);
     this.errorMessage.set('');
     this.successMessage.set('');
   }
@@ -109,7 +111,7 @@ export class RetosPageComponent implements OnInit {
         this.loadRetos(saved._id);
       },
       error: (error) =>
-        this.errorMessage.set(error?.error?.message || 'No se pudo guardar el reto.'),
+        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el reto.')),
     });
   }
 
@@ -125,7 +127,8 @@ export class RetosPageComponent implements OnInit {
           this.successMessage.set('Reto desactivado correctamente.');
           this.loadRetos(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo desactivar el reto.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el reto.')),
       });
   }
 
@@ -141,7 +144,8 @@ export class RetosPageComponent implements OnInit {
           this.successMessage.set('Reto activado correctamente.');
           this.loadRetos(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo activar el reto.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo activar el reto.')),
       });
   }
 

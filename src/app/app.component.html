@@ -1,7 +1,30 @@
 <div class="app-shell">
   <app-topbar></app-topbar>
 
-  <main class="app-content">
-    <router-outlet></router-outlet>
-  </main>
+  @if (isLoggedIn()) {
+    <div class="workspace">
+      <aside class="sidebar" aria-label="Modelos administrables">
+        <nav class="sidebar__nav">
+          @for (item of navigation; track item.route) {
+            <a
+              class="sidebar__link"
+              [routerLink]="item.route"
+              routerLinkActive="sidebar__link--active"
+            >
+              <span class="sidebar__icon" aria-hidden="true">{{ item.shortLabel }}</span>
+              <span>{{ item.label }}</span>
+            </a>
+          }
+        </nav>
+      </aside>
+
+      <main class="app-content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  } @else {
+    <main class="app-content app-content--auth">
+      <router-outlet></router-outlet>
+    </main>
+  }
 </div>

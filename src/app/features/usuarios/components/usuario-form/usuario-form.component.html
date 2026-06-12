@@ -133,9 +133,9 @@
         <span class="usuario-form__libro-name">Ha completado el tutorial</span>
       </label>
 
-      <div class="usuario-form__field usuario-form__field--full">
+      <details class="usuario-form__field usuario-form__field--full admin-related">
+        <summary>Libros relacionados ({{ librosControl.length }})</summary>
         <div class="usuario-form__label-row">
-          <label class="usuario-form__label">Libros</label>
           <span class="usuario-form__hint" *ngIf="isLoadingLibros"> Cargando libros... </span>
         </div>
 
@@ -166,7 +166,7 @@
         <p class="usuario-form__hint">
           La selección de libros es opcional según la validación actual del backend.
         </p>
-      </div>
+      </details>
     </div>
 
     <div class="usuario-form__actions">

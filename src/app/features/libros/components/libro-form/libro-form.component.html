@@ -73,9 +73,9 @@
         <input id="categoria" class="libro-form__input" formControlName="categoria" />
       </div>
 
-      <div class="libro-form__field libro-form__field--full">
+      <details class="libro-form__field libro-form__field--full admin-related">
+        <summary>Autores relacionados ({{ authorsControl.length }})</summary>
         <div class="libro-form__label-row">
-          <label class="libro-form__label">Autores relacionados</label>
           <span class="libro-form__hint" *ngIf="isLoadingAutores">Cargando autores...</span>
         </div>
         <div
@@ -98,7 +98,7 @@
         <ng-template #autoresEmpty>
           <div class="libro-form__empty-authors">No hay autores activos disponibles.</div>
         </ng-template>
-      </div>
+      </details>
 
       <div class="libro-form__field libro-form__field--full">
         <label class="libro-form__label" for="imageUrl">URL de imagen</label>

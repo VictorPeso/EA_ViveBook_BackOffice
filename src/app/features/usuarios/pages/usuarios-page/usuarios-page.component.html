@@ -1,24 +1,45 @@
-<section class="usuarios-page">
-  <div class="usuarios-page__layout">
-    <aside class="usuarios-page__form-column" *ngIf="isAdmin()">
-      <app-usuario-form
-        [usuario]="selectedUsuario()"
-        [libros]="libros()"
-        [isSaving]="isSaving()"
-        [isDeleting]="isDeleting()"
-        [isCreating]="isCreating()"
-        [isLoadingLibros]="isLoadingLibros()"
-        [errorMessage]="errorMessage()"
-        [successMessage]="successMessage()"
-        (save)="onSaveUsuario($event)"
-        (delete)="onDeleteUsuario($event)"
-        (cancel)="onCancelEdit()"
-        (restoreUsuario)="onRestore($event)"
-      >
-      </app-usuario-form>
-    </aside>
+<section class="usuarios-page admin-page">
+  <div class="usuarios-page__layout admin-page__layout">
+    <div
+      class="admin-modal"
+      *ngIf="isAdmin() && selectedUsuario()"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Detalle de usuario"
+    >
+      <button
+        class="admin-modal__backdrop"
+        type="button"
+        (click)="onCancelEdit()"
+        aria-label="Cerrar"
+      ></button>
+      <aside class="usuarios-page__form-column admin-modal__dialog">
+        <button
+          class="admin-modal__close"
+          type="button"
+          (click)="onCancelEdit()"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+        <app-usuario-form
+          [usuario]="selectedUsuario()"
+          [libros]="libros()"
+          [isSaving]="isSaving()"
+          [isDeleting]="isDeleting()"
+          [isCreating]="isCreating()"
+          [isLoadingLibros]="isLoadingLibros()"
+          [errorMessage]="errorMessage()"
+          [successMessage]="successMessage()"
+          (save)="onSaveUsuario($event)"
+          (delete)="onDeleteUsuario($event)"
+          (cancel)="onCancelEdit()"
+          (restoreUsuario)="onRestore($event)"
+        />
+      </aside>
+    </div>
 
-    <section [ngClass]="isAdmin() ? 'usuarios-page__list-column' : 'usuarios-page__list-full'">
+    <section class="usuarios-page__list-column admin-page__list">
       <app-usuarios-list
         [usuarios]="usuarios()"
         [selectedUsuarioId]="selectedUsuario()?._id ?? null"
@@ -34,8 +55,7 @@
         (nextPage)="onNextPage()"
         (previousPage)="onPreviousPage()"
         (search)="onSearch($event)"
-      >
-      </app-usuarios-list>
+      />
     </section>
   </div>
 </section>

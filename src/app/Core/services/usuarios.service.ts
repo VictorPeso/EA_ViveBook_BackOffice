@@ -48,7 +48,7 @@ export class UsuariosService {
   //------------------------- AUTENTICACIÓN -------------------------
 
   signup(userData: Partial<Usuario>): Observable<{ user: Usuario; token: string }> {
-    const signupUrl = `${environment.apiUrl}/auth/signup`;
+    const signupUrl = `${environment.apiUrl}/auth/admin-signup`;
     return this.http
       .post<ApiResponse<{ user: Usuario; token: string }>>(signupUrl, userData)
       .pipe(map((response) => response.data));
@@ -88,11 +88,13 @@ export class UsuariosService {
       .pipe(map((response) => response.data));
   }
 
-  logout() {
+  logout(): void {
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.clear(); // Borra TODO para evitar estados fantasma
-      this.isAuthenticated.set(false); // Forzamos a la señal a ser FALSE
-      this.router.navigate(['/auth']);
+      localStorage.removeItem('token');
+      localStorage.removeItem('rol');
+      this.headersService.clearToken();
+      this.isAuthenticated.set(false);
+      void this.router.navigate(['/auth']);
     }
   }
 

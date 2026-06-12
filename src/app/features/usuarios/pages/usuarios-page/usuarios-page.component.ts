@@ -3,6 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Libro } from '../../../../Core/models/libro.model';
+import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { LibrosService } from '../../../../Core/services/libros.service';
 import { UsuariosService } from '../../../../Core/services/usuarios.service';
@@ -28,7 +29,7 @@ export class UsuariosPageComponent implements OnInit {
   readonly isLoadingLibros = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly isCreating = signal(true);
+  readonly isCreating = signal(false);
   readonly isAdmin = signal(true);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
@@ -83,12 +84,12 @@ export class UsuariosPageComponent implements OnInit {
             return;
           }
 
-          this.selectedUsuario.set(this.createEmptyUsuario());
-          this.isCreating.set(true);
+          this.selectedUsuario.set(null);
+          this.isCreating.set(false);
         },
         error: (error) => {
           console.error('Error al cargar usuarios:', error);
-          this.errorMessage.set('No se pudieron cargar los usuarios.');
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los usuarios.'));
         },
       });
   }
@@ -100,7 +101,8 @@ export class UsuariosPageComponent implements OnInit {
       .pipe(finalize(() => this.isLoadingLibros.set(false)))
       .subscribe({
         next: (result) => this.libros.set(result.data),
-        error: () => this.errorMessage.set('No se pudieron cargar los libros.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los libros.')),
       });
   }
 
@@ -142,11 +144,7 @@ export class UsuariosPageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al guardar usuario:', error);
-        this.errorMessage.set(
-          error?.error?.message ||
-            error?.error?.details?.[0]?.message ||
-            'No se pudo guardar el usuario.',
-        );
+        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el usuario.'));
       },
     });
   }
@@ -165,7 +163,8 @@ export class UsuariosPageComponent implements OnInit {
           this.successMessage.set('Usuario desactivado correctamente.');
           this.loadUsuarios(updatedUsuario._id);
         },
-        error: () => this.errorMessage.set('No se pudo desactivar el usuario.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el usuario.')),
       });
   }
 
@@ -183,15 +182,16 @@ export class UsuariosPageComponent implements OnInit {
           this.successMessage.set('Usuario restaurado correctamente.');
           this.loadUsuarios(updatedUsuario._id);
         },
-        error: () => this.errorMessage.set('No se pudo restaurar el usuario.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el usuario.')),
       });
   }
 
   onCancelEdit(): void {
     this.errorMessage.set('');
     this.successMessage.set('');
-    this.selectedUsuario.set(this.createEmptyUsuario());
-    this.isCreating.set(true);
+    this.selectedUsuario.set(null);
+    this.isCreating.set(false);
   }
 
   onPageChange(page: number): void {

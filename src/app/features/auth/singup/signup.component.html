@@ -1,34 +1,87 @@
-<div class="login-container">
-  <form (ngSubmit)="onSignup()" #signupForm="ngForm">
-    <h2>Crear Cuenta BackOffice</h2>
+<main class="auth-page">
+  <section class="auth-shell">
+    <aside class="auth-showcase" aria-labelledby="signup-title">
+      <div class="auth-brand">
+        <span class="auth-logo" aria-hidden="true">VB</span>
+        <span>ViveBook Backoffice</span>
+      </div>
 
-    <div class="field">
-      <label>Nombre Completo</label>
-      <input type="text" name="name" [(ngModel)]="newUser.name" required minlength="3" />
-    </div>
+      <div class="auth-copy">
+        <p>Acceso administrativo</p>
+        <h1 id="signup-title">Registro administrativo</h1>
+        <span>
+          Temporalmente, las nuevas cuentas creadas desde este BackOffice recibirán automáticamente
+          permisos de administrador.
+        </span>
+      </div>
+    </aside>
 
-    <div class="field">
-      <label>Email</label>
-      <input type="email" name="email" [(ngModel)]="newUser.email" required email />
-    </div>
+    <section class="auth-panel">
+      <div class="auth-card">
+        <header>
+          <p class="eyebrow">Alta directa temporal</p>
+          <h2>Crea una cuenta de administrador</h2>
+          <p>Completa tus datos para obtener acceso al BackOffice.</p>
+        </header>
 
-    <div class="field">
-      <label>Contraseña</label>
-      <input
-        type="password"
-        name="password"
-        [(ngModel)]="newUser.password"
-        required
-        minlength="6"
-      />
-    </div>
+        <div class="auth-alert" role="alert" *ngIf="errorMessage()">
+          {{ errorMessage() }}
+        </div>
+        <div class="auth-alert success" role="status" *ngIf="successMessage()">
+          {{ successMessage() }}
+        </div>
 
-    <button type="submit" [disabled]="signupForm.invalid || isLoading">
-      {{ isLoading ? 'Registrando...' : 'Registrarse' }}
-    </button>
+        <form (ngSubmit)="onSignup()" #signupForm="ngForm">
+          <label for="signup-name">Nombre completo</label>
+          <input
+            id="signup-name"
+            type="text"
+            name="name"
+            [(ngModel)]="newUser.name"
+            placeholder="Nombre"
+            autocomplete="name"
+            required
+            minlength="3"
+          />
 
-    <p class="footer-text">
-      ¿Ya tienes cuenta? <a routerLink="/auth/signin">Inicia sesión aquí</a>
-    </p>
-  </form>
-</div>
+          <label for="signup-email">Correo electrónico</label>
+          <input
+            id="signup-email"
+            type="email"
+            name="email"
+            [(ngModel)]="newUser.email"
+            placeholder="nombre@empresa.com"
+            autocomplete="email"
+            required
+            email
+          />
+
+          <label for="signup-password">Contraseña</label>
+          <input
+            id="signup-password"
+            type="password"
+            name="password"
+            [(ngModel)]="newUser.password"
+            placeholder="Mínimo 6 caracteres"
+            autocomplete="new-password"
+            required
+            minlength="6"
+          />
+
+          <button
+            class="primary-action"
+            type="submit"
+            [disabled]="signupForm.invalid || isLoading()"
+          >
+            {{ isLoading() ? 'Creando cuenta...' : 'Crear cuenta' }}
+          </button>
+        </form>
+
+        <footer>
+          <span>¿Ya tienes acceso?</span>
+          <a routerLink="/auth">Iniciar sesión</a>
+        </footer>
+      </div>
+    </section>
+  </section>
+</main>

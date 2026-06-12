@@ -4,34 +4,43 @@ import { UsuariosService } from '../../../Core/services/usuarios.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { signal } from '@angular/core';
+import { getApiErrorMessage } from '../../../Core/models/api-response.model';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './signup.component.html',
-  styleUrl: './signup.component.css',
+  styleUrl: '../auth-shell.css',
 })
 export class SignupComponent {
-  // El backend suele pedir name, email y password
   newUser = { name: '', email: '', password: '' };
-  isLoading = false;
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal('');
+  readonly successMessage = signal('');
 
   private authService = inject(UsuariosService);
   private router = inject(Router);
 
-  onSignup() {
-    this.isLoading = true;
+  onSignup(): void {
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.isLoading.set(true);
     this.authService.signup(this.newUser).subscribe({
-      next: (res) => {
-        this.isLoading = false;
-        alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
-        this.router.navigate(['/auth/signin']); // Redirigimos al login
+      next: () => {
+        this.isLoading.set(false);
+        this.successMessage.set('Cuenta de administrador creada. Ya puedes iniciar sesión.');
+        this.newUser = { name: '', email: '', password: '' };
       },
       error: (err) => {
-        this.isLoading = false;
-        alert('Error en el registro: ' + (err.error?.message || 'Datos inválidos'));
+        this.isLoading.set(false);
+        this.errorMessage.set(getApiErrorMessage(err, 'No se pudo crear la cuenta.'));
       },
     });
+  }
+
+  goToLogin(): void {
+    void this.router.navigate(['/auth']);
   }
 }

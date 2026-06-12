@@ -3,6 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Autor } from '../../../../Core/models/autor.model';
+import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { AutoresService } from '../../../../Core/services/autores.service';
 import { AutorFormComponent } from '../../components/autor-form/autor-form.component';
 import { AutoresListComponent } from '../../components/autores-list/autores-list.component';
@@ -24,7 +25,7 @@ export class AutoresPageComponent implements OnInit {
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly isCreating = signal(true);
+  readonly isCreating = signal(false);
   readonly isAdmin = signal(true);
 
   readonly errorMessage = signal('');
@@ -97,12 +98,12 @@ export class AutoresPageComponent implements OnInit {
             return;
           }
 
-          this.selectedAutor.set(this.createEmptyAutor());
-          this.isCreating.set(true);
+          this.selectedAutor.set(null);
+          this.isCreating.set(false);
         },
         error: (error) => {
           console.error('Error al cargar autores:', error);
-          this.errorMessage.set('No se pudieron cargar los autores.');
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los autores.'));
         },
       });
   }
@@ -146,11 +147,7 @@ export class AutoresPageComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error al crear autor:', error);
-            this.errorMessage.set(
-              error?.error?.message ||
-                error?.error?.details?.[0]?.message ||
-                'No se pudo crear el autor.',
-            );
+            this.errorMessage.set(getApiErrorMessage(error, 'No se pudo crear el autor.'));
           },
         });
 
@@ -176,11 +173,7 @@ export class AutoresPageComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al actualizar autor:', error);
-          this.errorMessage.set(
-            error?.error?.message ||
-              error?.error?.details?.[0]?.message ||
-              'No se pudo actualizar el autor.',
-          );
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo actualizar el autor.'));
         },
       });
   }
@@ -208,17 +201,13 @@ export class AutoresPageComponent implements OnInit {
       .subscribe({
         next: () => {
           this.successMessage.set('Autor eliminado correctamente.');
-          this.selectedAutor.set(this.createEmptyAutor());
-          this.isCreating.set(true);
+          this.selectedAutor.set(null);
+          this.isCreating.set(false);
           this.loadAutores();
         },
         error: (error) => {
           console.error('Error al eliminar autor:', error);
-          this.errorMessage.set(
-            error?.error?.message ||
-              error?.error?.details?.[0]?.message ||
-              'No se pudo eliminar el autor.',
-          );
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el autor.'));
         },
       });
   }
@@ -226,8 +215,8 @@ export class AutoresPageComponent implements OnInit {
   onCancelEdit(): void {
     this.errorMessage.set('');
     this.successMessage.set('');
-    this.selectedAutor.set(this.createEmptyAutor());
-    this.isCreating.set(true);
+    this.selectedAutor.set(null);
+    this.isCreating.set(false);
   }
 
   onRestore(autor: Autor): void {
@@ -244,7 +233,8 @@ export class AutoresPageComponent implements OnInit {
           this.successMessage.set('Autor restaurado con éxito');
           this.loadAutores(updatedAutor._id);
         },
-        error: () => this.errorMessage.set('Error al restaurar el autor.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el autor.')),
       });
   }
 

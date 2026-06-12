@@ -4,17 +4,17 @@
 }
 
 .autor-form {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: #fff9f7;
+  border: 1px solid #dfa196;
   border-radius: 24px;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 16px 40px rgba(123, 20, 30, 0.06);
   overflow: hidden;
 }
 
 .autor-form__header {
   padding: 28px 28px 20px;
-  border-bottom: 1px solid #eef2f7;
-  background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+  border-bottom: 1px solid #f3c7bd;
+  background: linear-gradient(180deg, #fff9f7 0%, #f3c7bd 100%);
 }
 
 .autor-form__eyebrow {
@@ -23,20 +23,20 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6366f1;
+  color: #a33c3c;
 }
 
 .autor-form__title {
   margin: 0;
   font-size: 1.45rem;
   font-weight: 700;
-  color: #111827;
+  color: #7b141e;
   line-height: 1.2;
 }
 
 .autor-form__subtitle {
   margin: 8px 0 0;
-  color: #6b7280;
+  color: #b75b56;
   line-height: 1.55;
   font-size: 0.95rem;
 }
@@ -50,15 +50,15 @@
 }
 
 .autor-form__alert--error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background: #f3c7bd;
+  color: #7b141e;
+  border: 1px solid #dfa196;
 }
 
 .autor-form__alert--success {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: #f3c7bd;
+  color: #8f262b;
+  border: 1px solid #dfa196;
 }
 
 .autor-form__body {
@@ -85,17 +85,17 @@
 .autor-form__label {
   font-size: 0.92rem;
   font-weight: 700;
-  color: #374151;
+  color: #8f262b;
 }
 
 .autor-form__input {
   width: 100%;
-  border: 1px solid #d1d5db;
+  border: 1px solid #dfa196;
   border-radius: 14px;
-  background: #ffffff;
+  background: #fff9f7;
   padding: 13px 14px;
   font-size: 0.95rem;
-  color: #111827;
+  color: #7b141e;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -103,18 +103,18 @@
 }
 
 .autor-form__input::placeholder {
-  color: #9ca3af;
+  color: #cb7d74;
 }
 
 .autor-form__input:focus {
   outline: none;
-  border-color: #818cf8;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+  border-color: #b75b56;
+  box-shadow: 0 0 0 4px rgba(163, 60, 60, 0.12);
 }
 
 .autor-form__error {
   margin: 0;
-  color: #dc2626;
+  color: #8f262b;
   font-size: 0.84rem;
   font-weight: 500;
 }
@@ -126,7 +126,7 @@
   flex-wrap: wrap;
   margin-top: 28px;
   padding-top: 20px;
-  border-top: 1px solid #eef2f7;
+  border-top: 1px solid #f3c7bd;
 }
 
 .autor-form__button {
@@ -154,31 +154,31 @@
 }
 
 .autor-form__button--primary {
-  background: linear-gradient(135deg, #111827, #1f2937);
-  color: #ffffff;
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.18);
+  background: linear-gradient(135deg, #7b141e, #8f262b);
+  color: #fff9f7;
+  box-shadow: 0 10px 24px rgba(123, 20, 30, 0.18);
 }
 
 .autor-form__button--secondary {
-  background: #f3f4f6;
-  color: #111827;
+  background: #f3c7bd;
+  color: #7b141e;
 }
 
 .autor-form__button--danger {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: #f3c7bd;
+  color: #7b141e;
 }
 
 .autor-form__button--danger-outline {
-  background: #ffffff;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  background: #fff9f7;
+  border: 1px solid #dfa196;
+  color: #8f262b;
 }
 
 .autor-form__button--danger-outline:hover:not(:disabled) {
-  background: #fef2f2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background: #f3c7bd;
+  border-color: #cb7d74;
+  color: #7b141e;
 }
 
 @media (max-width: 960px) {

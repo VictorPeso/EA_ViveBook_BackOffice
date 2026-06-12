@@ -3,6 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize, forkJoin } from 'rxjs';
 
 import { Libro } from '../../../../Core/models/libro.model';
+import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { Valoracion } from '../../../../Core/models/valoracion.model';
 import { LibrosService } from '../../../../Core/services/libros.service';
@@ -32,7 +33,7 @@ export class ValoracionesPageComponent implements OnInit {
   readonly isLoadingRelations = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly isCreating = signal(true);
+  readonly isCreating = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly currentPage = signal(1);
@@ -76,10 +77,13 @@ export class ValoracionesPageComponent implements OnInit {
             this.isCreating.set(false);
             return;
           }
-          this.selected.set(this.createEmpty());
-          this.isCreating.set(true);
+          this.selected.set(null);
+          this.isCreating.set(false);
         },
-        error: () => this.errorMessage.set('No se pudieron cargar las valoraciones.'),
+        error: (error) =>
+          this.errorMessage.set(
+            getApiErrorMessage(error, 'No se pudieron cargar las valoraciones.'),
+          ),
       });
   }
 
@@ -99,7 +103,10 @@ export class ValoracionesPageComponent implements OnInit {
           this.usuarios.set(usuarios.data);
           this.libros.set(libros.data);
         },
-        error: () => this.errorMessage.set('No se pudieron cargar usuarios y libros.'),
+        error: (error) =>
+          this.errorMessage.set(
+            getApiErrorMessage(error, 'No se pudieron cargar usuarios y libros.'),
+          ),
       });
   }
 
@@ -110,8 +117,8 @@ export class ValoracionesPageComponent implements OnInit {
   }
 
   onCreateNew(): void {
-    this.selected.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selected.set(null);
+    this.isCreating.set(false);
     this.errorMessage.set('');
     this.successMessage.set('');
   }
@@ -141,7 +148,7 @@ export class ValoracionesPageComponent implements OnInit {
         this.loadValoraciones(saved._id);
       },
       error: (error) =>
-        this.errorMessage.set(error?.error?.message || 'No se pudo guardar la valoración.'),
+        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar la valoración.')),
     });
   }
 
@@ -157,7 +164,8 @@ export class ValoracionesPageComponent implements OnInit {
           this.successMessage.set('Valoración desactivada correctamente.');
           this.loadValoraciones(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo desactivar la valoración.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar la valoración.')),
       });
   }
 
@@ -173,7 +181,8 @@ export class ValoracionesPageComponent implements OnInit {
           this.successMessage.set('Valoración restaurada correctamente.');
           this.loadValoraciones(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo restaurar la valoración.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar la valoración.')),
       });
   }
 

@@ -1,20 +1,38 @@
-<section class="retos-page">
-  <div class="retos-page__layout">
-    <aside class="retos-page__form-column">
-      <app-reto-form
-        [reto]="selected()"
-        [isSaving]="isSaving()"
-        [isDeleting]="isDeleting()"
-        [isCreating]="isCreating()"
-        [errorMessage]="errorMessage()"
-        [successMessage]="successMessage()"
-        (save)="onSave($event)"
-        (deactivate)="onDeactivate($event)"
-        (activate)="onActivate($event)"
-        (cancel)="onCancel()"
-      />
-    </aside>
-    <section class="retos-page__list-column">
+<section class="retos-page admin-page">
+  <div class="retos-page__layout admin-page__layout">
+    <div
+      class="admin-modal"
+      *ngIf="selected()"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Detalle de reto"
+    >
+      <button
+        class="admin-modal__backdrop"
+        type="button"
+        (click)="onCancel()"
+        aria-label="Cerrar"
+      ></button>
+      <aside class="retos-page__form-column admin-modal__dialog">
+        <button class="admin-modal__close" type="button" (click)="onCancel()" aria-label="Cerrar">
+          ×
+        </button>
+        <app-reto-form
+          [reto]="selected()"
+          [isSaving]="isSaving()"
+          [isDeleting]="isDeleting()"
+          [isCreating]="isCreating()"
+          [errorMessage]="errorMessage()"
+          [successMessage]="successMessage()"
+          (save)="onSave($event)"
+          (deactivate)="onDeactivate($event)"
+          (activate)="onActivate($event)"
+          (cancel)="onCancel()"
+        />
+      </aside>
+    </div>
+
+    <section class="retos-page__list-column admin-page__list">
       <app-retos-list
         [retos]="retos()"
         [selectedId]="selected()?._id ?? null"

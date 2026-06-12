@@ -1,23 +1,41 @@
-<section class="valoraciones-page">
-  <div class="valoraciones-page__layout">
-    <aside class="valoraciones-page__form-column">
-      <app-valoracion-form
-        [valoracion]="selected()"
-        [usuarios]="usuarios()"
-        [libros]="libros()"
-        [isLoadingRelations]="isLoadingRelations()"
-        [isSaving]="isSaving()"
-        [isDeleting]="isDeleting()"
-        [isCreating]="isCreating()"
-        [errorMessage]="errorMessage()"
-        [successMessage]="successMessage()"
-        (save)="onSave($event)"
-        (delete)="onDelete($event)"
-        (restore)="onRestore($event)"
-        (cancel)="onCancel()"
-      />
-    </aside>
-    <section class="valoraciones-page__list-column">
+<section class="valoraciones-page admin-page">
+  <div class="valoraciones-page__layout admin-page__layout">
+    <div
+      class="admin-modal"
+      *ngIf="selected()"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Detalle de valoración"
+    >
+      <button
+        class="admin-modal__backdrop"
+        type="button"
+        (click)="onCancel()"
+        aria-label="Cerrar"
+      ></button>
+      <aside class="valoraciones-page__form-column admin-modal__dialog">
+        <button class="admin-modal__close" type="button" (click)="onCancel()" aria-label="Cerrar">
+          ×
+        </button>
+        <app-valoracion-form
+          [valoracion]="selected()"
+          [usuarios]="usuarios()"
+          [libros]="libros()"
+          [isLoadingRelations]="isLoadingRelations()"
+          [isSaving]="isSaving()"
+          [isDeleting]="isDeleting()"
+          [isCreating]="isCreating()"
+          [errorMessage]="errorMessage()"
+          [successMessage]="successMessage()"
+          (save)="onSave($event)"
+          (delete)="onDelete($event)"
+          (restore)="onRestore($event)"
+          (cancel)="onCancel()"
+        />
+      </aside>
+    </div>
+
+    <section class="valoraciones-page__list-column admin-page__list">
       <app-valoraciones-list
         [valoraciones]="valoraciones()"
         [selectedId]="selected()?._id ?? null"

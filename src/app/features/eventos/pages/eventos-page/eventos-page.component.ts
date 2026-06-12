@@ -3,6 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Evento } from '../../../../Core/models/evento.model';
+import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { EventosService } from '../../../../Core/services/eventos.service';
 import { UsuariosService } from '../../../../Core/services/usuarios.service';
@@ -28,7 +29,7 @@ export class EventosPageComponent implements OnInit {
   readonly isLoadingUsuarios = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly isCreating = signal(true);
+  readonly isCreating = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly currentPage = signal(1);
@@ -72,10 +73,11 @@ export class EventosPageComponent implements OnInit {
             this.isCreating.set(false);
             return;
           }
-          this.selectedEvento.set(this.createEmpty());
-          this.isCreating.set(true);
+          this.selectedEvento.set(null);
+          this.isCreating.set(false);
         },
-        error: () => this.errorMessage.set('No se pudieron cargar los eventos.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los eventos.')),
       });
   }
 
@@ -86,7 +88,8 @@ export class EventosPageComponent implements OnInit {
       .pipe(finalize(() => this.isLoadingUsuarios.set(false)))
       .subscribe({
         next: (result) => this.usuarios.set(result.data),
-        error: () => this.errorMessage.set('No se pudieron cargar los usuarios.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los usuarios.')),
       });
   }
 
@@ -97,8 +100,8 @@ export class EventosPageComponent implements OnInit {
   }
 
   onCreateNew(): void {
-    this.selectedEvento.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selectedEvento.set(null);
+    this.isCreating.set(false);
     this.errorMessage.set('');
     this.successMessage.set('');
   }
@@ -128,7 +131,7 @@ export class EventosPageComponent implements OnInit {
         this.loadEventos(saved._id);
       },
       error: (error) =>
-        this.errorMessage.set(error?.error?.message || 'No se pudo guardar el evento.'),
+        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el evento.')),
     });
   }
 
@@ -144,7 +147,8 @@ export class EventosPageComponent implements OnInit {
           this.successMessage.set('Evento desactivado correctamente.');
           this.loadEventos(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo desactivar el evento.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el evento.')),
       });
   }
 
@@ -160,7 +164,8 @@ export class EventosPageComponent implements OnInit {
           this.successMessage.set('Evento restaurado correctamente.');
           this.loadEventos(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo restaurar el evento.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el evento.')),
       });
   }
 

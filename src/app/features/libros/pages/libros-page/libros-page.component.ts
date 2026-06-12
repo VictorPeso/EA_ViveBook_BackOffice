@@ -3,6 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Autor } from '../../../../Core/models/autor.model';
+import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Libro, UsuarioRef } from '../../../../Core/models/libro.model';
 import { AutoresService } from '../../../../Core/services/autores.service';
 import { LibrosService } from '../../../../Core/services/libros.service';
@@ -29,7 +30,7 @@ export class LibrosPageComponent implements OnInit {
   readonly isLoadingAutores = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly isCreating = signal(true);
+  readonly isCreating = signal(false);
   readonly isAdmin = signal(true);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
@@ -88,12 +89,12 @@ export class LibrosPageComponent implements OnInit {
             return;
           }
 
-          this.selectedLibro.set(this.createEmptyLibro());
-          this.isCreating.set(true);
+          this.selectedLibro.set(null);
+          this.isCreating.set(false);
         },
         error: (error) => {
           console.error('Error al cargar libros:', error);
-          this.errorMessage.set('No se pudieron cargar los libros.');
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los libros.'));
         },
       });
   }
@@ -108,7 +109,7 @@ export class LibrosPageComponent implements OnInit {
         next: (result) => this.autores.set(result.data),
         error: (error) => {
           console.error('Error al cargar autores:', error);
-          this.errorMessage.set('No se pudieron cargar los autores.');
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los autores.'));
         },
       });
   }
@@ -148,11 +149,7 @@ export class LibrosPageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al guardar libro:', error);
-        this.errorMessage.set(
-          error?.error?.message ||
-            error?.error?.details?.[0]?.message ||
-            'No se pudo guardar el libro.',
-        );
+        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el libro.'));
       },
     });
   }
@@ -178,7 +175,7 @@ export class LibrosPageComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al desactivar libro:', error);
-          this.errorMessage.set(error?.error?.message || 'No se pudo desactivar el libro.');
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el libro.'));
         },
       });
   }
@@ -198,15 +195,16 @@ export class LibrosPageComponent implements OnInit {
           this.successMessage.set('Libro restaurado correctamente.');
           this.loadLibros(updatedLibro._id);
         },
-        error: () => this.errorMessage.set('No se pudo restaurar el libro.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el libro.')),
       });
   }
 
   onCancelEdit(): void {
     this.errorMessage.set('');
     this.successMessage.set('');
-    this.selectedLibro.set(this.createEmptyLibro());
-    this.isCreating.set(true);
+    this.selectedLibro.set(null);
+    this.isCreating.set(false);
   }
 
   onPageChange(page: number): void {

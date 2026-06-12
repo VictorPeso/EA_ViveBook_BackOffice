@@ -3,6 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize, forkJoin } from 'rxjs';
 
 import { Libro } from '../../../../Core/models/libro.model';
+import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Reserva } from '../../../../Core/models/reserva.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { LibrosService } from '../../../../Core/services/libros.service';
@@ -79,7 +80,8 @@ export class ReservasPageComponent implements OnInit {
           this.selected.set(this.createEmpty());
           this.isCreating.set(true);
         },
-        error: () => this.errorMessage.set('No se pudieron cargar las reservas.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar las reservas.')),
       });
   }
 
@@ -103,7 +105,10 @@ export class ReservasPageComponent implements OnInit {
           this.usuarios.set(usuarios.data);
           this.libros.set(libros.data);
         },
-        error: () => this.errorMessage.set('No se pudieron cargar usuarios y libros.'),
+        error: (error) =>
+          this.errorMessage.set(
+            getApiErrorMessage(error, 'No se pudieron cargar usuarios y libros.'),
+          ),
       });
   }
 
@@ -145,7 +150,7 @@ export class ReservasPageComponent implements OnInit {
         this.loadReservas(saved._id);
       },
       error: (error) =>
-        this.errorMessage.set(error?.error?.message || 'No se pudo guardar la reserva.'),
+        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar la reserva.')),
     });
   }
 
@@ -161,7 +166,8 @@ export class ReservasPageComponent implements OnInit {
           this.successMessage.set('Reserva desactivada correctamente.');
           this.loadReservas(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo desactivar la reserva.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar la reserva.')),
       });
   }
 
@@ -178,7 +184,7 @@ export class ReservasPageComponent implements OnInit {
           this.loadReservas(updated._id);
         },
         error: (error) =>
-          this.errorMessage.set(error?.error?.message || 'No se pudo restaurar la reserva.'),
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar la reserva.')),
       });
   }
 

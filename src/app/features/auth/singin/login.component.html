@@ -1,24 +1,72 @@
-<div class="login-container">
-  <form (ngSubmit)="onLogin()" #loginForm="ngForm">
-    <h2>BackOffice Login</h2>
+<main class="auth-page">
+  <section class="auth-shell">
+    <aside class="auth-showcase" aria-labelledby="welcome-title">
+      <div class="auth-brand">
+        <span class="auth-logo" aria-hidden="true">VB</span>
+        <span>ViveBook Backoffice</span>
+      </div>
 
-    <div class="field">
-      <label>Email</label>
-      <input type="email" name="email" [(ngModel)]="credentials.email" required />
-    </div>
+      <div class="auth-copy">
+        <p>Administración ViveBook</p>
+        <h1 id="welcome-title">Gestiona la plataforma</h1>
+        <span>
+          Espacio dedicado al personal administrador para gestionar el contenido y la comunidad de
+          ViveBook.
+        </span>
+      </div>
+    </aside>
 
-    <div class="field">
-      <label>Contraseña</label>
-      <input type="password" name="password" [(ngModel)]="credentials.password" required />
-    </div>
+    <section class="auth-panel">
+      <div class="auth-card">
+        <header>
+          <p class="eyebrow">Acceso administrativo</p>
+          <h2>Bienvenido de nuevo</h2>
+          <p>Identifícate con una cuenta de administrador autorizada.</p>
+        </header>
 
-    <button type="submit" [disabled]="loginForm.invalid || isLoading">
-      {{ isLoading ? 'Cargando...' : 'Entrar' }}
-    </button>
+        <div class="auth-alert" role="alert" *ngIf="errorMessage()">
+          {{ errorMessage() }}
+        </div>
 
-    <div class="auth-footer">
-      <p>¿No tienes una cuenta?</p>
-      <a routerLink="/auth/signup" class="register-link">Regístrate aquí</a>
-    </div>
-  </form>
-</div>
+        <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+          <label for="login-email">Correo electrónico</label>
+          <input
+            id="login-email"
+            type="email"
+            name="email"
+            [(ngModel)]="credentials.email"
+            placeholder="admin@vivebook.com"
+            autocomplete="email"
+            required
+            email
+          />
+
+          <label for="login-password">Contraseña</label>
+          <input
+            id="login-password"
+            type="password"
+            name="password"
+            [(ngModel)]="credentials.password"
+            placeholder="Contraseña"
+            autocomplete="current-password"
+            required
+            minlength="6"
+          />
+
+          <button
+            class="primary-action"
+            type="submit"
+            [disabled]="loginForm.invalid || isLoading()"
+          >
+            {{ isLoading() ? 'Verificando...' : 'Iniciar sesión' }}
+          </button>
+        </form>
+
+        <footer>
+          <span>¿No tienes cuenta?</span>
+          <a routerLink="/auth/signup">Crear cuenta</a>
+        </footer>
+      </div>
+    </section>
+  </section>
+</main>

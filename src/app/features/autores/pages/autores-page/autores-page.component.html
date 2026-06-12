@@ -1,24 +1,39 @@
-<section class="autores-page">
-  <div class="autores-page__layout">
-    @if (isAdmin()) {
-      <aside class="autores-page__form-column">
-        <app-autor-form
-          [autor]="selectedAutor()"
-          [isSaving]="isSaving()"
-          [isDeleting]="isDeleting()"
-          [isCreating]="isCreating()"
-          [errorMessage]="errorMessage()"
-          [successMessage]="successMessage()"
-          (save)="onSaveAutor($event)"
-          (delete)="onDeleteAutor($event)"
-          (cancel)="onCancelEdit()"
-          (restoreAutor)="onRestore($event)"
-        >
-        </app-autor-form>
-      </aside>
+<section class="autores-page admin-page">
+  <div class="autores-page__layout admin-page__layout">
+    @if (isAdmin() && selectedAutor()) {
+      <div class="admin-modal" role="dialog" aria-modal="true" aria-label="Detalle de autor">
+        <button
+          class="admin-modal__backdrop"
+          type="button"
+          (click)="onCancelEdit()"
+          aria-label="Cerrar"
+        ></button>
+        <aside class="autores-page__form-column admin-modal__dialog">
+          <button
+            class="admin-modal__close"
+            type="button"
+            (click)="onCancelEdit()"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+          <app-autor-form
+            [autor]="selectedAutor()"
+            [isSaving]="isSaving()"
+            [isDeleting]="isDeleting()"
+            [isCreating]="isCreating()"
+            [errorMessage]="errorMessage()"
+            [successMessage]="successMessage()"
+            (save)="onSaveAutor($event)"
+            (delete)="onDeleteAutor($event)"
+            (cancel)="onCancelEdit()"
+            (restoreAutor)="onRestore($event)"
+          />
+        </aside>
+      </div>
     }
 
-    <section class="autores-page__list-column" [style.grid-column]="isAdmin() ? '' : '1 / -1'">
+    <section class="autores-page__list-column admin-page__list">
       <app-autores-list
         [autores]="autores()"
         [selectedAutorId]="selectedAutor()?._id ?? null"
@@ -34,8 +49,7 @@
         (nextPage)="onNextPage()"
         (previousPage)="onPreviousPage()"
         (search)="onSearch($event)"
-      >
-      </app-autores-list>
+      />
     </section>
   </div>
 </section>

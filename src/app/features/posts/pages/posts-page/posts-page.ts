@@ -3,6 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Libro } from '../../../../Core/models/libro.model';
+import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Post } from '../../../../Core/models/post.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { LibrosService } from '../../../../Core/services/libros.service';
@@ -32,7 +33,7 @@ export class PostsPage implements OnInit {
   readonly isLoadingRelations = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly isCreating = signal(true);
+  readonly isCreating = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly currentPage = signal(1);
@@ -76,10 +77,11 @@ export class PostsPage implements OnInit {
             this.isCreating.set(false);
             return;
           }
-          this.selectedPost.set(this.createEmpty());
-          this.isCreating.set(true);
+          this.selectedPost.set(null);
+          this.isCreating.set(false);
         },
-        error: () => this.errorMessage.set('No se pudieron cargar los posts.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los posts.')),
       });
   }
 
@@ -92,14 +94,16 @@ export class PostsPage implements OnInit {
     };
     this.librosService.getAdminLibros({ page: 1, limit: 100, includeDeleted: false }).subscribe({
       next: (result) => this.libros.set(result.data),
-      error: () => this.errorMessage.set('No se pudieron cargar los libros.'),
+      error: (error) =>
+        this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los libros.')),
       complete: done,
     });
     this.usuariosService
       .getAdminUsuarios({ page: 1, limit: 100, includeDeleted: false })
       .subscribe({
         next: (result) => this.usuarios.set(result.data),
-        error: () => this.errorMessage.set('No se pudieron cargar los usuarios.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los usuarios.')),
         complete: done,
       });
   }
@@ -111,8 +115,8 @@ export class PostsPage implements OnInit {
   }
 
   onCreateNew(): void {
-    this.selectedPost.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selectedPost.set(null);
+    this.isCreating.set(false);
     this.errorMessage.set('');
     this.successMessage.set('');
   }
@@ -142,7 +146,7 @@ export class PostsPage implements OnInit {
         this.loadPosts(saved._id);
       },
       error: (error) =>
-        this.errorMessage.set(error?.error?.message || 'No se pudo guardar el post.'),
+        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el post.')),
     });
   }
 
@@ -158,7 +162,8 @@ export class PostsPage implements OnInit {
           this.successMessage.set('Post desactivado correctamente.');
           this.loadPosts(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo desactivar el post.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el post.')),
       });
   }
 
@@ -174,7 +179,8 @@ export class PostsPage implements OnInit {
           this.successMessage.set('Post restaurado correctamente.');
           this.loadPosts(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo restaurar el post.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el post.')),
       });
   }
 

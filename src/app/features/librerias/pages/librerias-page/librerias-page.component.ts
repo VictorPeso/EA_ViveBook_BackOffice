@@ -3,6 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { Libreria } from '../../../../Core/models/libreria.model';
+import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { LibreriasService } from '../../../../Core/services/librerias.service';
 import { LibreriaFormComponent } from '../../components/libreria-form/libreria-form.component';
 import { LibreriasListComponent } from '../../components/librerias-list/librerias-list.component';
@@ -70,7 +71,8 @@ export class LibreriasPageComponent implements OnInit {
           this.selectedLibreria.set(this.createEmpty());
           this.isCreating.set(true);
         },
-        error: () => this.errorMessage.set('No se pudieron cargar las librerías.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar las librerías.')),
       });
   }
 
@@ -117,7 +119,7 @@ export class LibreriasPageComponent implements OnInit {
         this.loadLibrerias(saved._id);
       },
       error: (error) =>
-        this.errorMessage.set(error?.error?.message || 'No se pudo guardar la librería.'),
+        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar la librería.')),
     });
   }
 
@@ -133,7 +135,8 @@ export class LibreriasPageComponent implements OnInit {
           this.successMessage.set('Librería desactivada correctamente.');
           this.loadLibrerias(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo desactivar la librería.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar la librería.')),
       });
   }
 
@@ -149,7 +152,8 @@ export class LibreriasPageComponent implements OnInit {
           this.successMessage.set('Librería restaurada correctamente.');
           this.loadLibrerias(updated._id);
         },
-        error: () => this.errorMessage.set('No se pudo restaurar la librería.'),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar la librería.')),
       });
   }
 

@@ -3,7 +3,7 @@
   top: 50%;
   max-width: 600px;
   margin-top: 10px;
-  background: #f2f3f4;
+  background: #f3c7bd;
   border: none;
   border-radius: 1rem;
 }
@@ -46,7 +46,7 @@ dialog::backdrop {
 }
 
 .libro-form__button--primary {
-  background: linear-gradient(135deg, #111827, #1f2937);
-  color: #ffffff;
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.18);
+  background: linear-gradient(135deg, #7b141e, #8f262b);
+  color: #fff9f7;
+  box-shadow: 0 10px 24px rgba(123, 20, 30, 0.18);
 }

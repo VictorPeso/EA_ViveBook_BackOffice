@@ -17,6 +17,10 @@ export class HeadersService {
     this.token = data;
   }
 
+  clearToken(): void {
+    this.token = '';
+  }
+
   //Lazy initialization
   getHeader(): HttpHeaders {
     const headers = new HttpHeaders();
