@@ -13,11 +13,15 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Libro } from '../../../../Core/models/libro.model';
 import { Post } from '../../../../Core/models/post.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
+import {
+  AdminEditorComponent,
+  AdminEditorSectionDirective,
+} from '../../../../shared/components/admin-editor/admin-editor.component';
 
 @Component({
   selector: 'app-post-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AdminEditorComponent, AdminEditorSectionDirective],
   templateUrl: './post-form.component.html',
   styleUrl: './post-form.component.css',
 })
@@ -67,6 +71,47 @@ export class PostFormComponent implements OnChanges {
     }
   }
 
+  get formTitle(): string {
+    return this.isCreating ? 'Nuevo post' : 'Editar post';
+  }
+
+  get formSubtitle(): string {
+    return this.isCreating
+      ? 'Completa los datos para crear una nueva publicación.'
+      : 'Modifica los datos y relaciones de la publicación seleccionada.';
+  }
+
+  get propietarioSeleccionado(): Usuario | null {
+    const ownerId = this.form.controls.ownerId.value;
+    if (!ownerId) return null;
+    const ownerFromOptions = this.usuarios.find((usuario) => usuario._id === ownerId);
+    if (ownerFromOptions) return ownerFromOptions;
+    return typeof this.post?.ownerId === 'object' && this.post.ownerId._id === ownerId
+      ? this.post.ownerId
+      : null;
+  }
+
+  get libroSeleccionado(): Libro | null {
+    const bookId = this.form.controls.bookId.value;
+    if (!bookId) return null;
+    const bookFromOptions = this.libros.find((libro) => libro._id === bookId);
+    if (bookFromOptions) return bookFromOptions;
+    return typeof this.post?.bookId === 'object' && this.post.bookId._id === bookId
+      ? this.post.bookId
+      : null;
+  }
+
+  formatDate(value?: string): string {
+    if (!value) return 'No disponible';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? 'No disponible'
+      : new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date);
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -83,6 +128,10 @@ export class PostFormComponent implements OnChanges {
   onRestore(): void {
     const post = this.value();
     if (post._id) this.restore.emit(post);
+  }
+
+  onCancel(): void {
+    this.cancel.emit();
   }
 
   private value(): Post {

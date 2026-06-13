@@ -11,13 +11,26 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { Libro } from '../../../../Core/models/libro.model';
-import { Usuario } from '../../../../Core/models/usuario.model';
+import { LibroRef, Usuario, UsuarioRef } from '../../../../Core/models/usuario.model';
+import {
+  AdminEditorComponent,
+  AdminEditorSectionDirective,
+} from '../../../../shared/components/admin-editor/admin-editor.component';
+
+type BookCollectionName =
+  | 'libros'
+  | 'boughtLibros'
+  | 'rentedLibros'
+  | 'favoriteBooks'
+  | 'wishlist'
+  | 'favoritos';
+type UserCollectionName = 'followingUsers' | 'notificationUsersEnabled';
+type TextCollectionName = 'favoriteAuthors' | 'favoriteCategories';
 
 @Component({
   selector: 'app-usuario-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AdminEditorComponent, AdminEditorSectionDirective],
   templateUrl: './usuario-form.component.html',
   styleUrl: './usuario-form.component.css',
 })
@@ -25,11 +38,9 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
   private readonly fb = inject(FormBuilder);
 
   @Input() usuario: Usuario | null = null;
-  @Input() libros: Libro[] = [];
   @Input() isSaving = false;
   @Input() isDeleting = false;
   @Input() isCreating = true;
-  @Input() isLoadingLibros = false;
   @Input() errorMessage = '';
   @Input() successMessage = '';
 
@@ -49,6 +60,15 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
     hasSeenTutorial: [false],
     IsDeleted: [false],
     libros: this.fb.array<string>([]),
+    boughtLibros: this.fb.array<string>([]),
+    rentedLibros: this.fb.array<string>([]),
+    favoriteAuthors: this.fb.array<string>([]),
+    favoriteBooks: this.fb.array<string>([]),
+    favoriteCategories: this.fb.array<string>([]),
+    wishlist: this.fb.array<string>([]),
+    followingUsers: this.fb.array<string>([]),
+    favoritos: this.fb.array<string>([]),
+    notificationUsersEnabled: this.fb.array<string>([]),
   });
 
   ngOnInit(): void {
@@ -91,25 +111,58 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       : 'Modifica los datos del usuario seleccionado.';
   }
 
-  isLibroSelected(libroId: string): boolean {
-    return this.librosArrayValues.includes(libroId);
+  get librosAsociados(): LibroRef[] {
+    return this.resolveLibroRefs('libros', this.usuario?.libros);
   }
 
-  onToggleLibro(libroId: string, checked: boolean): void {
-    if (checked) {
-      if (!this.isLibroSelected(libroId)) {
-        this.librosControl.push(this.fb.control(libroId, { nonNullable: true }));
-      }
-    } else {
-      const index = this.librosArrayValues.findIndex((id) => id === libroId);
+  get librosComprados(): LibroRef[] {
+    return this.resolveLibroRefs('boughtLibros', this.usuario?.boughtLibros);
+  }
 
-      if (index >= 0) {
-        this.librosControl.removeAt(index);
-      }
-    }
+  get librosAlquilados(): LibroRef[] {
+    return this.resolveLibroRefs('rentedLibros', this.usuario?.rentedLibros);
+  }
 
-    this.librosControl.markAsTouched();
-    this.librosControl.updateValueAndValidity();
+  get librosFavoritos(): LibroRef[] {
+    return this.resolveLibroRefs('favoriteBooks', this.usuario?.favoriteBooks);
+  }
+
+  get listaDeseos(): LibroRef[] {
+    return this.resolveLibroRefs('wishlist', this.usuario?.wishlist);
+  }
+
+  get favoritos(): LibroRef[] {
+    return this.resolveLibroRefs('favoritos', this.usuario?.favoritos);
+  }
+
+  get usuariosSeguidos(): UsuarioRef[] {
+    return this.resolveUsuarioRefs('followingUsers', this.usuario?.followingUsers);
+  }
+
+  get notificacionesDeUsuarios(): UsuarioRef[] {
+    return this.resolveUsuarioRefs(
+      'notificationUsersEnabled',
+      this.usuario?.notificationUsersEnabled,
+    );
+  }
+
+  get autoresFavoritos(): string[] {
+    return this.getSafeIds(this.form.controls.favoriteAuthors.getRawValue());
+  }
+
+  get categoriasFavoritas(): string[] {
+    return this.getSafeIds(this.form.controls.favoriteCategories.getRawValue());
+  }
+
+  formatDate(value?: string): string {
+    if (!value) return 'No disponible';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? 'No disponible'
+      : new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date);
   }
 
   onSubmit(): void {
@@ -130,6 +183,15 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       password: rawValue.password,
       rol: rawValue.rol,
       libros: libroIds,
+      boughtLibros: this.getSafeIds(rawValue.boughtLibros),
+      rentedLibros: this.getSafeIds(rawValue.rentedLibros),
+      favoriteAuthors: this.getSafeIds(rawValue.favoriteAuthors),
+      favoriteBooks: this.getSafeIds(rawValue.favoriteBooks),
+      favoriteCategories: this.getSafeIds(rawValue.favoriteCategories),
+      wishlist: this.getSafeIds(rawValue.wishlist),
+      followingUsers: this.getSafeIds(rawValue.followingUsers),
+      favoritos: this.getSafeIds(rawValue.favoritos),
+      notificationUsersEnabled: this.getSafeIds(rawValue.notificationUsersEnabled),
       avatar: rawValue.avatar.trim(),
       description: rawValue.description.trim(),
       hasSeenTutorial: rawValue.hasSeenTutorial,
@@ -158,8 +220,32 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
     this.restoreUsuario.emit(usuario);
   }
 
-  trackByLibroId(index: number, libro: Libro): string | number {
+  trackByLibroId(index: number, libro: LibroRef): string | number {
     return libro._id ?? index;
+  }
+
+  trackByUsuarioId(index: number, usuario: UsuarioRef): string | number {
+    return usuario._id ?? index;
+  }
+
+  trackByValue(index: number, value: string): string {
+    return `${value}-${index}`;
+  }
+
+  removeBook(collection: BookCollectionName, libroId: string): void {
+    this.removeValue(this.form.controls[collection], libroId);
+  }
+
+  removeUser(collection: UserCollectionName, usuarioId: string): void {
+    this.removeValue(this.form.controls[collection], usuarioId);
+
+    if (collection === 'followingUsers') {
+      this.removeValue(this.form.controls.notificationUsersEnabled, usuarioId);
+    }
+  }
+
+  removeText(collection: TextCollectionName, value: string): void {
+    this.removeValue(this.form.controls[collection], value);
   }
 
   private applyModeValidators(): void {
@@ -187,8 +273,6 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
   }
 
   private patchForm(usuario: Usuario | null): void {
-    const libroIds = this.extractLibroIds(usuario?.libros);
-
     this.form.reset({
       _id: usuario?._id ?? '',
       name: usuario?.name ?? '',
@@ -200,27 +284,56 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       hasSeenTutorial: usuario?.hasSeenTutorial ?? false,
       IsDeleted: usuario?.IsDeleted ?? false,
       libros: [],
+      boughtLibros: [],
+      rentedLibros: [],
+      favoriteAuthors: [],
+      favoriteBooks: [],
+      favoriteCategories: [],
+      wishlist: [],
+      followingUsers: [],
+      favoritos: [],
+      notificationUsersEnabled: [],
     });
 
-    this.librosControl.clear();
-
-    libroIds.forEach((libroId) => {
-      this.librosControl.push(this.fb.control(libroId, { nonNullable: true }));
-    });
+    this.setArrayValues(this.form.controls.libros, this.extractReferenceIds(usuario?.libros));
+    this.setArrayValues(
+      this.form.controls.boughtLibros,
+      this.extractReferenceIds(usuario?.boughtLibros),
+    );
+    this.setArrayValues(
+      this.form.controls.rentedLibros,
+      this.extractReferenceIds(usuario?.rentedLibros),
+    );
+    this.setArrayValues(this.form.controls.favoriteAuthors, usuario?.favoriteAuthors ?? []);
+    this.setArrayValues(
+      this.form.controls.favoriteBooks,
+      this.extractReferenceIds(usuario?.favoriteBooks),
+    );
+    this.setArrayValues(this.form.controls.favoriteCategories, usuario?.favoriteCategories ?? []);
+    this.setArrayValues(this.form.controls.wishlist, this.extractReferenceIds(usuario?.wishlist));
+    this.setArrayValues(
+      this.form.controls.followingUsers,
+      this.extractReferenceIds(usuario?.followingUsers),
+    );
+    this.setArrayValues(this.form.controls.favoritos, this.extractReferenceIds(usuario?.favoritos));
+    this.setArrayValues(
+      this.form.controls.notificationUsersEnabled,
+      this.extractReferenceIds(usuario?.notificationUsersEnabled),
+    );
 
     this.form.markAsPristine();
     this.form.markAsUntouched();
     this.librosControl.updateValueAndValidity();
   }
 
-  private extractLibroIds(libros: Usuario['libros'] | undefined): string[] {
-    if (!Array.isArray(libros)) {
+  private extractReferenceIds(values: Array<string | LibroRef | UsuarioRef> | undefined): string[] {
+    if (!Array.isArray(values)) {
       return [];
     }
 
-    return libros
-      .map((libro) => (typeof libro === 'string' ? libro : libro._id))
-      .filter((libroId): libroId is string => !!libroId);
+    return values
+      .map((value) => (typeof value === 'string' ? value : value._id))
+      .filter((id): id is string => !!id);
   }
 
   private buildCurrentUsuarioFromForm(): Usuario | null {
@@ -238,6 +351,15 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
       password: rawValue.password,
       rol: rawValue.rol,
       libros: libroIds,
+      boughtLibros: this.getSafeIds(rawValue.boughtLibros),
+      rentedLibros: this.getSafeIds(rawValue.rentedLibros),
+      favoriteAuthors: this.getSafeIds(rawValue.favoriteAuthors),
+      favoriteBooks: this.getSafeIds(rawValue.favoriteBooks),
+      favoriteCategories: this.getSafeIds(rawValue.favoriteCategories),
+      wishlist: this.getSafeIds(rawValue.wishlist),
+      followingUsers: this.getSafeIds(rawValue.followingUsers),
+      favoritos: this.getSafeIds(rawValue.favoritos),
+      notificationUsersEnabled: this.getSafeIds(rawValue.notificationUsersEnabled),
       avatar: rawValue.avatar.trim(),
       description: rawValue.description.trim(),
       hasSeenTutorial: rawValue.hasSeenTutorial,
@@ -246,12 +368,54 @@ export class UsuarioFormComponent implements OnInit, OnChanges {
   }
 
   private getSafeLibroIds(values: Array<string | null | undefined>): string[] {
-    return values.filter(
-      (value): value is string => typeof value === 'string' && value.trim().length > 0,
+    return this.getSafeIds(values);
+  }
+
+  private getSafeIds(values: Array<string | null | undefined>): string[] {
+    return values
+      .map((value) => value?.trim())
+      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+  }
+
+  private resolveLibroRefs(
+    collection: BookCollectionName,
+    source: Usuario['libros'] | undefined,
+  ): LibroRef[] {
+    const referenceMap = new Map(
+      (source ?? []).map((value) => {
+        const reference = typeof value === 'string' ? { _id: value } : value;
+        return [reference._id, reference] as const;
+      }),
+    );
+    return this.getSafeIds(this.form.controls[collection].getRawValue()).map(
+      (id) => referenceMap.get(id) ?? { _id: id },
     );
   }
 
-  private get librosArrayValues(): string[] {
-    return this.librosControl.getRawValue() as string[];
+  private resolveUsuarioRefs(
+    collection: UserCollectionName,
+    source: Usuario['followingUsers'] | undefined,
+  ): UsuarioRef[] {
+    const referenceMap = new Map(
+      (source ?? []).map((value) => {
+        const reference = typeof value === 'string' ? { _id: value } : value;
+        return [reference._id, reference] as const;
+      }),
+    );
+    return this.getSafeIds(this.form.controls[collection].getRawValue()).map(
+      (id) => referenceMap.get(id) ?? { _id: id },
+    );
+  }
+
+  private setArrayValues(control: FormArray, values: string[]): void {
+    control.clear();
+    values.forEach((value) => control.push(this.fb.control(value, { nonNullable: true })));
+  }
+
+  private removeValue(control: FormArray, value: string): void {
+    const index = control.getRawValue().indexOf(value);
+    if (index < 0) return;
+    control.removeAt(index);
+    control.markAsDirty();
   }
 }

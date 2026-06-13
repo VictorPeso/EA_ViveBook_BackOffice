@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { TopbarComponent } from './shared/components/topbar/topbar.component';
 import { UsuariosService } from './Core/services/usuarios.service';
-import { inject } from '@angular/core';
+import { filter } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
@@ -14,8 +15,14 @@ import { inject } from '@angular/core';
 })
 export class AppComponent {
   private readonly authService = inject(UsuariosService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly currentUrl = signal(this.router.url);
 
   readonly isLoggedIn = this.authService.isAuthenticated;
+  readonly showAdminLayout = computed(
+    () => this.isLoggedIn() && !this.isPublicAuthRoute(this.currentUrl()),
+  );
 
   readonly navigation = [
     { label: 'Autor', route: '/autores', shortLabel: 'AU' },
@@ -26,4 +33,17 @@ export class AppComponent {
     { label: 'Usuario', route: '/usuarios', shortLabel: 'US' },
     { label: 'Valoracion', route: '/valoraciones', shortLabel: 'VA' },
   ];
+
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((event) => this.currentUrl.set(event.urlAfterRedirects));
+  }
+
+  private isPublicAuthRoute(url: string): boolean {
+    return url === '/auth' || url.startsWith('/auth/');
+  }
 }

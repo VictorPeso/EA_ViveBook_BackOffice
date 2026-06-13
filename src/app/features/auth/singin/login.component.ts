@@ -22,7 +22,7 @@ export class LoginComponent implements OnInit {
   private readonly router = inject(Router);
 
   ngOnInit(): void {
-    if (this.authService.isAuthenticated()) {
+    if (this.authService.updateAuthState()) {
       void this.router.navigate(['/libros']);
     }
   }
@@ -38,7 +38,7 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.authService.isAuthenticated.set(false);
+        this.authService.clearSession();
         this.errorMessage.set(
           getApiErrorMessage(
             err,

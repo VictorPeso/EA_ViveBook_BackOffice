@@ -10,13 +10,16 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { Autor } from '../../../../Core/models/autor.model';
-import { Libro } from '../../../../Core/models/libro.model';
+import { AutorRef, Libro } from '../../../../Core/models/libro.model';
+import {
+  AdminEditorComponent,
+  AdminEditorSectionDirective,
+} from '../../../../shared/components/admin-editor/admin-editor.component';
 
 @Component({
   selector: 'app-libro-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AdminEditorComponent, AdminEditorSectionDirective],
   templateUrl: './libro-form.component.html',
   styleUrl: './libro-form.component.css',
 })
@@ -24,11 +27,9 @@ export class LibroFormComponent implements OnChanges {
   private readonly fb = inject(FormBuilder);
 
   @Input() libro: Libro | null = null;
-  @Input() autores: Autor[] = [];
   @Input() isSaving = false;
   @Input() isDeleting = false;
   @Input() isCreating = true;
-  @Input() isLoadingAutores = false;
   @Input() errorMessage = '';
   @Input() successMessage = '';
 
@@ -77,18 +78,17 @@ export class LibroFormComponent implements OnChanges {
       : 'Modifica los datos del libro seleccionado.';
   }
 
-  isAuthorSelected(authorId: string): boolean {
-    return this.authorsControl.getRawValue().includes(authorId);
-  }
-
-  onToggleAuthor(authorId: string, checked: boolean): void {
-    const index = this.authorsControl.getRawValue().indexOf(authorId);
-
-    if (checked && index < 0) {
-      this.authorsControl.push(this.fb.control(authorId, { nonNullable: true }));
-    } else if (!checked && index >= 0) {
-      this.authorsControl.removeAt(index);
-    }
+  get autoresAsociados(): AutorRef[] {
+    const referenceMap = new Map(
+      (this.libro?.authors ?? []).map((autor) => {
+        const reference = typeof autor === 'string' ? { _id: autor } : autor;
+        return [reference._id, reference] as const;
+      }),
+    );
+    return this.authorsControl
+      .getRawValue()
+      .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      .map((id) => referenceMap.get(id) ?? { _id: id });
   }
 
   onSubmit(): void {
@@ -115,8 +115,26 @@ export class LibroFormComponent implements OnChanges {
     if (currentLibro._id) this.restoreLibro.emit(currentLibro);
   }
 
-  trackByAutorId(index: number, autor: Autor): string | number {
+  trackByAutorId(index: number, autor: AutorRef): string | number {
     return autor._id ?? index;
+  }
+
+  removeAuthor(authorId: string): void {
+    const index = this.authorsControl.getRawValue().indexOf(authorId);
+    if (index < 0) return;
+    this.authorsControl.removeAt(index);
+    this.authorsControl.markAsDirty();
+  }
+
+  formatDate(value?: string): string {
+    if (!value) return 'No disponible';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? 'No disponible'
+      : new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date);
   }
 
   private patchForm(libro: Libro | null): void {

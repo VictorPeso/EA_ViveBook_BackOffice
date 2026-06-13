@@ -100,8 +100,8 @@ export class EventosPageComponent implements OnInit {
   }
 
   onCreateNew(): void {
-    this.selectedEvento.set(null);
-    this.isCreating.set(false);
+    this.selectedEvento.set(this.createEmpty());
+    this.isCreating.set(true);
     this.errorMessage.set('');
     this.successMessage.set('');
   }
@@ -176,8 +176,10 @@ export class EventosPageComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.selectedEvento.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selectedEvento.set(null);
+    this.isCreating.set(false);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   private createEmpty(): Evento {
@@ -196,8 +198,6 @@ export class EventosPageComponent implements OnInit {
   private mapToForm(evento: Evento): Evento {
     return {
       ...evento,
-      creator: this.userId(evento.creator),
-      participant: evento.participant.map((user) => this.userId(user)),
       IsDeleted: evento.IsDeleted ?? false,
     };
   }

@@ -33,7 +33,7 @@ export class ReservasPageComponent implements OnInit {
   readonly isLoadingRelations = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly isCreating = signal(true);
+  readonly isCreating = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly currentPage = signal(1);
@@ -77,8 +77,8 @@ export class ReservasPageComponent implements OnInit {
             this.isCreating.set(false);
             return;
           }
-          this.selected.set(this.createEmpty());
-          this.isCreating.set(true);
+          this.selected.set(null);
+          this.isCreating.set(false);
         },
         error: (error) =>
           this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar las reservas.')),
@@ -195,8 +195,10 @@ export class ReservasPageComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.selected.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selected.set(null);
+    this.isCreating.set(false);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   private createEmpty(): Reserva {
@@ -214,9 +216,6 @@ export class ReservasPageComponent implements OnInit {
   private mapToForm(reserva: Reserva): Reserva {
     return {
       ...reserva,
-      libro: this.bookId(reserva.libro),
-      usuarioSolicitante: this.userId(reserva.usuarioSolicitante),
-      propietario: this.userId(reserva.propietario),
       IsDeleted: reserva.IsDeleted ?? false,
     };
   }

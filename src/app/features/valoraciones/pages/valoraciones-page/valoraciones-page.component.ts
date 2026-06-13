@@ -117,8 +117,8 @@ export class ValoracionesPageComponent implements OnInit {
   }
 
   onCreateNew(): void {
-    this.selected.set(null);
-    this.isCreating.set(false);
+    this.selected.set(this.createEmpty());
+    this.isCreating.set(true);
     this.errorMessage.set('');
     this.successMessage.set('');
   }
@@ -193,8 +193,10 @@ export class ValoracionesPageComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.selected.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selected.set(null);
+    this.isCreating.set(false);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   private createEmpty(): Valoracion {
@@ -213,9 +215,6 @@ export class ValoracionesPageComponent implements OnInit {
   private mapToForm(valoracion: Valoracion): Valoracion {
     return {
       ...valoracion,
-      usuarioAutor: this.userId(valoracion.usuarioAutor),
-      usuarioValorado: this.userId(valoracion.usuarioValorado),
-      libro: this.bookId(valoracion.libro),
       reservationId: typeof valoracion.reservationId === 'string' ? valoracion.reservationId : null,
       IsDeleted: valoracion.IsDeleted ?? false,
     };

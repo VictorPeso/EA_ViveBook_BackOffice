@@ -115,8 +115,8 @@ export class PostsPage implements OnInit {
   }
 
   onCreateNew(): void {
-    this.selectedPost.set(null);
-    this.isCreating.set(false);
+    this.selectedPost.set(this.createEmpty());
+    this.isCreating.set(true);
     this.errorMessage.set('');
     this.successMessage.set('');
   }
@@ -191,8 +191,10 @@ export class PostsPage implements OnInit {
   }
 
   onCancel(): void {
-    this.selectedPost.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selectedPost.set(null);
+    this.isCreating.set(false);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   private createEmpty(): Post {
@@ -210,8 +212,6 @@ export class PostsPage implements OnInit {
   private mapToForm(post: Post): Post {
     return {
       ...post,
-      ownerId: typeof post.ownerId === 'string' ? post.ownerId : (post.ownerId._id ?? ''),
-      bookId: typeof post.bookId === 'string' ? post.bookId : (post.bookId._id ?? ''),
       imageUrl: post.imageUrl ?? '',
       IsDeleted: post.IsDeleted ?? false,
     };

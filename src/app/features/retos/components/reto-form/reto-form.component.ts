@@ -11,11 +11,15 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Reto } from '../../../../Core/models/reto.model';
+import {
+  AdminEditorComponent,
+  AdminEditorSectionDirective,
+} from '../../../../shared/components/admin-editor/admin-editor.component';
 
 @Component({
   selector: 'app-reto-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AdminEditorComponent, AdminEditorSectionDirective],
   templateUrl: './reto-form.component.html',
   styleUrl: './reto-form.component.css',
 })
@@ -54,6 +58,27 @@ export class RetoFormComponent implements OnChanges {
     });
   }
 
+  get formTitle(): string {
+    return this.isCreating ? 'Nuevo reto' : 'Editar reto';
+  }
+
+  get formSubtitle(): string {
+    return this.isCreating
+      ? 'Completa los datos para crear un nuevo reto.'
+      : 'Modifica la definición y el objetivo del reto seleccionado.';
+  }
+
+  formatDate(value?: string): string {
+    if (!value) return 'No disponible';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? 'No disponible'
+      : new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date);
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -70,6 +95,10 @@ export class RetoFormComponent implements OnChanges {
   onActivate(): void {
     const value = this.value();
     if (value._id) this.activate.emit(value);
+  }
+
+  onCancel(): void {
+    this.cancel.emit();
   }
 
   private value(): Reto {

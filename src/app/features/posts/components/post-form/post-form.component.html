@@ -1,65 +1,200 @@
-<section class="post-form">
-  <header>
-    <p>Formulario</p>
-    <h2>{{ isCreating ? 'Nuevo post' : 'Editar post' }}</h2>
-  </header>
-  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
-  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <label>Descripción<textarea rows="4" formControlName="description"></textarea></label>
-    <label
-      >Estado
-      <select formControlName="status">
-        <option value="VENTA">Venta</option>
-        <option value="ALQUILER">Alquiler</option>
-        <option value="NO_DISPONIBLE">No disponible</option>
-      </select>
-    </label>
-    <label>Precio<input type="number" min="0" step="0.01" formControlName="price" /></label>
-    <label>Imagen<input type="url" formControlName="imageUrl" /></label>
-    <label
-      >Propietario
-      <select formControlName="ownerId">
-        <option value="">Selecciona un usuario</option>
-        <option *ngFor="let usuario of usuarios" [value]="usuario._id">
-          {{ usuario.name }} · {{ usuario.email }}
-        </option>
-      </select>
-    </label>
-    <label
-      >Libro
-      <select formControlName="bookId">
-        <option value="">Selecciona un libro</option>
-        <option *ngFor="let libro of libros" [value]="libro._id">
-          {{ libro.title }} · {{ libro.isbn }}
-        </option>
-      </select>
-    </label>
-    <p class="hint" *ngIf="isLoadingRelations">Cargando usuarios y libros...</p>
-    <p class="validation" *ngIf="form.touched && form.invalid">
-      Revisa los campos obligatorios, precio e imagen.
-    </p>
-    <div class="actions">
-      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button>
-      <button type="submit" class="primary" [disabled]="isSaving || isDeleting">
+<form class="post-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <app-admin-editor
+    eyebrow="Gestión de posts"
+    [title]="formTitle"
+    [subtitle]="formSubtitle"
+    (closeEditor)="onCancel()"
+  >
+    <div adminEditorMessages>
+      <div class="post-form__alert post-form__alert--error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      <div class="post-form__alert post-form__alert--success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+    </div>
+
+    <ng-template adminEditorSection sectionId="general" label="General">
+      <input type="hidden" formControlName="_id" />
+      <input type="hidden" formControlName="IsDeleted" />
+
+      <div class="post-form__grid">
+        <div class="post-form__field">
+          <label class="post-form__label" for="postId">ID de Mongo</label>
+          <input
+            id="postId"
+            class="post-form__input post-form__input--readonly"
+            [value]="post?._id || 'Se generará al crear el post'"
+            readonly
+          />
+        </div>
+
+        <div class="post-form__field">
+          <span class="post-form__label">Estado del registro</span>
+          <span
+            class="post-form__record-status"
+            [class.post-form__record-status--inactive]="post?.IsDeleted"
+          >
+            {{ post?.IsDeleted ? 'Desactivado' : 'Activo' }}
+          </span>
+        </div>
+
+        <div class="post-form__field post-form__field--full">
+          <label class="post-form__label" for="description">Descripción</label>
+          <textarea
+            id="description"
+            class="post-form__input"
+            rows="5"
+            formControlName="description"
+          ></textarea>
+        </div>
+
+        <div class="post-form__field">
+          <label class="post-form__label" for="status">Estado de publicación *</label>
+          <select id="status" class="post-form__input" formControlName="status">
+            <option value="VENTA">Venta</option>
+            <option value="ALQUILER">Alquiler</option>
+            <option value="NO_DISPONIBLE">No disponible</option>
+          </select>
+        </div>
+
+        <div class="post-form__field">
+          <label class="post-form__label" for="price">Precio *</label>
+          <input
+            id="price"
+            type="number"
+            min="0"
+            step="0.01"
+            class="post-form__input"
+            formControlName="price"
+          />
+        </div>
+
+        <div class="post-form__field post-form__field--full">
+          <label class="post-form__label" for="imageUrl">URL de imagen</label>
+          <input
+            id="imageUrl"
+            type="url"
+            class="post-form__input"
+            formControlName="imageUrl"
+            placeholder="https://..."
+          />
+        </div>
+
+        <div class="post-form__field">
+          <label class="post-form__label" for="createdAt">Fecha de creación</label>
+          <input
+            id="createdAt"
+            class="post-form__input post-form__input--readonly"
+            [value]="formatDate(post?.createdAt)"
+            readonly
+          />
+        </div>
+
+        <div class="post-form__field">
+          <label class="post-form__label" for="updatedAt">Última actualización</label>
+          <input
+            id="updatedAt"
+            class="post-form__input post-form__input--readonly"
+            [value]="formatDate(post?.updatedAt)"
+            readonly
+          />
+        </div>
+      </div>
+
+      <p class="post-form__error" *ngIf="form.touched && form.invalid">
+        Revisa el estado, el precio, la imagen y las relaciones obligatorias.
+      </p>
+    </ng-template>
+
+    <ng-template adminEditorSection sectionId="propietario" label="Propietario">
+      <section class="post-form__relation-section">
+        <div class="post-form__relation-header">
+          <h3>Propietario del post</h3>
+          <p>Selecciona el usuario que publica este libro.</p>
+        </div>
+
+        <div class="post-form__field">
+          <label class="post-form__label" for="ownerId">Usuario *</label>
+          <select id="ownerId" class="post-form__input" formControlName="ownerId">
+            <option value="">Selecciona un usuario</option>
+            <option *ngFor="let usuario of usuarios" [value]="usuario._id">
+              {{ usuario.name }} · {{ usuario.email }}
+            </option>
+          </select>
+          <span class="post-form__hint" *ngIf="isLoadingRelations">Cargando usuarios...</span>
+        </div>
+
+        <article class="post-form__relation-card" *ngIf="propietarioSeleccionado as propietario">
+          <span class="post-form__relation-information">
+            <strong>{{ propietario.name || 'Usuario sin nombre' }}</strong>
+            <small>{{ propietario.email || propietario._id }}</small>
+          </span>
+        </article>
+      </section>
+    </ng-template>
+
+    <ng-template adminEditorSection sectionId="libro" label="Libro">
+      <section class="post-form__relation-section">
+        <div class="post-form__relation-header">
+          <h3>Libro publicado</h3>
+          <p>Selecciona el libro relacionado con este post.</p>
+        </div>
+
+        <div class="post-form__field">
+          <label class="post-form__label" for="bookId">Libro *</label>
+          <select id="bookId" class="post-form__input" formControlName="bookId">
+            <option value="">Selecciona un libro</option>
+            <option *ngFor="let libro of libros" [value]="libro._id">
+              {{ libro.title }} · {{ libro.isbn }}
+            </option>
+          </select>
+          <span class="post-form__hint" *ngIf="isLoadingRelations">Cargando libros...</span>
+        </div>
+
+        <article class="post-form__relation-card" *ngIf="libroSeleccionado as libro">
+          <span class="post-form__relation-information">
+            <strong>{{ libro.title || 'Libro sin título' }}</strong>
+            <small>ISBN: {{ libro.isbn || 'No disponible' }}</small>
+          </span>
+        </article>
+      </section>
+    </ng-template>
+
+    <div adminEditorActions class="post-form__actions">
+      <button
+        type="button"
+        class="post-form__button post-form__button--secondary"
+        (click)="onCancel()"
+        [disabled]="isSaving || isDeleting"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="post-form__button post-form__button--primary"
+        [disabled]="isSaving || isDeleting"
+      >
         {{ isSaving ? 'Guardando...' : isCreating ? 'Crear post' : 'Guardar cambios' }}
       </button>
       <button
         type="button"
-        class="danger"
+        class="post-form__button post-form__button--danger"
         *ngIf="!isCreating && !post?.IsDeleted"
         (click)="onDelete()"
+        [disabled]="isSaving || isDeleting"
       >
-        Desactivar
+        {{ isDeleting ? 'Desactivando...' : 'Desactivar post' }}
       </button>
       <button
         type="button"
-        class="restore"
+        class="post-form__button post-form__button--success"
         *ngIf="!isCreating && post?.IsDeleted"
         (click)="onRestore()"
+        [disabled]="isSaving || isDeleting"
       >
-        Restaurar
+        {{ isDeleting ? 'Restaurando...' : 'Restaurar post' }}
       </button>
     </div>
-  </form>
-</section>
+  </app-admin-editor>
+</form>

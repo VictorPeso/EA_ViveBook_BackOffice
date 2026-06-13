@@ -13,22 +13,14 @@
         (click)="onCancelEdit()"
         aria-label="Cerrar"
       ></button>
-      <aside class="usuarios-page__form-column admin-modal__dialog">
-        <button
-          class="admin-modal__close"
-          type="button"
-          (click)="onCancelEdit()"
-          aria-label="Cerrar"
-        >
-          ×
-        </button>
+      <aside
+        class="usuarios-page__form-column admin-modal__dialog admin-modal__dialog--wide"
+      >
         <app-usuario-form
           [usuario]="selectedUsuario()"
-          [libros]="libros()"
           [isSaving]="isSaving()"
           [isDeleting]="isDeleting()"
           [isCreating]="isCreating()"
-          [isLoadingLibros]="isLoadingLibros()"
           [errorMessage]="errorMessage()"
           [successMessage]="successMessage()"
           (save)="onSaveUsuario($event)"

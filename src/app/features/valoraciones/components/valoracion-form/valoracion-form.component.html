@@ -1,74 +1,248 @@
-<section class="valoracion-form">
-  <header>
-    <p>Moderación</p>
-    <h2>{{ isCreating ? 'Nueva valoración' : 'Editar valoración' }}</h2>
-  </header>
-  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
-  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <label
-      >Autor<select formControlName="usuarioAutor">
-        <option value="">Selecciona un usuario</option>
-        <option *ngFor="let user of usuarios" [value]="user._id">
-          {{ user.name }} · {{ user.email }}
-        </option>
-      </select></label
-    >
-    <label
-      >Usuario valorado<select formControlName="usuarioValorado">
-        <option value="">Selecciona un usuario</option>
-        <option *ngFor="let user of usuarios" [value]="user._id">
-          {{ user.name }} · {{ user.email }}
-        </option>
-      </select></label
-    >
-    <label
-      >Libro<select formControlName="libro">
-        <option value="">Selecciona un libro</option>
-        <option *ngFor="let libro of libros" [value]="libro._id">
-          {{ libro.title }} · {{ libro.isbn }}
-        </option>
-      </select></label
-    >
-    <label
-      >Operación<select formControlName="tipoOperacion">
-        <option value="VENTA">Venta</option>
-        <option value="ALQUILER">Alquiler</option>
-        <option value="RESERVA">Reserva</option>
-      </select></label
-    >
-    <label>Puntuación<input type="number" min="1" max="5" formControlName="puntuacion" /></label>
-    <label>Comentario<textarea rows="4" formControlName="comentario"></textarea></label>
-    <label
-      >ID de reserva opcional<input
-        formControlName="reservationId"
-        placeholder="ObjectId de 24 caracteres"
-    /></label>
-    <p class="hint" *ngIf="isLoadingRelations">Cargando usuarios y libros...</p>
-    <p class="validation" *ngIf="form.touched && form.invalid">
-      Revisa los campos obligatorios, puntuación e ID de reserva.
-    </p>
-    <div class="actions">
-      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button
-      ><button type="submit" class="primary" [disabled]="isSaving || isDeleting">
-        {{
-          isSaving ? 'Guardando...' : isCreating ? 'Crear valoración' : 'Guardar cambios'
-        }}</button
-      ><button
+<form class="valoracion-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <app-admin-editor
+    eyebrow="Gestión de valoraciones"
+    [title]="formTitle"
+    [subtitle]="formSubtitle"
+    (closeEditor)="onCancel()"
+  >
+    <div adminEditorMessages>
+      <div
+        class="valoracion-form__alert valoracion-form__alert--error"
+        *ngIf="errorMessage"
+      >
+        {{ errorMessage }}
+      </div>
+      <div
+        class="valoracion-form__alert valoracion-form__alert--success"
+        *ngIf="successMessage"
+      >
+        {{ successMessage }}
+      </div>
+    </div>
+
+    <ng-template adminEditorSection sectionId="general" label="General">
+      <input type="hidden" formControlName="_id" />
+      <input type="hidden" formControlName="IsDeleted" />
+
+      <div class="valoracion-form__grid">
+        <div class="valoracion-form__field">
+          <label class="valoracion-form__label" for="valoracionId">ID de Mongo</label>
+          <input
+            id="valoracionId"
+            class="valoracion-form__input valoracion-form__input--readonly"
+            [value]="valoracion?._id || 'Se generará al crear la valoración'"
+            readonly
+          />
+        </div>
+
+        <div class="valoracion-form__field">
+          <span class="valoracion-form__label">Estado del registro</span>
+          <span
+            class="valoracion-form__record-status"
+            [class.valoracion-form__record-status--inactive]="valoracion?.IsDeleted"
+          >
+            {{ valoracion?.IsDeleted ? 'Desactivada' : 'Activa' }}
+          </span>
+        </div>
+
+        <div class="valoracion-form__field">
+          <label class="valoracion-form__label" for="tipoOperacion">Tipo de operación *</label>
+          <select
+            id="tipoOperacion"
+            class="valoracion-form__input"
+            formControlName="tipoOperacion"
+          >
+            <option value="VENTA">Venta</option>
+            <option value="ALQUILER">Alquiler</option>
+            <option value="RESERVA">Reserva</option>
+          </select>
+        </div>
+
+        <div class="valoracion-form__field">
+          <label class="valoracion-form__label" for="puntuacion">Puntuación *</label>
+          <select id="puntuacion" class="valoracion-form__input" formControlName="puntuacion">
+            <option [ngValue]="1">1 estrella</option>
+            <option [ngValue]="2">2 estrellas</option>
+            <option [ngValue]="3">3 estrellas</option>
+            <option [ngValue]="4">4 estrellas</option>
+            <option [ngValue]="5">5 estrellas</option>
+          </select>
+        </div>
+
+        <div class="valoracion-form__field valoracion-form__field--full">
+          <label class="valoracion-form__label" for="comentario">Comentario</label>
+          <textarea
+            id="comentario"
+            class="valoracion-form__input"
+            rows="5"
+            formControlName="comentario"
+          ></textarea>
+        </div>
+
+        <div class="valoracion-form__field valoracion-form__field--full">
+          <label class="valoracion-form__label" for="reservationId">ID de reserva</label>
+          <input
+            id="reservationId"
+            class="valoracion-form__input"
+            formControlName="reservationId"
+            placeholder="ObjectId opcional de 24 caracteres"
+          />
+        </div>
+
+        <div class="valoracion-form__field">
+          <label class="valoracion-form__label" for="createdAt">Fecha de creación</label>
+          <input
+            id="createdAt"
+            class="valoracion-form__input valoracion-form__input--readonly"
+            [value]="formatDate(valoracion?.createdAt)"
+            readonly
+          />
+        </div>
+
+        <div class="valoracion-form__field">
+          <label class="valoracion-form__label" for="updatedAt">Última actualización</label>
+          <input
+            id="updatedAt"
+            class="valoracion-form__input valoracion-form__input--readonly"
+            [value]="formatDate(valoracion?.updatedAt)"
+            readonly
+          />
+        </div>
+      </div>
+
+      <p class="valoracion-form__error" *ngIf="form.touched && form.invalid">
+        Revisa la puntuación, el ID de reserva y las relaciones obligatorias.
+      </p>
+    </ng-template>
+
+    <ng-template adminEditorSection sectionId="usuario" label="Usuario">
+      <section class="valoracion-form__relation-section">
+        <div class="valoracion-form__relation-header">
+          <h3>Usuarios relacionados</h3>
+          <p>Configura quién emite la valoración y quién la recibe.</p>
+        </div>
+
+        <div class="valoracion-form__relation-grid">
+          <div class="valoracion-form__field">
+            <label class="valoracion-form__label" for="usuarioAutor">Usuario autor *</label>
+            <select
+              id="usuarioAutor"
+              class="valoracion-form__input"
+              formControlName="usuarioAutor"
+            >
+              <option value="">Selecciona un usuario</option>
+              <option *ngFor="let usuario of usuarios" [value]="usuario._id">
+                {{ usuario.name }} · {{ usuario.email }}
+              </option>
+            </select>
+          </div>
+
+          <article
+            class="valoracion-form__relation-card"
+            *ngIf="autorSeleccionado as usuarioAutor"
+          >
+            <span class="valoracion-form__relation-information">
+              <strong>{{ usuarioAutor.name || 'Usuario sin nombre' }}</strong>
+              <small>{{ usuarioAutor.email || usuarioAutor._id }}</small>
+            </span>
+          </article>
+
+          <div class="valoracion-form__field">
+            <label class="valoracion-form__label" for="usuarioValorado">
+              Usuario valorado *
+            </label>
+            <select
+              id="usuarioValorado"
+              class="valoracion-form__input"
+              formControlName="usuarioValorado"
+            >
+              <option value="">Selecciona un usuario</option>
+              <option *ngFor="let usuario of usuarios" [value]="usuario._id">
+                {{ usuario.name }} · {{ usuario.email }}
+              </option>
+            </select>
+          </div>
+
+          <article
+            class="valoracion-form__relation-card"
+            *ngIf="usuarioValoradoSeleccionado as usuarioValorado"
+          >
+            <span class="valoracion-form__relation-information">
+              <strong>{{ usuarioValorado.name || 'Usuario sin nombre' }}</strong>
+              <small>{{ usuarioValorado.email || usuarioValorado._id }}</small>
+            </span>
+          </article>
+        </div>
+
+        <span class="valoracion-form__hint" *ngIf="isLoadingRelations">
+          Cargando usuarios...
+        </span>
+      </section>
+    </ng-template>
+
+    <ng-template adminEditorSection sectionId="libro" label="Libro">
+      <section class="valoracion-form__relation-section">
+        <div class="valoracion-form__relation-header">
+          <h3>Libro valorado</h3>
+          <p>Selecciona el libro asociado a esta valoración.</p>
+        </div>
+
+        <div class="valoracion-form__field">
+          <label class="valoracion-form__label" for="libro">Libro *</label>
+          <select id="libro" class="valoracion-form__input" formControlName="libro">
+            <option value="">Selecciona un libro</option>
+            <option *ngFor="let libro of libros" [value]="libro._id">
+              {{ libro.title }} · {{ libro.isbn }}
+            </option>
+          </select>
+          <span class="valoracion-form__hint" *ngIf="isLoadingRelations">
+            Cargando libros...
+          </span>
+        </div>
+
+        <article class="valoracion-form__relation-card" *ngIf="libroSeleccionado as libro">
+          <span class="valoracion-form__relation-information">
+            <strong>{{ libro.title || 'Libro sin título' }}</strong>
+            <small>ISBN: {{ libro.isbn || 'No disponible' }}</small>
+          </span>
+        </article>
+      </section>
+    </ng-template>
+
+    <div adminEditorActions class="valoracion-form__actions">
+      <button
         type="button"
-        class="danger"
+        class="valoracion-form__button valoracion-form__button--secondary"
+        (click)="onCancel()"
+        [disabled]="isSaving || isDeleting"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="valoracion-form__button valoracion-form__button--primary"
+        [disabled]="isSaving || isDeleting"
+      >
+        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear valoración' : 'Guardar cambios' }}
+      </button>
+      <button
+        type="button"
+        class="valoracion-form__button valoracion-form__button--danger"
         *ngIf="!isCreating && !valoracion?.IsDeleted"
         (click)="onDelete()"
+        [disabled]="isSaving || isDeleting"
       >
-        Desactivar</button
-      ><button
+        {{ isDeleting ? 'Desactivando...' : 'Desactivar valoración' }}
+      </button>
+      <button
         type="button"
-        class="restore"
+        class="valoracion-form__button valoracion-form__button--success"
         *ngIf="!isCreating && valoracion?.IsDeleted"
         (click)="onRestore()"
+        [disabled]="isSaving || isDeleting"
       >
-        Restaurar
+        {{ isDeleting ? 'Restaurando...' : 'Restaurar valoración' }}
       </button>
     </div>
-  </form>
-</section>
+  </app-admin-editor>
+</form>

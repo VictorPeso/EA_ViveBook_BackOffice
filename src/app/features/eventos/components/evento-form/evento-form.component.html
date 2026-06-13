@@ -1,60 +1,234 @@
-<section class="evento-form">
-  <header>
-    <p>Formulario</p>
-    <h2>{{ isCreating ? 'Nuevo evento' : 'Editar evento' }}</h2>
-  </header>
-  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
-  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <label>Título<input formControlName="title" /></label>
-    <label>Descripción<textarea rows="4" formControlName="description"></textarea></label>
-    <label
-      >Creador<select formControlName="creator">
-        <option value="">Selecciona un usuario</option>
-        <option *ngFor="let user of usuarios" [value]="user._id">
-          {{ user.name }} · {{ user.email }}
-        </option>
-      </select></label
-    >
-    <label>Fecha del evento<input type="datetime-local" formControlName="eventDate" /></label>
-    <label>Dirección exacta<input formControlName="direccionExacta" /></label>
-    <div class="coordinates">
-      <label>Longitud<input type="number" step="any" formControlName="longitude" /></label
-      ><label>Latitud<input type="number" step="any" formControlName="latitude" /></label>
+<form class="evento-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <app-admin-editor
+    eyebrow="Gestión de eventos"
+    [title]="formTitle"
+    [subtitle]="formSubtitle"
+    (closeEditor)="onCancel()"
+  >
+    <div adminEditorMessages>
+      <div class="evento-form__alert evento-form__alert--error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      <div class="evento-form__alert evento-form__alert--success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
     </div>
-    <fieldset>
-      <legend>Participantes</legend>
-      <span *ngIf="isLoadingUsuarios">Cargando usuarios...</span
-      ><label class="check" *ngFor="let user of usuarios"
-        ><input
-          type="checkbox"
-          [checked]="user._id ? selected(user._id) : false"
-          (change)="user._id && toggle(user._id, $any($event.target).checked)"
-        />{{ user.name }}</label
-      >
-    </fieldset>
-    <p class="validation" *ngIf="form.touched && form.invalid">
-      Revisa los campos obligatorios y las coordenadas.
+
+    <ng-template adminEditorSection sectionId="general" label="General">
+      <input type="hidden" formControlName="_id" />
+      <input type="hidden" formControlName="IsDeleted" />
+
+      <div class="evento-form__grid">
+        <div class="evento-form__field">
+          <label class="evento-form__label" for="eventoId">ID de Mongo</label>
+          <input
+            id="eventoId"
+            class="evento-form__input evento-form__input--readonly"
+            [value]="evento?._id || 'Se generará al crear el evento'"
+            readonly
+          />
+        </div>
+
+        <div class="evento-form__field">
+          <span class="evento-form__label">Estado del registro</span>
+          <span
+            class="evento-form__status"
+            [class.evento-form__status--inactive]="evento?.IsDeleted"
+          >
+            {{ evento?.IsDeleted ? 'Desactivado' : 'Activo' }}
+          </span>
+        </div>
+
+        <div class="evento-form__field evento-form__field--full">
+          <label class="evento-form__label" for="title">Título *</label>
+          <input id="title" class="evento-form__input" formControlName="title" />
+        </div>
+
+        <div class="evento-form__field evento-form__field--full">
+          <label class="evento-form__label" for="description">Descripción *</label>
+          <textarea
+            id="description"
+            class="evento-form__input"
+            rows="4"
+            formControlName="description"
+          ></textarea>
+        </div>
+
+        <div class="evento-form__field evento-form__field--full">
+          <label class="evento-form__label" for="creator">Creador *</label>
+          <select id="creator" class="evento-form__input" formControlName="creator">
+            <option value="">Selecciona un usuario</option>
+            <option *ngFor="let user of usuarios" [value]="user._id">
+              {{ user.name }} · {{ user.email }}
+            </option>
+          </select>
+          <span class="evento-form__hint" *ngIf="isLoadingUsuarios">Cargando usuarios...</span>
+        </div>
+
+        <div class="evento-form__field">
+          <label class="evento-form__label" for="eventDate">Fecha del evento *</label>
+          <input
+            id="eventDate"
+            type="datetime-local"
+            class="evento-form__input"
+            formControlName="eventDate"
+          />
+        </div>
+
+        <div class="evento-form__field">
+          <label class="evento-form__label" for="direccionExacta">Dirección exacta *</label>
+          <input
+            id="direccionExacta"
+            class="evento-form__input"
+            formControlName="direccionExacta"
+          />
+        </div>
+
+        <div class="evento-form__field">
+          <label class="evento-form__label" for="longitude">Longitud *</label>
+          <input
+            id="longitude"
+            type="number"
+            step="any"
+            class="evento-form__input"
+            formControlName="longitude"
+          />
+        </div>
+
+        <div class="evento-form__field">
+          <label class="evento-form__label" for="latitude">Latitud *</label>
+          <input
+            id="latitude"
+            type="number"
+            step="any"
+            class="evento-form__input"
+            formControlName="latitude"
+          />
+        </div>
+
+        <div class="evento-form__field">
+          <label class="evento-form__label" for="createdDate">Fecha propia de creación</label>
+          <input
+            id="createdDate"
+            class="evento-form__input evento-form__input--readonly"
+            [value]="formatDate(evento?.createdDate)"
+            readonly
+          />
+        </div>
+
+        <div class="evento-form__field">
+          <label class="evento-form__label" for="createdAt">Fecha de creación</label>
+          <input
+            id="createdAt"
+            class="evento-form__input evento-form__input--readonly"
+            [value]="formatDate(evento?.createdAt)"
+            readonly
+          />
+        </div>
+
+        <div class="evento-form__field">
+          <label class="evento-form__label" for="updatedAt">Última actualización</label>
+          <input
+            id="updatedAt"
+            class="evento-form__input evento-form__input--readonly"
+            [value]="formatDate(evento?.updatedAt)"
+            readonly
+          />
+        </div>
+      </div>
+
+      <p class="evento-form__error" *ngIf="form.touched && form.invalid">
+        Revisa los campos obligatorios y las coordenadas.
+      </p>
+    </ng-template>
+
+    <ng-template
+      adminEditorSection
+      sectionId="participantes"
+      label="Participantes"
+      [badge]="participantesAsociados.length"
+    >
+      <section class="evento-form__relation-section">
+        <div class="evento-form__relation-header">
+          <div>
+            <h3>Participantes asociados</h3>
+            <p>Usuarios inscritos actualmente en este evento.</p>
+          </div>
+        </div>
+
+        <div
+          class="evento-form__participants"
+          *ngIf="participantesAsociados.length; else participantesEmpty"
+        >
+          <article
+            class="evento-form__participant-card admin-relation-row"
+            *ngFor="let participant of participantesAsociados; trackBy: trackByUsuarioId"
+          >
+            <img
+              *ngIf="participant.avatar"
+              class="evento-form__participant-avatar"
+              [src]="participant.avatar"
+              [alt]="'Avatar de ' + participant.name"
+            />
+            <span class="evento-form__participant-information admin-relation-row__content">
+              <strong>{{ participant.name || 'Usuario sin nombre' }}</strong>
+              <small>{{ participant.email || participant._id }}</small>
+            </span>
+            <button
+              type="button"
+              class="admin-relation-remove"
+              (click)="removeParticipant(participant._id!)"
+              [attr.aria-label]="'Eliminar ' + (participant.name || 'participante') + ' del evento'"
+            >
+              Eliminar
+            </button>
+          </article>
+        </div>
+
+        <ng-template #participantesEmpty>
+          <div class="evento-form__empty">Este evento no tiene participantes inscritos.</div>
+        </ng-template>
+      </section>
+    </ng-template>
+
+    <p adminEditorActions class="admin-relation-save-hint" *ngIf="participants.dirty">
+      La relación eliminada se aplicará al guardar.
     </p>
-    <div class="actions">
-      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button
-      ><button type="submit" class="primary" [disabled]="isSaving || isDeleting">
-        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear evento' : 'Guardar cambios' }}</button
-      ><button
+
+    <div adminEditorActions class="evento-form__actions">
+      <button
         type="button"
-        class="danger"
+        class="evento-form__button evento-form__button--secondary"
+        (click)="onCancel()"
+        [disabled]="isSaving || isDeleting"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="evento-form__button evento-form__button--primary"
+        [disabled]="isSaving || isDeleting"
+      >
+        {{ isSaving ? 'Guardando...' : isCreating ? 'Crear evento' : 'Guardar cambios' }}
+      </button>
+      <button
+        type="button"
+        class="evento-form__button evento-form__button--danger"
         *ngIf="!isCreating && !evento?.IsDeleted"
         (click)="onDelete()"
+        [disabled]="isSaving || isDeleting"
       >
-        Desactivar</button
-      ><button
+        {{ isDeleting ? 'Desactivando...' : 'Desactivar evento' }}
+      </button>
+      <button
         type="button"
-        class="restore"
+        class="evento-form__button evento-form__button--success"
         *ngIf="!isCreating && evento?.IsDeleted"
         (click)="onRestore()"
+        [disabled]="isSaving || isDeleting"
       >
-        Restaurar
+        {{ isDeleting ? 'Restaurando...' : 'Restaurar evento' }}
       </button>
     </div>
-  </form>
-</section>
+  </app-admin-editor>
+</form>

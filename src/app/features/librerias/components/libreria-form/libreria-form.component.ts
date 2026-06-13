@@ -11,11 +11,15 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Libreria } from '../../../../Core/models/libreria.model';
+import {
+  AdminEditorComponent,
+  AdminEditorSectionDirective,
+} from '../../../../shared/components/admin-editor/admin-editor.component';
 
 @Component({
   selector: 'app-libreria-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AdminEditorComponent, AdminEditorSectionDirective],
   templateUrl: './libreria-form.component.html',
   styleUrl: './libreria-form.component.css',
 })
@@ -51,6 +55,27 @@ export class LibreriaFormComponent implements OnChanges {
     }
   }
 
+  get formTitle(): string {
+    return this.isCreating ? 'Nueva librería' : 'Editar librería';
+  }
+
+  get formSubtitle(): string {
+    return this.isCreating
+      ? 'Completa los datos para crear una nueva librería.'
+      : 'Modifica los datos de la librería seleccionada.';
+  }
+
+  formatDate(value?: string): string {
+    if (!value) return 'No disponible';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? 'No disponible'
+      : new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date);
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -67,6 +92,10 @@ export class LibreriaFormComponent implements OnChanges {
   onRestore(): void {
     const value = this.currentValue();
     if (value._id) this.restore.emit(value);
+  }
+
+  onCancel(): void {
+    this.cancel.emit();
   }
 
   private currentValue(): Libreria {

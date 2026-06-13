@@ -8,15 +8,7 @@
           (click)="onCancelEdit()"
           aria-label="Cerrar"
         ></button>
-        <aside class="autores-page__form-column admin-modal__dialog">
-          <button
-            class="admin-modal__close"
-            type="button"
-            (click)="onCancelEdit()"
-            aria-label="Cerrar"
-          >
-            ×
-          </button>
+        <aside class="autores-page__form-column admin-modal__dialog admin-modal__dialog--wide">
           <app-autor-form
             [autor]="selectedAutor()"
             [isSaving]="isSaving()"

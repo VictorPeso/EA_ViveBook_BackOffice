@@ -2,10 +2,8 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
-import { Autor } from '../../../../Core/models/autor.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Libro, UsuarioRef } from '../../../../Core/models/libro.model';
-import { AutoresService } from '../../../../Core/services/autores.service';
 import { LibrosService } from '../../../../Core/services/libros.service';
 import { LibroFormComponent } from '../../components/libro-form/libro-form.component';
 import { LibrosListComponent } from '../../components/libros-list/libros-list.component';
@@ -20,14 +18,11 @@ import { Toast } from '../../../../shared/components/toast/toast';
 })
 export class LibrosPageComponent implements OnInit {
   private readonly librosService = inject(LibrosService);
-  private readonly autoresService = inject(AutoresService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly libros = signal<Libro[]>([]);
-  readonly autores = signal<Autor[]>([]);
   readonly selectedLibro = signal<Libro | null>(null);
   readonly isLoading = signal(false);
-  readonly isLoadingAutores = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
   readonly isCreating = signal(false);
@@ -42,7 +37,6 @@ export class LibrosPageComponent implements OnInit {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      this.loadAutores();
       this.loadLibros();
     }
   }
@@ -95,21 +89,6 @@ export class LibrosPageComponent implements OnInit {
         error: (error) => {
           console.error('Error al cargar libros:', error);
           this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los libros.'));
-        },
-      });
-  }
-
-  loadAutores(): void {
-    this.isLoadingAutores.set(true);
-
-    this.autoresService
-      .getAdminAutores({ page: 1, limit: 100, includeDeleted: false })
-      .pipe(finalize(() => this.isLoadingAutores.set(false)))
-      .subscribe({
-        next: (result) => this.autores.set(result.data),
-        error: (error) => {
-          console.error('Error al cargar autores:', error);
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los autores.'));
         },
       });
   }
@@ -239,7 +218,7 @@ export class LibrosPageComponent implements OnInit {
       ...libro,
       title: libro.title ?? '',
       isbn: libro.isbn ?? '',
-      authors: this.extractAuthorIds(libro.authors),
+      authors: libro.authors ?? [],
       autor: libro.autor ?? '',
       categoria: libro.categoria ?? '',
       type: libro.type ?? 'VENTA',

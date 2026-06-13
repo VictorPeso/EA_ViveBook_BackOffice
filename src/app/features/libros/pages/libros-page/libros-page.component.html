@@ -8,22 +8,12 @@
           (click)="onCancelEdit()"
           aria-label="Cerrar"
         ></button>
-        <aside class="libros-page__form-column admin-modal__dialog">
-          <button
-            class="admin-modal__close"
-            type="button"
-            (click)="onCancelEdit()"
-            aria-label="Cerrar"
-          >
-            ×
-          </button>
+        <aside class="libros-page__form-column admin-modal__dialog admin-modal__dialog--wide">
           <app-libro-form
             [libro]="selectedLibro()"
-            [autores]="autores()"
             [isSaving]="isSaving()"
             [isDeleting]="isDeleting()"
             [isCreating]="isCreating()"
-            [isLoadingAutores]="isLoadingAutores()"
             [errorMessage]="errorMessage()"
             [successMessage]="successMessage()"
             (save)="onSaveLibro($event)"

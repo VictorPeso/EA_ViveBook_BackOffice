@@ -12,11 +12,15 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Autor } from '../../../../Core/models/autor.model';
+import {
+  AdminEditorComponent,
+  AdminEditorSectionDirective,
+} from '../../../../shared/components/admin-editor/admin-editor.component';
 
 @Component({
   selector: 'app-autor-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AdminEditorComponent, AdminEditorSectionDirective],
   templateUrl: './autor-form.component.html',
   styleUrl: './autor-form.component.css',
 })
@@ -69,6 +73,17 @@ export class AutorFormComponent implements OnInit, OnChanges {
       : 'Modifica los datos del autor seleccionado.';
   }
 
+  formatDate(value?: string): string {
+    if (!value) return 'No disponible';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? 'No disponible'
+      : new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date);
+  }
+
   onSubmit(): void {
     this.applyModeValidators();
 
@@ -102,8 +117,7 @@ export class AutorFormComponent implements OnInit, OnChanges {
     this.cancel.emit();
   }
 
-  onRestore(event: Event, autor: Autor): void {
-    event.stopPropagation();
+  onRestore(autor: Autor): void {
     this.restoreAutor.emit(autor);
   }
 

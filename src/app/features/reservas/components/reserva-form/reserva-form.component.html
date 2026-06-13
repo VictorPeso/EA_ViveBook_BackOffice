@@ -1,79 +1,222 @@
-<section class="reserva-form">
-  <header>
-    <p>Administración</p>
-    <h2>{{ isCreating ? 'Nueva reserva' : 'Editar reserva' }}</h2>
-  </header>
-  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
-  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <label>
-      Libro
-      <select formControlName="libro">
-        <option value="">Selecciona un libro</option>
-        <option *ngFor="let libro of libros" [value]="libro._id">
-          {{ libro.title }} · {{ libro.isbn }}
-        </option>
-      </select>
-    </label>
-    <label>
-      Solicitante
-      <select formControlName="usuarioSolicitante">
-        <option value="">Selecciona un usuario</option>
-        <option *ngFor="let user of usuarios" [value]="user._id">
-          {{ user.name }} · {{ user.email }}
-        </option>
-      </select>
-    </label>
-    <label>
-      Propietario
-      <select formControlName="propietario">
-        <option value="">Selecciona un usuario</option>
-        <option *ngFor="let user of usuarios" [value]="user._id">
-          {{ user.name }} · {{ user.email }}
-        </option>
-      </select>
-    </label>
-    <label>
-      Estado
-      <select formControlName="estado">
-        <option value="PENDIENTE">Pendiente</option>
-        <option value="ACEPTADA">Aceptada</option>
-        <option value="RECHAZADA">Rechazada</option>
-      </select>
-    </label>
-    <label>
-      Fecha de solicitud
-      <input type="datetime-local" formControlName="fechaSolicitud" />
-    </label>
-    <label>
-      Fecha límite
-      <input type="datetime-local" formControlName="fechaLimite" />
-    </label>
-    <p class="hint" *ngIf="isLoadingRelations">Cargando usuarios y libros...</p>
-    <p class="validation" *ngIf="form.touched && form.invalid">
-      Revisa los campos obligatorios. Solicitante y propietario deben ser diferentes.
-    </p>
-    <div class="actions">
-      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button>
-      <button type="submit" class="primary" [disabled]="isSaving || isDeleting">
+<form class="reserva-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <app-admin-editor
+    eyebrow="Gestión de reservas"
+    [title]="formTitle"
+    [subtitle]="formSubtitle"
+    (closeEditor)="onCancel()"
+  >
+    <div adminEditorMessages>
+      <div class="reserva-form__alert reserva-form__alert--error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      <div class="reserva-form__alert reserva-form__alert--success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+    </div>
+
+    <ng-template adminEditorSection sectionId="general" label="General">
+      <input type="hidden" formControlName="_id" />
+      <input type="hidden" formControlName="IsDeleted" />
+
+      <div class="reserva-form__grid">
+        <div class="reserva-form__field">
+          <label class="reserva-form__label" for="reservaId">ID de Mongo</label>
+          <input
+            id="reservaId"
+            class="reserva-form__input reserva-form__input--readonly"
+            [value]="reserva?._id || 'Se generará al crear la reserva'"
+            readonly
+          />
+        </div>
+
+        <div class="reserva-form__field">
+          <span class="reserva-form__label">Estado del registro</span>
+          <span
+            class="reserva-form__record-status"
+            [class.reserva-form__record-status--inactive]="reserva?.IsDeleted"
+          >
+            {{ reserva?.IsDeleted ? 'Desactivada' : 'Activa' }}
+          </span>
+        </div>
+
+        <div class="reserva-form__field">
+          <label class="reserva-form__label" for="estado">Estado de la reserva *</label>
+          <select id="estado" class="reserva-form__input" formControlName="estado">
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="ACEPTADA">Aceptada</option>
+            <option value="RECHAZADA">Rechazada</option>
+          </select>
+        </div>
+
+        <div class="reserva-form__field">
+          <label class="reserva-form__label" for="fechaSolicitud">Fecha de solicitud *</label>
+          <input
+            id="fechaSolicitud"
+            type="datetime-local"
+            class="reserva-form__input"
+            formControlName="fechaSolicitud"
+          />
+        </div>
+
+        <div class="reserva-form__field">
+          <label class="reserva-form__label" for="fechaLimite">Fecha límite</label>
+          <input
+            id="fechaLimite"
+            type="datetime-local"
+            class="reserva-form__input"
+            formControlName="fechaLimite"
+          />
+        </div>
+
+        <div class="reserva-form__field">
+          <label class="reserva-form__label" for="createdAt">Fecha de creación</label>
+          <input
+            id="createdAt"
+            class="reserva-form__input reserva-form__input--readonly"
+            [value]="formatDate(reserva?.createdAt)"
+            readonly
+          />
+        </div>
+
+        <div class="reserva-form__field">
+          <label class="reserva-form__label" for="updatedAt">Última actualización</label>
+          <input
+            id="updatedAt"
+            class="reserva-form__input reserva-form__input--readonly"
+            [value]="formatDate(reserva?.updatedAt)"
+            readonly
+          />
+        </div>
+      </div>
+
+      <p class="reserva-form__error" *ngIf="form.touched && form.invalid">
+        Revisa las fechas y las relaciones obligatorias. Solicitante y propietario deben ser
+        diferentes.
+      </p>
+    </ng-template>
+
+    <ng-template adminEditorSection sectionId="usuario" label="Usuario">
+      <section class="reserva-form__relation-section">
+        <div class="reserva-form__relation-header">
+          <h3>Usuarios de la reserva</h3>
+          <p>Configura el solicitante y el propietario del libro.</p>
+        </div>
+
+        <div class="reserva-form__relation-grid">
+          <div class="reserva-form__field">
+            <label class="reserva-form__label" for="usuarioSolicitante">Solicitante *</label>
+            <select
+              id="usuarioSolicitante"
+              class="reserva-form__input"
+              formControlName="usuarioSolicitante"
+            >
+              <option value="">Selecciona un usuario</option>
+              <option *ngFor="let usuario of usuarios" [value]="usuario._id">
+                {{ usuario.name }} · {{ usuario.email }}
+              </option>
+            </select>
+          </div>
+
+          <article
+            class="reserva-form__relation-card"
+            *ngIf="solicitanteSeleccionado as solicitante"
+          >
+            <span class="reserva-form__relation-information">
+              <strong>{{ solicitante.name || 'Usuario sin nombre' }}</strong>
+              <small>{{ solicitante.email || solicitante._id }}</small>
+            </span>
+          </article>
+
+          <div class="reserva-form__field">
+            <label class="reserva-form__label" for="propietario">Propietario *</label>
+            <select
+              id="propietario"
+              class="reserva-form__input"
+              formControlName="propietario"
+            >
+              <option value="">Selecciona un usuario</option>
+              <option *ngFor="let usuario of usuarios" [value]="usuario._id">
+                {{ usuario.name }} · {{ usuario.email }}
+              </option>
+            </select>
+          </div>
+
+          <article
+            class="reserva-form__relation-card"
+            *ngIf="propietarioSeleccionado as propietario"
+          >
+            <span class="reserva-form__relation-information">
+              <strong>{{ propietario.name || 'Usuario sin nombre' }}</strong>
+              <small>{{ propietario.email || propietario._id }}</small>
+            </span>
+          </article>
+        </div>
+
+        <span class="reserva-form__hint" *ngIf="isLoadingRelations">Cargando usuarios...</span>
+      </section>
+    </ng-template>
+
+    <ng-template adminEditorSection sectionId="libro" label="Libro">
+      <section class="reserva-form__relation-section">
+        <div class="reserva-form__relation-header">
+          <h3>Libro reservado</h3>
+          <p>Selecciona el libro relacionado con esta reserva.</p>
+        </div>
+
+        <div class="reserva-form__field">
+          <label class="reserva-form__label" for="libro">Libro *</label>
+          <select id="libro" class="reserva-form__input" formControlName="libro">
+            <option value="">Selecciona un libro</option>
+            <option *ngFor="let libro of libros" [value]="libro._id">
+              {{ libro.title }} · {{ libro.isbn }}
+            </option>
+          </select>
+          <span class="reserva-form__hint" *ngIf="isLoadingRelations">Cargando libros...</span>
+        </div>
+
+        <article class="reserva-form__relation-card" *ngIf="libroSeleccionado as libro">
+          <span class="reserva-form__relation-information">
+            <strong>{{ libro.title || 'Libro sin título' }}</strong>
+            <small>ISBN: {{ libro.isbn || 'No disponible' }}</small>
+          </span>
+        </article>
+      </section>
+    </ng-template>
+
+    <div adminEditorActions class="reserva-form__actions">
+      <button
+        type="button"
+        class="reserva-form__button reserva-form__button--secondary"
+        (click)="onCancel()"
+        [disabled]="isSaving || isDeleting"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="reserva-form__button reserva-form__button--primary"
+        [disabled]="isSaving || isDeleting"
+      >
         {{ isSaving ? 'Guardando...' : isCreating ? 'Crear reserva' : 'Guardar cambios' }}
       </button>
       <button
         type="button"
-        class="danger"
+        class="reserva-form__button reserva-form__button--danger"
         *ngIf="!isCreating && !reserva?.IsDeleted"
         (click)="onDelete()"
+        [disabled]="isSaving || isDeleting"
       >
-        Desactivar
+        {{ isDeleting ? 'Desactivando...' : 'Desactivar reserva' }}
       </button>
       <button
         type="button"
-        class="restore"
+        class="reserva-form__button reserva-form__button--success"
         *ngIf="!isCreating && reserva?.IsDeleted"
         (click)="onRestore()"
+        [disabled]="isSaving || isDeleting"
       >
-        Restaurar
+        {{ isDeleting ? 'Restaurando...' : 'Restaurar reserva' }}
       </button>
     </div>
-  </form>
-</section>
+  </app-admin-editor>
+</form>

@@ -24,7 +24,7 @@ export class LibreriasPageComponent implements OnInit {
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly isCreating = signal(true);
+  readonly isCreating = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly currentPage = signal(1);
@@ -68,8 +68,8 @@ export class LibreriasPageComponent implements OnInit {
             return;
           }
 
-          this.selectedLibreria.set(this.createEmpty());
-          this.isCreating.set(true);
+          this.selectedLibreria.set(null);
+          this.isCreating.set(false);
         },
         error: (error) =>
           this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar las librerías.')),
@@ -158,8 +158,8 @@ export class LibreriasPageComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.selectedLibreria.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selectedLibreria.set(null);
+    this.isCreating.set(false);
     this.errorMessage.set('');
     this.successMessage.set('');
   }

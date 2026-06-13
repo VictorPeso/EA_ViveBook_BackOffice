@@ -1,13 +1,11 @@
-import { Injectable, inject, PLATFORM_ID, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { Usuario } from '../models/usuario.model';
 import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 import { environment } from '../../../environments/environment';
-import { isPlatformBrowser } from '@angular/common';
-import { Router } from '@angular/router';
-import { HeadersService } from './headers.service';
+import { AuthSessionService } from './auth-session.service';
 
 export interface AdminUsuariosQuery {
   page: number;
@@ -26,23 +24,14 @@ export class UsuariosService {
   private readonly apiUrl = environment.apiUrl + '/usuarios';
   private readonly adminApiUrl = environment.apiUrl + '/admin/usuarios';
 
-  private readonly router = inject(Router);
+  private readonly authSession = inject(AuthSessionService);
 
   //son señales para manejar el estado de autenticación en toda la aplicación,
   //permitiendo que el topbar reaccionen a los cambios en el estado de autenticación de manera eficiente.
-  private platformId = inject(PLATFORM_ID);
+  readonly isAuthenticated = this.authSession.isAuthenticated;
 
-  isAuthenticated = signal<boolean>(this.checkToken());
-
-  private checkToken(): boolean {
-    if (isPlatformBrowser(this.platformId)) {
-      return !!localStorage.getItem('token');
-    }
-    return false;
-  }
-
-  updateAuthState() {
-    this.isAuthenticated.set(this.checkToken());
+  updateAuthState(): boolean {
+    return this.authSession.refreshState();
   }
 
   //------------------------- AUTENTICACIÓN -------------------------
@@ -71,16 +60,11 @@ export class UsuariosService {
         }),
         tap((res) => {
           if (res.token) {
-            this.headersService.setToken(res.token);
-            localStorage.setItem('token', res.token);
-            localStorage.setItem('rol', res.user.rol);
-            this.isAuthenticated.set(true);
+            this.authSession.startSession(res.token, res.user.rol);
           }
         }),
       );
   }
-
-  headersService = inject(HeadersService);
 
   getProfile() {
     return this.http
@@ -89,13 +73,11 @@ export class UsuariosService {
   }
 
   logout(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('rol');
-      this.headersService.clearToken();
-      this.isAuthenticated.set(false);
-      void this.router.navigate(['/auth']);
-    }
+    this.authSession.clearSession(true);
+  }
+
+  clearSession(): void {
+    this.authSession.clearSession();
   }
 
   //------------------------- CRUD USUARIOS -------------------------

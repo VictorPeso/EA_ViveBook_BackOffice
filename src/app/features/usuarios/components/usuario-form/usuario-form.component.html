@@ -1,175 +1,495 @@
-<section class="usuario-form">
-  <div class="usuario-form__header">
-    <div>
-      <p class="usuario-form__eyebrow">Formulario</p>
-      <h2 class="usuario-form__title">{{ formTitle }}</h2>
-      <p class="usuario-form__subtitle">
-        {{ formSubtitle }}
-      </p>
+<form class="usuario-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <app-admin-editor
+    eyebrow="Gestión de usuarios"
+    [title]="formTitle"
+    [subtitle]="formSubtitle"
+    (closeEditor)="onCancel()"
+  >
+    <div adminEditorMessages>
+      <div class="usuario-form__alert usuario-form__alert--error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="usuario-form__alert usuario-form__alert--success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
     </div>
-  </div>
 
-  <div class="usuario-form__alert usuario-form__alert--error" *ngIf="errorMessage">
-    {{ errorMessage }}
-  </div>
+    <ng-template adminEditorSection sectionId="general" label="General">
+      <input type="hidden" formControlName="_id" />
+      <input type="hidden" formControlName="IsDeleted" />
 
-  <div class="usuario-form__alert usuario-form__alert--success" *ngIf="successMessage">
-    {{ successMessage }}
-  </div>
-
-  <form class="usuario-form__body" [formGroup]="form" (ngSubmit)="onSubmit()">
-    <input type="hidden" formControlName="_id" />
-    <input type="hidden" formControlName="IsDeleted" />
-
-    <div class="usuario-form__grid">
-      <div class="usuario-form__field">
-        <label class="usuario-form__label" for="name">Nombre</label>
-        <input
-          id="name"
-          type="text"
-          class="usuario-form__input"
-          formControlName="name"
-          placeholder="Introduce el nombre del usuario"
-        />
-        <p
-          class="usuario-form__error"
-          *ngIf="nameControl.touched && nameControl.errors?.['required']"
-        >
-          El nombre es obligatorio para crear un usuario.
-        </p>
-        <p
-          class="usuario-form__error"
-          *ngIf="nameControl.touched && nameControl.errors?.['maxlength']"
-        >
-          El nombre es demasiado largo.
-        </p>
-      </div>
-
-      <div class="usuario-form__field">
-        <label class="usuario-form__label" for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          class="usuario-form__input"
-          formControlName="email"
-          placeholder="Introduce el email"
-        />
-        <p
-          class="usuario-form__error"
-          *ngIf="emailControl.touched && emailControl.errors?.['required']"
-        >
-          El email es obligatorio para crear un usuario.
-        </p>
-        <p
-          class="usuario-form__error"
-          *ngIf="emailControl.touched && emailControl.errors?.['email']"
-        >
-          Introduce un email válido.
-        </p>
-        <p
-          class="usuario-form__error"
-          *ngIf="emailControl.touched && emailControl.errors?.['maxlength']"
-        >
-          El email es demasiado largo.
-        </p>
-      </div>
-
-      <div class="usuario-form__field usuario-form__field--full">
-        <label class="usuario-form__label" for="password">
-          {{ isCreating ? 'Contraseña' : 'Nueva contraseña' }}
-        </label>
-        <input
-          id="password"
-          type="password"
-          class="usuario-form__input"
-          formControlName="password"
-          [placeholder]="isCreating ? 'Introduce la contraseña' : 'Déjala vacía para conservarla'"
-        />
-        <p
-          class="usuario-form__error"
-          *ngIf="passwordControl.touched && passwordControl.errors?.['required']"
-        >
-          La contraseña es obligatoria para crear un usuario.
-        </p>
-        <p
-          class="usuario-form__error"
-          *ngIf="passwordControl.touched && passwordControl.errors?.['minlength']"
-        >
-          La contraseña debe tener al menos 6 caracteres.
-        </p>
-        <p
-          class="usuario-form__error"
-          *ngIf="passwordControl.touched && passwordControl.errors?.['maxlength']"
-        >
-          La contraseña es demasiado larga.
-        </p>
-      </div>
-
-      <div class="usuario-form__field">
-        <label class="usuario-form__label" for="rol">Rol</label>
-        <select id="rol" class="usuario-form__input" formControlName="rol">
-          <option value="User">User</option>
-          <option value="Admin">Admin</option>
-        </select>
-      </div>
-
-      <div class="usuario-form__field">
-        <label class="usuario-form__label" for="avatar">URL del avatar</label>
-        <input id="avatar" type="url" class="usuario-form__input" formControlName="avatar" />
-      </div>
-
-      <div class="usuario-form__field usuario-form__field--full">
-        <label class="usuario-form__label" for="description">Descripción</label>
-        <textarea
-          id="description"
-          class="usuario-form__input"
-          formControlName="description"
-          rows="3"
-        ></textarea>
-      </div>
-
-      <label class="usuario-form__libro-option">
-        <input type="checkbox" class="usuario-form__checkbox" formControlName="hasSeenTutorial" />
-        <span class="usuario-form__libro-name">Ha completado el tutorial</span>
-      </label>
-
-      <details class="usuario-form__field usuario-form__field--full admin-related">
-        <summary>Libros relacionados ({{ librosControl.length }})</summary>
-        <div class="usuario-form__label-row">
-          <span class="usuario-form__hint" *ngIf="isLoadingLibros"> Cargando libros... </span>
+      <div class="usuario-form__grid">
+        <div class="usuario-form__field">
+          <label class="usuario-form__label" for="usuarioId">ID de Mongo</label>
+          <input
+            id="usuarioId"
+            class="usuario-form__input usuario-form__input--readonly"
+            [value]="usuario?._id || 'Se generará al crear el usuario'"
+            readonly
+          />
         </div>
 
-        <div
-          class="usuario-form__libros"
-          *ngIf="!isLoadingLibros && libros.length > 0; else librosEmptyState"
-        >
-          <label
-            class="usuario-form__libro-option"
-            *ngFor="let libro of libros; trackBy: trackByLibroId"
+        <div class="usuario-form__field">
+          <label class="usuario-form__label" for="authProvider">Proveedor de acceso</label>
+          <input
+            id="authProvider"
+            class="usuario-form__input usuario-form__input--readonly"
+            [value]="usuario?.authProvider || 'local'"
+            readonly
+          />
+        </div>
+
+        <div class="usuario-form__field">
+          <label class="usuario-form__label" for="name">Nombre</label>
+          <input
+            id="name"
+            type="text"
+            class="usuario-form__input"
+            formControlName="name"
+            placeholder="Introduce el nombre del usuario"
+          />
+          <p
+            class="usuario-form__error"
+            *ngIf="nameControl.touched && nameControl.errors?.['required']"
           >
-            <input
-              type="checkbox"
-              class="usuario-form__checkbox"
-              [checked]="libro._id ? isLibroSelected(libro._id) : false"
-              (change)="libro._id && onToggleLibro(libro._id, $any($event.target).checked)"
-            />
-            <span class="usuario-form__libro-name">
-              {{ libro.title }}
-            </span>
+            El nombre es obligatorio para crear un usuario.
+          </p>
+          <p
+            class="usuario-form__error"
+            *ngIf="nameControl.touched && nameControl.errors?.['maxlength']"
+          >
+            El nombre es demasiado largo.
+          </p>
+        </div>
+
+        <div class="usuario-form__field">
+          <label class="usuario-form__label" for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            class="usuario-form__input"
+            formControlName="email"
+            placeholder="Introduce el email"
+          />
+          <p
+            class="usuario-form__error"
+            *ngIf="emailControl.touched && emailControl.errors?.['required']"
+          >
+            El email es obligatorio para crear un usuario.
+          </p>
+          <p
+            class="usuario-form__error"
+            *ngIf="emailControl.touched && emailControl.errors?.['email']"
+          >
+            Introduce un email válido.
+          </p>
+          <p
+            class="usuario-form__error"
+            *ngIf="emailControl.touched && emailControl.errors?.['maxlength']"
+          >
+            El email es demasiado largo.
+          </p>
+        </div>
+
+        <div class="usuario-form__field usuario-form__field--full">
+          <label class="usuario-form__label" for="password">
+            {{ isCreating ? 'Contraseña' : 'Nueva contraseña' }}
           </label>
+          <input
+            id="password"
+            type="password"
+            class="usuario-form__input"
+            formControlName="password"
+            [placeholder]="
+              isCreating ? 'Introduce la contraseña' : 'Déjala vacía para conservarla'
+            "
+          />
+          <p
+            class="usuario-form__error"
+            *ngIf="passwordControl.touched && passwordControl.errors?.['required']"
+          >
+            La contraseña es obligatoria para crear un usuario.
+          </p>
+          <p
+            class="usuario-form__error"
+            *ngIf="passwordControl.touched && passwordControl.errors?.['minlength']"
+          >
+            La contraseña debe tener al menos 6 caracteres.
+          </p>
+          <p
+            class="usuario-form__error"
+            *ngIf="passwordControl.touched && passwordControl.errors?.['maxlength']"
+          >
+            La contraseña es demasiado larga.
+          </p>
+        </div>
+
+        <div class="usuario-form__field">
+          <label class="usuario-form__label" for="rol">Rol</label>
+          <select id="rol" class="usuario-form__input" formControlName="rol">
+            <option value="User">User</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="usuario-form__field">
+          <label class="usuario-form__label" for="avatar">URL del avatar</label>
+          <input id="avatar" type="url" class="usuario-form__input" formControlName="avatar" />
+        </div>
+
+        <div class="usuario-form__field usuario-form__field--full">
+          <label class="usuario-form__label" for="description">Descripción</label>
+          <textarea
+            id="description"
+            class="usuario-form__input"
+            formControlName="description"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <label class="usuario-form__libro-option">
+          <input type="checkbox" class="usuario-form__checkbox" formControlName="hasSeenTutorial" />
+          <span class="usuario-form__libro-name">Ha completado el tutorial</span>
+        </label>
+
+        <div class="usuario-form__field">
+          <span class="usuario-form__label">Estado de la cuenta</span>
+          <span
+            class="usuario-form__status"
+            [class.usuario-form__status--inactive]="usuario?.IsDeleted"
+          >
+            {{ usuario?.IsDeleted ? 'Desactivada' : 'Activa' }}
+          </span>
+        </div>
+
+        <div class="usuario-form__field">
+          <label class="usuario-form__label" for="createdAt">Fecha de creación</label>
+          <input
+            id="createdAt"
+            class="usuario-form__input usuario-form__input--readonly"
+            [value]="formatDate(usuario?.createdAt)"
+            readonly
+          />
+        </div>
+
+        <div class="usuario-form__field">
+          <label class="usuario-form__label" for="updatedAt">Última actualización</label>
+          <input
+            id="updatedAt"
+            class="usuario-form__input usuario-form__input--readonly"
+            [value]="formatDate(usuario?.updatedAt)"
+            readonly
+          />
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template
+      adminEditorSection
+      sectionId="libros"
+      label="Libros"
+      [badge]="librosControl.length"
+    >
+      <section class="usuario-form__relation-section">
+        <div class="usuario-form__relation-header">
+          <div>
+            <h3>Libros asociados</h3>
+            <p>Libros que pertenecen actualmente a este usuario.</p>
+          </div>
+        </div>
+
+        <div class="usuario-form__libros" *ngIf="librosAsociados.length > 0; else librosEmptyState">
+          <article
+            class="usuario-form__libro-card admin-relation-row"
+            *ngFor="let libro of librosAsociados; trackBy: trackByLibroId"
+          >
+            <span class="usuario-form__libro-information admin-relation-row__content">
+              <strong>{{ libro.title || 'Libro sin título' }}</strong>
+              <small>
+                {{ libro.isbn || libro._id }}
+                <ng-container *ngIf="libro.type"> · {{ libro.type }}</ng-container>
+              </small>
+            </span>
+            <button
+              type="button"
+              class="admin-relation-remove"
+              (click)="removeBook('libros', libro._id)"
+              [attr.aria-label]="'Eliminar ' + (libro.title || 'libro') + ' del usuario'"
+            >
+              Eliminar
+            </button>
+          </article>
         </div>
 
         <ng-template #librosEmptyState>
-          <div class="usuario-form__empty-libros">No hay libros disponibles para asociar.</div>
+          <div class="usuario-form__empty-libros">Este usuario no tiene libros asociados.</div>
         </ng-template>
+      </section>
+    </ng-template>
 
-        <p class="usuario-form__hint">
-          La selección de libros es opcional según la validación actual del backend.
-        </p>
-      </details>
-    </div>
+    <ng-template
+      adminEditorSection
+      sectionId="comprados"
+      label="Comprados"
+      [badge]="librosComprados.length"
+    >
+      <section class="usuario-form__relation-section">
+        <div class="usuario-form__relation-header">
+          <div><h3>Libros comprados</h3><p>Historial de libros comprados por el usuario.</p></div>
+        </div>
+        <ng-container
+          *ngTemplateOutlet="
+            bookCollection;
+            context: {
+              $implicit: librosComprados,
+              empty: 'No hay libros comprados.',
+              collection: 'boughtLibros'
+            }
+          "
+        />
+      </section>
+    </ng-template>
 
-    <div class="usuario-form__actions">
+    <ng-template
+      adminEditorSection
+      sectionId="alquilados"
+      label="Alquilados"
+      [badge]="librosAlquilados.length"
+    >
+      <section class="usuario-form__relation-section">
+        <div class="usuario-form__relation-header">
+          <div><h3>Libros alquilados</h3><p>Libros alquilados por el usuario.</p></div>
+        </div>
+        <ng-container
+          *ngTemplateOutlet="
+            bookCollection;
+            context: {
+              $implicit: librosAlquilados,
+              empty: 'No hay libros alquilados.',
+              collection: 'rentedLibros'
+            }
+          "
+        />
+      </section>
+    </ng-template>
+
+    <ng-template
+      adminEditorSection
+      sectionId="favoritos"
+      label="Favoritos"
+      [badge]="librosFavoritos.length + favoritos.length"
+    >
+      <section class="usuario-form__relation-section">
+        <div class="usuario-form__relation-header">
+          <div><h3>Libros favoritos</h3><p>Colecciones favoritas guardadas por el usuario.</p></div>
+        </div>
+        <div class="usuario-form__preference-group">
+          <h4>Libros favoritos del perfil</h4>
+          <ng-container
+            *ngTemplateOutlet="
+              bookCollection;
+              context: {
+                $implicit: librosFavoritos,
+                empty: 'No hay libros favoritos en el perfil.',
+                collection: 'favoriteBooks'
+              }
+            "
+          />
+        </div>
+        <div class="usuario-form__preference-group">
+          <h4>Favoritos generales</h4>
+          <ng-container
+            *ngTemplateOutlet="
+              bookCollection;
+              context: {
+                $implicit: favoritos,
+                empty: 'No hay favoritos generales.',
+                collection: 'favoritos'
+              }
+            "
+          />
+        </div>
+      </section>
+    </ng-template>
+
+    <ng-template
+      adminEditorSection
+      sectionId="wishlist"
+      label="Wishlist"
+      [badge]="listaDeseos.length"
+    >
+      <section class="usuario-form__relation-section">
+        <div class="usuario-form__relation-header">
+          <div><h3>Lista de deseos</h3><p>Libros guardados para consultar más adelante.</p></div>
+        </div>
+        <ng-container
+          *ngTemplateOutlet="
+            bookCollection;
+            context: {
+              $implicit: listaDeseos,
+              empty: 'La lista de deseos está vacía.',
+              collection: 'wishlist'
+            }
+          "
+        />
+      </section>
+    </ng-template>
+
+    <ng-template
+      adminEditorSection
+      sectionId="preferencias"
+      label="Preferencias"
+      [badge]="autoresFavoritos.length + categoriasFavoritas.length"
+    >
+      <section class="usuario-form__relation-section">
+        <div class="usuario-form__relation-header">
+          <div><h3>Preferencias</h3><p>Autores y categorías favoritas del usuario.</p></div>
+        </div>
+        <div class="usuario-form__preference-group">
+          <h4>Autores favoritos</h4>
+          <div class="admin-relation-list" *ngIf="autoresFavoritos.length; else noAuthors">
+            <div
+              class="admin-relation-row"
+              *ngFor="let autor of autoresFavoritos; trackBy: trackByValue"
+            >
+              <span class="admin-relation-row__content">{{ autor }}</span>
+              <button
+                type="button"
+                class="admin-relation-remove"
+                (click)="removeText('favoriteAuthors', autor)"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+          <ng-template #noAuthors><p class="usuario-form__empty-libros">Sin autores favoritos.</p></ng-template>
+        </div>
+        <div class="usuario-form__preference-group">
+          <h4>Categorías favoritas</h4>
+          <div class="admin-relation-list" *ngIf="categoriasFavoritas.length; else noCategories">
+            <div
+              class="admin-relation-row"
+              *ngFor="let categoria of categoriasFavoritas; trackBy: trackByValue"
+            >
+              <span class="admin-relation-row__content">{{ categoria }}</span>
+              <button
+                type="button"
+                class="admin-relation-remove"
+                (click)="removeText('favoriteCategories', categoria)"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+          <ng-template #noCategories><p class="usuario-form__empty-libros">Sin categorías favoritas.</p></ng-template>
+        </div>
+      </section>
+    </ng-template>
+
+    <ng-template
+      adminEditorSection
+      sectionId="seguidos"
+      label="Seguidos"
+      [badge]="usuariosSeguidos.length"
+    >
+      <section class="usuario-form__relation-section">
+        <div class="usuario-form__relation-header">
+          <div><h3>Usuarios seguidos</h3><p>Cuentas que sigue este usuario.</p></div>
+        </div>
+        <div class="usuario-form__libros" *ngIf="usuariosSeguidos.length; else noFollowing">
+          <article
+            class="usuario-form__libro-card admin-relation-row"
+            *ngFor="let followed of usuariosSeguidos; trackBy: trackByUsuarioId"
+          >
+            <span class="usuario-form__libro-information admin-relation-row__content">
+              <strong>{{ followed.name || 'Usuario sin nombre' }}</strong>
+              <small>{{ followed.email || followed._id }} · {{ followed.rol || 'User' }}</small>
+            </span>
+            <button
+              type="button"
+              class="admin-relation-remove"
+              (click)="removeUser('followingUsers', followed._id)"
+            >
+              Eliminar
+            </button>
+          </article>
+        </div>
+        <ng-template #noFollowing>
+          <div class="usuario-form__empty-libros">Este usuario no sigue a otras cuentas.</div>
+        </ng-template>
+      </section>
+    </ng-template>
+
+    <ng-template
+      adminEditorSection
+      sectionId="notificaciones"
+      label="Notificaciones"
+      [badge]="notificacionesDeUsuarios.length"
+    >
+      <section class="usuario-form__relation-section">
+        <div class="usuario-form__relation-header">
+          <div>
+            <h3>Notificaciones de usuarios</h3>
+            <p>Cuentas cuyas novedades tiene activadas este usuario.</p>
+          </div>
+        </div>
+        <div class="usuario-form__libros" *ngIf="notificacionesDeUsuarios.length; else noNotifications">
+          <article
+            class="usuario-form__libro-card admin-relation-row"
+            *ngFor="let notifiedUser of notificacionesDeUsuarios; trackBy: trackByUsuarioId"
+          >
+            <span class="usuario-form__libro-information admin-relation-row__content">
+              <strong>{{ notifiedUser.name || 'Usuario sin nombre' }}</strong>
+              <small>{{ notifiedUser.email || notifiedUser._id }}</small>
+            </span>
+            <button
+              type="button"
+              class="admin-relation-remove"
+              (click)="removeUser('notificationUsersEnabled', notifiedUser._id)"
+            >
+              Eliminar
+            </button>
+          </article>
+        </div>
+        <ng-template #noNotifications>
+          <div class="usuario-form__empty-libros">
+            No hay notificaciones de usuarios activadas.
+          </div>
+        </ng-template>
+      </section>
+    </ng-template>
+
+    <ng-template #bookCollection let-items let-empty="empty" let-collection="collection">
+      <div class="usuario-form__libros" *ngIf="items.length; else emptyBooks">
+        <article
+          class="usuario-form__libro-card admin-relation-row"
+          *ngFor="let libro of items; trackBy: trackByLibroId"
+        >
+          <span class="usuario-form__libro-information admin-relation-row__content">
+            <strong>{{ libro.title || 'Libro sin título' }}</strong>
+            <small>
+              {{ libro.isbn || libro._id }}
+              <ng-container *ngIf="libro.type"> · {{ libro.type }}</ng-container>
+            </small>
+          </span>
+          <button
+            type="button"
+            class="admin-relation-remove"
+            (click)="removeBook(collection, libro._id)"
+          >
+            Eliminar
+          </button>
+        </article>
+      </div>
+      <ng-template #emptyBooks><div class="usuario-form__empty-libros">{{ empty }}</div></ng-template>
+    </ng-template>
+
+    <p adminEditorActions class="admin-relation-save-hint" *ngIf="form.dirty">
+      Los cambios en las relaciones se aplicarán al guardar.
+    </p>
+
+    <div adminEditorActions class="usuario-form__actions">
       <button
         type="button"
         class="usuario-form__button usuario-form__button--secondary"
@@ -206,5 +526,5 @@
         {{ isDeleting ? 'Restaurando...' : 'Restaurar usuario' }}
       </button>
     </div>
-  </form>
-</section>
+  </app-admin-editor>
+</form>

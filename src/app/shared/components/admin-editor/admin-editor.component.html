@@ -1,0 +1,58 @@
+<section class="admin-editor">
+  <button
+    class="admin-editor__close"
+    type="button"
+    (click)="closeEditor.emit()"
+    aria-label="Cerrar formulario"
+  >
+    ×
+  </button>
+
+  <aside class="admin-editor__sidebar" aria-label="Secciones del formulario">
+    <div class="admin-editor__brand">
+      <span class="admin-editor__brand-mark" aria-hidden="true">VB</span>
+      <span>ViveBook</span>
+    </div>
+
+    <nav class="admin-editor__navigation">
+      @for (section of sections; track section.sectionId) {
+        <button
+          type="button"
+          class="admin-editor__navigation-item"
+          [class.admin-editor__navigation-item--active]="
+            activeSectionId() === section.sectionId
+          "
+          [attr.aria-current]="activeSectionId() === section.sectionId ? 'page' : null"
+          (click)="selectSection(section.sectionId)"
+        >
+          <span>{{ section.label }}</span>
+          @if (section.badge !== null) {
+            <span class="admin-editor__badge">{{ section.badge }}</span>
+          }
+        </button>
+      }
+    </nav>
+  </aside>
+
+  <div class="admin-editor__main">
+    <header class="admin-editor__header">
+      <p class="admin-editor__eyebrow">{{ eyebrow }}</p>
+      <h2>{{ title }}</h2>
+      @if (subtitle) {
+        <p class="admin-editor__subtitle">{{ subtitle }}</p>
+      }
+    </header>
+
+    <ng-content select="[adminEditorMessages]" />
+
+    <div class="admin-editor__content">
+      @if (activeSection(); as section) {
+        <ng-container *ngTemplateOutlet="section.template" />
+      }
+    </div>
+
+    <footer class="admin-editor__actions">
+      <ng-content select="[adminEditorActions]" />
+    </footer>
+  </div>
+</section>

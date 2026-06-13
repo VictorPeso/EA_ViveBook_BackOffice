@@ -1,23 +1,38 @@
-<section class="reservas-page">
-  <div class="reservas-page__layout">
-    <aside class="reservas-page__form-column">
-      <app-reserva-form
-        [reserva]="selected()"
-        [usuarios]="usuarios()"
-        [libros]="libros()"
-        [isLoadingRelations]="isLoadingRelations()"
-        [isSaving]="isSaving()"
-        [isDeleting]="isDeleting()"
-        [isCreating]="isCreating()"
-        [errorMessage]="errorMessage()"
-        [successMessage]="successMessage()"
-        (save)="onSave($event)"
-        (delete)="onDelete($event)"
-        (restore)="onRestore($event)"
-        (cancel)="onCancel()"
-      />
-    </aside>
-    <section class="reservas-page__list-column">
+<section class="reservas-page admin-page">
+  <div class="reservas-page__layout admin-page__layout">
+    <div
+      class="admin-modal"
+      *ngIf="selected()"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Detalle de reserva"
+    >
+      <button
+        class="admin-modal__backdrop"
+        type="button"
+        (click)="onCancel()"
+        aria-label="Cerrar"
+      ></button>
+      <aside class="reservas-page__form-column admin-modal__dialog admin-modal__dialog--wide">
+        <app-reserva-form
+          [reserva]="selected()"
+          [usuarios]="usuarios()"
+          [libros]="libros()"
+          [isLoadingRelations]="isLoadingRelations()"
+          [isSaving]="isSaving()"
+          [isDeleting]="isDeleting()"
+          [isCreating]="isCreating()"
+          [errorMessage]="errorMessage()"
+          [successMessage]="successMessage()"
+          (save)="onSave($event)"
+          (delete)="onDelete($event)"
+          (restore)="onRestore($event)"
+          (cancel)="onCancel()"
+        />
+      </aside>
+    </div>
+
+    <section class="reservas-page__list-column admin-page__list">
       <app-reservas-list
         [reservas]="reservas()"
         [selectedId]="selected()?._id ?? null"

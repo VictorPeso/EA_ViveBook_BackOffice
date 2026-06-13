@@ -1,7 +1,6 @@
 <div class="app-shell">
-  <app-topbar></app-topbar>
-
-  @if (isLoggedIn()) {
+  @if (showAdminLayout()) {
+    <app-topbar></app-topbar>
     <div class="workspace">
       <aside class="sidebar" aria-label="Modelos administrables">
         <nav class="sidebar__nav">

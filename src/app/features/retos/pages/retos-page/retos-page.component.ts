@@ -80,8 +80,8 @@ export class RetosPageComponent implements OnInit {
   }
 
   onCreateNew(): void {
-    this.selected.set(null);
-    this.isCreating.set(false);
+    this.selected.set(this.createEmpty());
+    this.isCreating.set(true);
     this.errorMessage.set('');
     this.successMessage.set('');
   }
@@ -156,8 +156,10 @@ export class RetosPageComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.selected.set(this.createEmpty());
-    this.isCreating.set(true);
+    this.selected.set(null);
+    this.isCreating.set(false);
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   private createEmpty(): Reto {

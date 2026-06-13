@@ -13,10 +13,7 @@
         (click)="onCancel()"
         aria-label="Cerrar"
       ></button>
-      <aside class="eventos-page__form-column admin-modal__dialog">
-        <button class="admin-modal__close" type="button" (click)="onCancel()" aria-label="Cerrar">
-          ×
-        </button>
+      <aside class="eventos-page__form-column admin-modal__dialog admin-modal__dialog--wide">
         <app-evento-form
           [evento]="selectedEvento()"
           [usuarios]="usuarios()"

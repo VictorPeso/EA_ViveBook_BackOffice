@@ -11,11 +11,15 @@ import {
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Evento } from '../../../../Core/models/evento.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
+import {
+  AdminEditorComponent,
+  AdminEditorSectionDirective,
+} from '../../../../shared/components/admin-editor/admin-editor.component';
 
 @Component({
   selector: 'app-evento-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AdminEditorComponent, AdminEditorSectionDirective],
   templateUrl: './evento-form.component.html',
   styleUrl: './evento-form.component.css',
 })
@@ -76,13 +80,60 @@ export class EventoFormComponent implements OnChanges {
     );
   }
 
-  selected(id: string): boolean {
-    return this.participants.getRawValue().includes(id);
+  get participantesAsociados(): Usuario[] {
+    const referenceMap = new Map(
+      (this.evento?.participant ?? []).map((usuario) => {
+        const reference =
+          typeof usuario === 'string'
+            ? { _id: usuario, name: 'Usuario sin datos', email: '', rol: 'User' as const }
+            : usuario;
+        return [reference._id ?? '', reference] as const;
+      }),
+    );
+    return this.participants
+      .getRawValue()
+      .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      .map(
+        (id) =>
+          referenceMap.get(id) ?? {
+            _id: id,
+            name: 'Usuario sin datos',
+            email: '',
+            rol: 'User',
+          },
+      );
   }
-  toggle(id: string, checked: boolean): void {
-    const index = this.participants.getRawValue().indexOf(id);
-    if (checked && index < 0) this.participants.push(this.fb.control(id, { nonNullable: true }));
-    if (!checked && index >= 0) this.participants.removeAt(index);
+
+  get formTitle(): string {
+    return this.isCreating ? 'Nuevo evento' : 'Editar evento';
+  }
+
+  get formSubtitle(): string {
+    return this.isCreating
+      ? 'Completa los datos para crear un nuevo evento.'
+      : 'Modifica los datos del evento seleccionado.';
+  }
+
+  formatDate(value?: string): string {
+    if (!value) return 'No disponible';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? 'No disponible'
+      : new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date);
+  }
+
+  trackByUsuarioId(index: number, usuario: Usuario): string | number {
+    return usuario._id ?? index;
+  }
+
+  removeParticipant(usuarioId: string): void {
+    const index = this.participants.getRawValue().indexOf(usuarioId);
+    if (index < 0) return;
+    this.participants.removeAt(index);
+    this.participants.markAsDirty();
   }
 
   onSubmit(): void {
@@ -99,6 +150,10 @@ export class EventoFormComponent implements OnChanges {
   onRestore(): void {
     const value = this.value();
     if (value._id) this.restore.emit(value);
+  }
+
+  onCancel(): void {
+    this.cancel.emit();
   }
 
   private value(): Evento {

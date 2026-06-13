@@ -1,94 +1,146 @@
 :host {
   display: block;
+  min-width: 0;
 }
+
 .reto-form {
-  overflow: hidden;
-  background: #fff9f7;
+  display: block;
+}
+
+.reto-form__alert {
+  margin-top: 18px;
+  padding: 14px 16px;
+  font-weight: 600;
+  border-radius: 14px;
+}
+
+.reto-form__alert--error,
+.reto-form__alert--success {
+  color: #7b141e;
+  background: #f3c7bd;
   border: 1px solid #dfa196;
-  border-radius: 24px;
-  box-shadow: 0 16px 40px rgba(123, 20, 30, 0.06);
 }
-header {
-  padding: 28px;
-  border-bottom: 1px solid #f3c7bd;
-}
-header p {
-  margin: 0 0 6px;
-  color: #a33c3c;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-h2 {
-  margin: 0;
-}
-form {
+
+.reto-form__grid {
   display: grid;
-  gap: 18px;
-  padding: 28px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
 }
-label {
-  display: grid;
+
+.reto-form__field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
   gap: 8px;
+}
+
+.reto-form__field--full {
+  grid-column: 1 / -1;
+}
+
+.reto-form__label {
   color: #8f262b;
+  font-size: 0.92rem;
   font-weight: 700;
 }
-input,
-textarea,
-select {
+
+.reto-form__input {
   width: 100%;
   padding: 13px 14px;
+  color: #7b141e;
   font: inherit;
   background: #fff9f7;
   border: 1px solid #dfa196;
   border-radius: 14px;
 }
-.alert {
-  margin: 20px 28px 0;
-  padding: 14px;
-  font-weight: 600;
-  border-radius: 14px;
+
+.reto-form__input:focus {
+  outline: none;
+  border-color: #b75b56;
+  box-shadow: 0 0 0 4px rgba(163, 60, 60, 0.12);
 }
-.error,
-.validation {
+
+.reto-form__input--readonly {
+  color: #a33c3c;
+  cursor: default;
+  background: #f8e4df;
+}
+
+.reto-form__record-status {
+  width: fit-content;
+  padding: 8px 12px;
+  color: #fff9f7;
+  font-size: 0.86rem;
+  font-weight: 800;
+  background: #a33c3c;
+  border-radius: 999px;
+}
+
+.reto-form__record-status--inactive {
   color: #7b141e;
+  background: #dfa196;
 }
-.alert.error {
-  background: #f3c7bd;
-}
-.alert.success {
-  color: #8f262b;
-  background: #f3c7bd;
-}
-.hint {
+
+.reto-form__hint {
   color: #b75b56;
+  font-size: 0.84rem;
 }
-.actions {
+
+.reto-form__error {
+  margin: 18px 0 0;
+  color: #8f262b;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.reto-form__actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #f3c7bd;
+  flex-wrap: wrap;
 }
-button {
+
+.reto-form__button {
   padding: 12px 18px;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   border: 0;
   border-radius: 14px;
 }
-.primary {
+
+.reto-form__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.reto-form__button--primary {
   color: #fff9f7;
-  background: #7b141e;
+  background: linear-gradient(135deg, #7b141e, #8f262b);
 }
-.secondary {
-  background: #f3c7bd;
-}
-.danger {
+
+.reto-form__button--secondary,
+.reto-form__button--danger {
   color: #7b141e;
   background: #f3c7bd;
 }
-.restore {
-  color: #8f262b;
-  background: #f3c7bd;
+
+.reto-form__button--success {
+  color: #fff9f7;
+  background: #a33c3c;
+}
+
+@media (max-width: 960px) {
+  .reto-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reto-form__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reto-form__button {
+    width: 100%;
+  }
 }

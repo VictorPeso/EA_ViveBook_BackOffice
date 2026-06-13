@@ -2,25 +2,3 @@
   display: block;
   min-width: 0;
 }
-.librerias-page__layout {
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(640px, 2fr);
-  gap: 24px;
-  align-items: start;
-}
-.librerias-page__form-column {
-  position: sticky;
-  top: 96px;
-  min-width: 0;
-}
-.librerias-page__list-column {
-  min-width: 0;
-}
-@media (max-width: 960px) {
-  .librerias-page__layout {
-    grid-template-columns: 1fr;
-  }
-  .librerias-page__form-column {
-    position: static;
-  }
-}

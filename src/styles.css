@@ -104,6 +104,11 @@ button:disabled {
   box-shadow: 0 30px 80px rgba(123, 20, 30, 0.25);
 }
 
+.admin-modal__dialog--wide {
+  width: min(1080px, 100%);
+  overflow: hidden;
+}
+
 .admin-modal__close {
   position: sticky;
   top: 14px;
@@ -146,6 +151,62 @@ details.admin-related > :not(summary) {
   margin-left: 14px;
 }
 
+.admin-relation-list {
+  display: grid;
+  gap: 10px;
+  max-height: 420px;
+  padding: 8px;
+  overflow-y: auto;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.admin-relation-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.admin-relation-row__content {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.admin-relation-remove {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  color: var(--color-danger);
+  font-size: 0.82rem;
+  font-weight: 750;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.admin-relation-remove:hover {
+  color: var(--color-surface);
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.admin-relation-remove:focus-visible {
+  outline: 3px solid rgba(163, 60, 60, 0.2);
+  outline-offset: 2px;
+}
+
+.admin-relation-save-hint {
+  flex: 1 1 100%;
+  margin: 0 0 10px;
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+}
+
 @media (max-width: 760px) {
   :root {
     --sidebar-width: 76px;
@@ -156,7 +217,16 @@ details.admin-related > :not(summary) {
   }
 
   .admin-modal__dialog {
-    max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
     border-radius: 16px;
+  }
+
+  .admin-relation-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-relation-remove {
+    width: 100%;
   }
 }

@@ -12,11 +12,15 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Libro } from '../../../../Core/models/libro.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { Valoracion } from '../../../../Core/models/valoracion.model';
+import {
+  AdminEditorComponent,
+  AdminEditorSectionDirective,
+} from '../../../../shared/components/admin-editor/admin-editor.component';
 
 @Component({
   selector: 'app-valoracion-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AdminEditorComponent, AdminEditorSectionDirective],
   templateUrl: './valoracion-form.component.html',
   styleUrl: './valoracion-form.component.css',
 })
@@ -73,6 +77,48 @@ export class ValoracionFormComponent implements OnChanges {
     });
   }
 
+  get formTitle(): string {
+    return this.isCreating ? 'Nueva valoración' : 'Editar valoración';
+  }
+
+  get formSubtitle(): string {
+    return this.isCreating
+      ? 'Completa los datos para crear una nueva valoración.'
+      : 'Modifica los datos y relaciones de la valoración seleccionada.';
+  }
+
+  get autorSeleccionado(): Usuario | null {
+    return this.findUsuario(this.form.controls.usuarioAutor.value, this.valoracion?.usuarioAutor);
+  }
+
+  get usuarioValoradoSeleccionado(): Usuario | null {
+    return this.findUsuario(
+      this.form.controls.usuarioValorado.value,
+      this.valoracion?.usuarioValorado,
+    );
+  }
+
+  get libroSeleccionado(): Libro | null {
+    const libroId = this.form.controls.libro.value;
+    if (!libroId) return null;
+    const libroFromOptions = this.libros.find((libro) => libro._id === libroId);
+    if (libroFromOptions) return libroFromOptions;
+    return typeof this.valoracion?.libro === 'object' && this.valoracion.libro._id === libroId
+      ? this.valoracion.libro
+      : null;
+  }
+
+  formatDate(value?: string): string {
+    if (!value) return 'No disponible';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? 'No disponible'
+      : new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date);
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -89,6 +135,10 @@ export class ValoracionFormComponent implements OnChanges {
     if (value._id) this.restore.emit(value);
   }
 
+  onCancel(): void {
+    this.cancel.emit();
+  }
+
   private value(): Valoracion {
     const value = this.form.getRawValue();
     return {
@@ -102,5 +152,17 @@ export class ValoracionFormComponent implements OnChanges {
       reservationId: value.reservationId.trim() || null,
       IsDeleted: value.IsDeleted,
     };
+  }
+
+  private findUsuario(
+    usuarioId: string,
+    currentUsuario: string | Usuario | undefined,
+  ): Usuario | null {
+    if (!usuarioId) return null;
+    const usuarioFromOptions = this.usuarios.find((usuario) => usuario._id === usuarioId);
+    if (usuarioFromOptions) return usuarioFromOptions;
+    return typeof currentUsuario === 'object' && currentUsuario._id === usuarioId
+      ? currentUsuario
+      : null;
   }
 }

@@ -1,54 +1,92 @@
-<section class="autor-form">
-  <div class="autor-form__header">
-    <div>
-      <p class="autor-form__eyebrow">Formulario</p>
-      <h2 class="autor-form__title">{{ formTitle }}</h2>
-      <p class="autor-form__subtitle">
-        {{ formSubtitle }}
-      </p>
-    </div>
-  </div>
-
-  <div class="autor-form__alert autor-form__alert--error" *ngIf="errorMessage">
-    {{ errorMessage }}
-  </div>
-
-  <div class="autor-form__alert autor-form__alert--success" *ngIf="successMessage">
-    {{ successMessage }}
-  </div>
-
-  <form class="autor-form__body" [formGroup]="form" (ngSubmit)="onSubmit()">
-    <input type="hidden" formControlName="_id" />
-    <input type="hidden" formControlName="IsDeleted" />
-
-    <div class="autor-form__grid">
-      <div class="autor-form__field autor-form__field--full">
-        <label class="autor-form__label" for="fullName">Nombre completo</label>
-        <input
-          id="fullName"
-          type="text"
-          class="autor-form__input"
-          formControlName="fullName"
-          placeholder="Introduce el nombre completo del autor"
-        />
-
-        <p
-          class="autor-form__error"
-          *ngIf="fullNameControl.touched && fullNameControl.errors?.['required']"
-        >
-          El nombre completo es obligatorio para crear un autor.
-        </p>
-
-        <p
-          class="autor-form__error"
-          *ngIf="fullNameControl.touched && fullNameControl.errors?.['maxlength']"
-        >
-          El nombre completo es demasiado largo.
-        </p>
+<form class="autor-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <app-admin-editor
+    eyebrow="Gestión de autores"
+    [title]="formTitle"
+    [subtitle]="formSubtitle"
+    (closeEditor)="onCancel()"
+  >
+    <div adminEditorMessages>
+      <div class="autor-form__alert autor-form__alert--error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      <div class="autor-form__alert autor-form__alert--success" *ngIf="successMessage">
+        {{ successMessage }}
       </div>
     </div>
 
-    <div class="autor-form__actions">
+    <ng-template adminEditorSection sectionId="general" label="General">
+      <input type="hidden" formControlName="_id" />
+      <input type="hidden" formControlName="IsDeleted" />
+
+      <div class="autor-form__grid">
+        <div class="autor-form__field">
+          <label class="autor-form__label" for="autorId">ID de Mongo</label>
+          <input
+            id="autorId"
+            class="autor-form__input autor-form__input--readonly"
+            [value]="autor?._id || 'Se generará al crear el autor'"
+            readonly
+          />
+        </div>
+
+        <div class="autor-form__field">
+          <span class="autor-form__label">Estado del registro</span>
+          <span
+            class="autor-form__status"
+            [class.autor-form__status--inactive]="autor?.IsDeleted"
+          >
+            {{ autor?.IsDeleted ? 'Desactivado' : 'Activo' }}
+          </span>
+        </div>
+
+        <div class="autor-form__field autor-form__field--full">
+          <label class="autor-form__label" for="fullName">Nombre completo</label>
+          <input
+            id="fullName"
+            type="text"
+            class="autor-form__input"
+            formControlName="fullName"
+            placeholder="Introduce el nombre completo del autor"
+          />
+
+          <p
+            class="autor-form__error"
+            *ngIf="fullNameControl.touched && fullNameControl.errors?.['required']"
+          >
+            El nombre completo es obligatorio para crear un autor.
+          </p>
+
+          <p
+            class="autor-form__error"
+            *ngIf="fullNameControl.touched && fullNameControl.errors?.['maxlength']"
+          >
+            El nombre completo es demasiado largo.
+          </p>
+        </div>
+
+        <div class="autor-form__field">
+          <label class="autor-form__label" for="createdAt">Fecha de creación</label>
+          <input
+            id="createdAt"
+            class="autor-form__input autor-form__input--readonly"
+            [value]="formatDate(autor?.createdAt)"
+            readonly
+          />
+        </div>
+
+        <div class="autor-form__field">
+          <label class="autor-form__label" for="updatedAt">Última actualización</label>
+          <input
+            id="updatedAt"
+            class="autor-form__input autor-form__input--readonly"
+            [value]="formatDate(autor?.updatedAt)"
+            readonly
+          />
+        </div>
+      </div>
+    </ng-template>
+
+    <div adminEditorActions class="autor-form__actions">
       <button
         type="button"
         class="autor-form__button autor-form__button--secondary"
@@ -79,11 +117,12 @@
       <button
         *ngIf="autor?.IsDeleted"
         type="button"
-        class="libro-form__button libro-form__button--success"
-        (click)="onRestore($event, autor!)"
+        class="autor-form__button autor-form__button--success"
+        (click)="onRestore(autor!)"
+        [disabled]="isSaving || isDeleting"
       >
-        Activar
+        {{ isDeleting ? 'Activando...' : 'Activar' }}
       </button>
     </div>
-  </form>
-</section>
+  </app-admin-editor>
+</form>

@@ -1,46 +1,133 @@
-<section class="libreria-form">
-  <header>
-    <p>Formulario</p>
-    <h2>{{ isCreating ? 'Nueva librería' : 'Editar librería' }}</h2>
-  </header>
-  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
-  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <label>
-      Nombre
-      <input formControlName="name" placeholder="Nombre de la librería" />
-    </label>
-    <p class="validation" *ngIf="form.controls.name.touched && form.controls.name.invalid">
-      El nombre es obligatorio.
-    </p>
-    <label>
-      Dirección
-      <textarea formControlName="address" rows="3" placeholder="Dirección completa"></textarea>
-    </label>
-    <p class="validation" *ngIf="form.controls.address.touched && form.controls.address.invalid">
-      La dirección es obligatoria.
-    </p>
-    <div class="actions">
-      <button type="button" class="secondary" (click)="cancel.emit()">Cancelar</button>
-      <button type="submit" class="primary" [disabled]="isSaving || isDeleting">
+<form class="libreria-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <app-admin-editor
+    eyebrow="Gestión de librerías"
+    [title]="formTitle"
+    [subtitle]="formSubtitle"
+    (closeEditor)="onCancel()"
+  >
+    <div adminEditorMessages>
+      <div class="libreria-form__alert libreria-form__alert--error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      <div class="libreria-form__alert libreria-form__alert--success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+    </div>
+
+    <ng-template adminEditorSection sectionId="general" label="General">
+      <input type="hidden" formControlName="_id" />
+      <input type="hidden" formControlName="IsDeleted" />
+
+      <div class="libreria-form__grid">
+        <div class="libreria-form__field">
+          <label class="libreria-form__label" for="libreriaId">ID de Mongo</label>
+          <input
+            id="libreriaId"
+            class="libreria-form__input libreria-form__input--readonly"
+            [value]="libreria?._id || 'Se generará al crear la librería'"
+            readonly
+          />
+        </div>
+
+        <div class="libreria-form__field">
+          <span class="libreria-form__label">Estado del registro</span>
+          <span
+            class="libreria-form__record-status"
+            [class.libreria-form__record-status--inactive]="libreria?.IsDeleted"
+          >
+            {{ libreria?.IsDeleted ? 'Desactivada' : 'Activa' }}
+          </span>
+        </div>
+
+        <div class="libreria-form__field libreria-form__field--full">
+          <label class="libreria-form__label" for="name">Nombre *</label>
+          <input
+            id="name"
+            class="libreria-form__input"
+            formControlName="name"
+            placeholder="Nombre de la librería"
+          />
+          <p
+            class="libreria-form__error"
+            *ngIf="form.controls.name.touched && form.controls.name.invalid"
+          >
+            El nombre es obligatorio.
+          </p>
+        </div>
+
+        <div class="libreria-form__field libreria-form__field--full">
+          <label class="libreria-form__label" for="address">Dirección *</label>
+          <textarea
+            id="address"
+            class="libreria-form__input"
+            formControlName="address"
+            rows="4"
+            placeholder="Dirección completa"
+          ></textarea>
+          <p
+            class="libreria-form__error"
+            *ngIf="form.controls.address.touched && form.controls.address.invalid"
+          >
+            La dirección es obligatoria.
+          </p>
+        </div>
+
+        <div class="libreria-form__field">
+          <label class="libreria-form__label" for="createdAt">Fecha de creación</label>
+          <input
+            id="createdAt"
+            class="libreria-form__input libreria-form__input--readonly"
+            [value]="formatDate(libreria?.createdAt)"
+            readonly
+          />
+        </div>
+
+        <div class="libreria-form__field">
+          <label class="libreria-form__label" for="updatedAt">Última actualización</label>
+          <input
+            id="updatedAt"
+            class="libreria-form__input libreria-form__input--readonly"
+            [value]="formatDate(libreria?.updatedAt)"
+            readonly
+          />
+        </div>
+      </div>
+    </ng-template>
+
+    <div adminEditorActions class="libreria-form__actions">
+      <button
+        type="button"
+        class="libreria-form__button libreria-form__button--secondary"
+        (click)="onCancel()"
+        [disabled]="isSaving || isDeleting"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="libreria-form__button libreria-form__button--primary"
+        [disabled]="isSaving || isDeleting"
+      >
         {{ isSaving ? 'Guardando...' : isCreating ? 'Crear librería' : 'Guardar cambios' }}
       </button>
       <button
         type="button"
-        class="danger"
+        class="libreria-form__button libreria-form__button--danger"
         *ngIf="!isCreating && !libreria?.IsDeleted"
         (click)="onDelete()"
+        [disabled]="isSaving || isDeleting"
       >
-        Desactivar
+        {{ isDeleting ? 'Desactivando...' : 'Desactivar librería' }}
       </button>
       <button
         type="button"
-        class="success-button"
+        class="libreria-form__button libreria-form__button--success"
         *ngIf="!isCreating && libreria?.IsDeleted"
         (click)="onRestore()"
+        [disabled]="isSaving || isDeleting"
       >
-        Restaurar
+        {{ isDeleting ? 'Restaurando...' : 'Restaurar librería' }}
       </button>
     </div>
-  </form>
-</section>
+  </app-admin-editor>
+</form>

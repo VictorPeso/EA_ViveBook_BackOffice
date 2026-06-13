@@ -2,10 +2,8 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
-import { Libro } from '../../../../Core/models/libro.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
-import { LibrosService } from '../../../../Core/services/libros.service';
 import { UsuariosService } from '../../../../Core/services/usuarios.service';
 import { UsuarioFormComponent } from '../../components/usuario-form/usuario-form.component';
 import { UsuariosListComponent } from '../../components/usuarios-list/usuarios-list.component';
@@ -19,14 +17,11 @@ import { UsuariosListComponent } from '../../components/usuarios-list/usuarios-l
 })
 export class UsuariosPageComponent implements OnInit {
   private readonly usuariosService = inject(UsuariosService);
-  private readonly librosService = inject(LibrosService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly usuarios = signal<Usuario[]>([]);
-  readonly libros = signal<Libro[]>([]);
   readonly selectedUsuario = signal<Usuario | null>(null);
   readonly isLoading = signal(false);
-  readonly isLoadingLibros = signal(false);
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
   readonly isCreating = signal(false);
@@ -41,7 +36,6 @@ export class UsuariosPageComponent implements OnInit {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      this.loadLibros();
       this.loadUsuarios();
     }
   }
@@ -91,18 +85,6 @@ export class UsuariosPageComponent implements OnInit {
           console.error('Error al cargar usuarios:', error);
           this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los usuarios.'));
         },
-      });
-  }
-
-  loadLibros(): void {
-    this.isLoadingLibros.set(true);
-    this.librosService
-      .getAdminLibros({ page: 1, limit: 100, includeDeleted: false })
-      .pipe(finalize(() => this.isLoadingLibros.set(false)))
-      .subscribe({
-        next: (result) => this.libros.set(result.data),
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los libros.')),
       });
   }
 
@@ -215,6 +197,16 @@ export class UsuariosPageComponent implements OnInit {
       password: '',
       rol: 'User',
       libros: [],
+      boughtLibros: [],
+      rentedLibros: [],
+      favoriteAuthors: [],
+      favoriteBooks: [],
+      favoriteCategories: [],
+      wishlist: [],
+      followingUsers: [],
+      favoritos: [],
+      notificationUsersEnabled: [],
+      authProvider: 'local',
       avatar: '',
       description: '',
       IsDeleted: false,
@@ -229,7 +221,7 @@ export class UsuariosPageComponent implements OnInit {
       email: usuario.email ?? '',
       password: '',
       rol: usuario.rol ?? 'User',
-      libros: this.extractLibroIds(usuario.libros),
+      libros: usuario.libros ?? [],
       avatar: usuario.avatar ?? '',
       description: usuario.description ?? '',
       IsDeleted: usuario.IsDeleted ?? false,
@@ -256,6 +248,15 @@ export class UsuariosPageComponent implements OnInit {
       email: usuario.email.trim(),
       rol: usuario.rol,
       libros: this.extractLibroIds(usuario.libros),
+      boughtLibros: this.extractLibroIds(usuario.boughtLibros),
+      rentedLibros: this.extractLibroIds(usuario.rentedLibros),
+      favoriteAuthors: usuario.favoriteAuthors ?? [],
+      favoriteBooks: this.extractLibroIds(usuario.favoriteBooks),
+      favoriteCategories: usuario.favoriteCategories ?? [],
+      wishlist: this.extractLibroIds(usuario.wishlist),
+      followingUsers: this.extractReferenceIds(usuario.followingUsers),
+      favoritos: this.extractLibroIds(usuario.favoritos),
+      notificationUsersEnabled: this.extractReferenceIds(usuario.notificationUsersEnabled),
       avatar: usuario.avatar?.trim() ?? '',
       description: usuario.description?.trim() ?? '',
       IsDeleted: usuario.IsDeleted ?? false,
@@ -267,6 +268,16 @@ export class UsuariosPageComponent implements OnInit {
     return Array.isArray(libros)
       ? libros
           .map((libro) => (typeof libro === 'string' ? libro : libro._id))
+          .filter((id): id is string => !!id)
+      : [];
+  }
+
+  private extractReferenceIds(
+    references: Usuario['followingUsers'] | Usuario['notificationUsersEnabled'],
+  ): string[] {
+    return Array.isArray(references)
+      ? references
+          .map((reference) => (typeof reference === 'string' ? reference : reference._id))
           .filter((id): id is string => !!id)
       : [];
   }
