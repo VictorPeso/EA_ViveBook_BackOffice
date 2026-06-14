@@ -2,6 +2,16 @@
 
 BackOffice desarrollado con **Angular** para la gestión de **Libros**, **Autores** y **Usuarios**, conectado a una **API REST** en `http://localhost:1337`.
 
+## Configuración de la API
+
+El desarrollo local carga `public/env.js`, configurado con `http://localhost:1337`, por lo que
+`ng serve` continúa funcionando sin pasos adicionales.
+
+Durante la construcción de la imagen, Docker sustituye el `env.js` generado usando
+`BACKOFFICE_API_URL`. El workflow de GitHub pasa esta variable al Dockerfile cuando un commit de
+`main` comienza por `v`. La imagen resultante se publica como
+`vivebook-backoffice-ea:latest`.
+
 El proyecto permite:
 
 - listar elementos no eliminados de cada categoría

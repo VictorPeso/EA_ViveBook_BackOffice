@@ -1,4 +1,11 @@
+type ViveBookRuntimeEnvironment = typeof globalThis & {
+  __VIVEBOOK_ENV__?: {
+    apiUrl?: string;
+  };
+};
+
+const runtimeEnvironment = globalThis as ViveBookRuntimeEnvironment;
+
 export const environment = {
-  apiUrl: 'http://localhost:1337',
-  //apiUrl: 'https://ea3-api.upc.edu'
+  apiUrl: runtimeEnvironment.__VIVEBOOK_ENV__?.apiUrl || 'http://localhost:1337',
 };

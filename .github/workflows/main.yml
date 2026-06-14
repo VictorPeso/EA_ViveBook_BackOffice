@@ -24,17 +24,18 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Set Docker image tag
-        id: vars
-        run: |
-          VERSION="${{ github.event.head_commit.message }}"
-          VERSION="${VERSION#v}"
-          SHORT_SHA="${GITHUB_SHA::7}"
-          echo "tag=${VERSION}-${SHORT_SHA}" >> $GITHUB_OUTPUT
-
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
+
+      - name: Validate public BackOffice configuration
+        env:
+          BACKOFFICE_API_URL: ${{ vars.BACKOFFICE_API_URL }}
+        run: |
+          test -n "$BACKOFFICE_API_URL" || (echo "Missing repository variable BACKOFFICE_API_URL" && exit 1)
+          case "$BACKOFFICE_API_URL" in
+            *localhost*|*127.0.0.1*) echo "BACKOFFICE_API_URL cannot point to localhost" && exit 1 ;;
+          esac
 
       - name: Build and push
         id: docker_build
@@ -43,7 +44,9 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/vivebook-backoffice-ea:${{ steps.vars.outputs.tag }}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/vivebook-backoffice-ea:latest
+          build-args: |
+            BACKOFFICE_API_URL=${{ vars.BACKOFFICE_API_URL }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

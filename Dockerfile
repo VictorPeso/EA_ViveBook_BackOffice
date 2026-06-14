@@ -33,6 +33,9 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 # Create a stage for building the application.
 FROM deps as build
 
+ARG BACKOFFICE_API_URL=http://localhost:1337
+ENV BACKOFFICE_API_URL=$BACKOFFICE_API_URL
+
 # Download additional development dependencies before building, as some projects require
 # "devDependencies" to be installed to build. If you don't need this, remove this step.
 RUN --mount=type=bind,source=package.json,target=package.json \
@@ -44,22 +47,16 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 COPY . .
 # Run the build script.
 RUN npm run build
+RUN printf "window.__VIVEBOOK_ENV__ = { apiUrl: '%s' };\n" "$BACKOFFICE_API_URL" \
+    > /usr/src/app/dist/mini-spa/browser/env.js
 
 ################################################################################
-# Create a new stage to run the application with minimal runtime dependencies
-# where the necessary files are copied from the build stage.
-FROM base as final
+# Serve the client-side BackOffice with Nginx.
+FROM nginx:stable-alpine AS final
 
-ENV NODE_ENV=production
-ENV PORT=4000
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /usr/src/app/dist/mini-spa/browser /usr/share/nginx/html
 
-USER node
+EXPOSE 80
 
-COPY package.json .
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/dist ./dist
-
-EXPOSE 4000
-
-CMD ["node", "dist/mini-spa/server/server.mjs"]
-
+CMD ["nginx", "-g", "daemon off;"]
