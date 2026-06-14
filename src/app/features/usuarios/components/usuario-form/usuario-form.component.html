@@ -101,9 +101,7 @@
             type="password"
             class="usuario-form__input"
             formControlName="password"
-            [placeholder]="
-              isCreating ? 'Introduce la contraseña' : 'Déjala vacía para conservarla'
-            "
+            [placeholder]="isCreating ? 'Introduce la contraseña' : 'Déjala vacía para conservarla'"
           />
           <p
             class="usuario-form__error"
@@ -236,7 +234,10 @@
     >
       <section class="usuario-form__relation-section">
         <div class="usuario-form__relation-header">
-          <div><h3>Libros comprados</h3><p>Historial de libros comprados por el usuario.</p></div>
+          <div>
+            <h3>Libros comprados</h3>
+            <p>Historial de libros comprados por el usuario.</p>
+          </div>
         </div>
         <ng-container
           *ngTemplateOutlet="
@@ -244,7 +245,7 @@
             context: {
               $implicit: librosComprados,
               empty: 'No hay libros comprados.',
-              collection: 'boughtLibros'
+              collection: 'boughtLibros',
             }
           "
         />
@@ -259,7 +260,10 @@
     >
       <section class="usuario-form__relation-section">
         <div class="usuario-form__relation-header">
-          <div><h3>Libros alquilados</h3><p>Libros alquilados por el usuario.</p></div>
+          <div>
+            <h3>Libros alquilados</h3>
+            <p>Libros alquilados por el usuario.</p>
+          </div>
         </div>
         <ng-container
           *ngTemplateOutlet="
@@ -267,7 +271,7 @@
             context: {
               $implicit: librosAlquilados,
               empty: 'No hay libros alquilados.',
-              collection: 'rentedLibros'
+              collection: 'rentedLibros',
             }
           "
         />
@@ -282,7 +286,10 @@
     >
       <section class="usuario-form__relation-section">
         <div class="usuario-form__relation-header">
-          <div><h3>Libros favoritos</h3><p>Colecciones favoritas guardadas por el usuario.</p></div>
+          <div>
+            <h3>Libros favoritos</h3>
+            <p>Colecciones favoritas guardadas por el usuario.</p>
+          </div>
         </div>
         <div class="usuario-form__preference-group">
           <h4>Libros favoritos del perfil</h4>
@@ -292,7 +299,7 @@
               context: {
                 $implicit: librosFavoritos,
                 empty: 'No hay libros favoritos en el perfil.',
-                collection: 'favoriteBooks'
+                collection: 'favoriteBooks',
               }
             "
           />
@@ -305,7 +312,7 @@
               context: {
                 $implicit: favoritos,
                 empty: 'No hay favoritos generales.',
-                collection: 'favoritos'
+                collection: 'favoritos',
               }
             "
           />
@@ -321,7 +328,10 @@
     >
       <section class="usuario-form__relation-section">
         <div class="usuario-form__relation-header">
-          <div><h3>Lista de deseos</h3><p>Libros guardados para consultar más adelante.</p></div>
+          <div>
+            <h3>Lista de deseos</h3>
+            <p>Libros guardados para consultar más adelante.</p>
+          </div>
         </div>
         <ng-container
           *ngTemplateOutlet="
@@ -329,7 +339,7 @@
             context: {
               $implicit: listaDeseos,
               empty: 'La lista de deseos está vacía.',
-              collection: 'wishlist'
+              collection: 'wishlist',
             }
           "
         />
@@ -344,7 +354,10 @@
     >
       <section class="usuario-form__relation-section">
         <div class="usuario-form__relation-header">
-          <div><h3>Preferencias</h3><p>Autores y categorías favoritas del usuario.</p></div>
+          <div>
+            <h3>Preferencias</h3>
+            <p>Autores y categorías favoritas del usuario.</p>
+          </div>
         </div>
         <div class="usuario-form__preference-group">
           <h4>Autores favoritos</h4>
@@ -363,7 +376,9 @@
               </button>
             </div>
           </div>
-          <ng-template #noAuthors><p class="usuario-form__empty-libros">Sin autores favoritos.</p></ng-template>
+          <ng-template #noAuthors
+            ><p class="usuario-form__empty-libros">Sin autores favoritos.</p></ng-template
+          >
         </div>
         <div class="usuario-form__preference-group">
           <h4>Categorías favoritas</h4>
@@ -382,7 +397,9 @@
               </button>
             </div>
           </div>
-          <ng-template #noCategories><p class="usuario-form__empty-libros">Sin categorías favoritas.</p></ng-template>
+          <ng-template #noCategories
+            ><p class="usuario-form__empty-libros">Sin categorías favoritas.</p></ng-template
+          >
         </div>
       </section>
     </ng-template>
@@ -395,7 +412,10 @@
     >
       <section class="usuario-form__relation-section">
         <div class="usuario-form__relation-header">
-          <div><h3>Usuarios seguidos</h3><p>Cuentas que sigue este usuario.</p></div>
+          <div>
+            <h3>Usuarios seguidos</h3>
+            <p>Cuentas que sigue este usuario.</p>
+          </div>
         </div>
         <div class="usuario-form__libros" *ngIf="usuariosSeguidos.length; else noFollowing">
           <article
@@ -434,7 +454,10 @@
             <p>Cuentas cuyas novedades tiene activadas este usuario.</p>
           </div>
         </div>
-        <div class="usuario-form__libros" *ngIf="notificacionesDeUsuarios.length; else noNotifications">
+        <div
+          class="usuario-form__libros"
+          *ngIf="notificacionesDeUsuarios.length; else noNotifications"
+        >
           <article
             class="usuario-form__libro-card admin-relation-row"
             *ngFor="let notifiedUser of notificacionesDeUsuarios; trackBy: trackByUsuarioId"
@@ -453,9 +476,7 @@
           </article>
         </div>
         <ng-template #noNotifications>
-          <div class="usuario-form__empty-libros">
-            No hay notificaciones de usuarios activadas.
-          </div>
+          <div class="usuario-form__empty-libros">No hay notificaciones de usuarios activadas.</div>
         </ng-template>
       </section>
     </ng-template>
@@ -482,7 +503,9 @@
           </button>
         </article>
       </div>
-      <ng-template #emptyBooks><div class="usuario-form__empty-libros">{{ empty }}</div></ng-template>
+      <ng-template #emptyBooks
+        ><div class="usuario-form__empty-libros">{{ empty }}</div></ng-template
+      >
     </ng-template>
 
     <p adminEditorActions class="admin-relation-save-hint" *ngIf="form.dirty">

@@ -31,10 +31,7 @@
 
         <div class="autor-form__field">
           <span class="autor-form__label">Estado del registro</span>
-          <span
-            class="autor-form__status"
-            [class.autor-form__status--inactive]="autor?.IsDeleted"
-          >
+          <span class="autor-form__status" [class.autor-form__status--inactive]="autor?.IsDeleted">
             {{ autor?.IsDeleted ? 'Desactivado' : 'Activo' }}
           </span>
         </div>

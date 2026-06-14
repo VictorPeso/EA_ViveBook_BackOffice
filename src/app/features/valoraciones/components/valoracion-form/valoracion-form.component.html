@@ -6,16 +6,10 @@
     (closeEditor)="onCancel()"
   >
     <div adminEditorMessages>
-      <div
-        class="valoracion-form__alert valoracion-form__alert--error"
-        *ngIf="errorMessage"
-      >
+      <div class="valoracion-form__alert valoracion-form__alert--error" *ngIf="errorMessage">
         {{ errorMessage }}
       </div>
-      <div
-        class="valoracion-form__alert valoracion-form__alert--success"
-        *ngIf="successMessage"
-      >
+      <div class="valoracion-form__alert valoracion-form__alert--success" *ngIf="successMessage">
         {{ successMessage }}
       </div>
     </div>
@@ -47,11 +41,7 @@
 
         <div class="valoracion-form__field">
           <label class="valoracion-form__label" for="tipoOperacion">Tipo de operación *</label>
-          <select
-            id="tipoOperacion"
-            class="valoracion-form__input"
-            formControlName="tipoOperacion"
-          >
+          <select id="tipoOperacion" class="valoracion-form__input" formControlName="tipoOperacion">
             <option value="VENTA">Venta</option>
             <option value="ALQUILER">Alquiler</option>
             <option value="RESERVA">Reserva</option>
@@ -125,11 +115,7 @@
         <div class="valoracion-form__relation-grid">
           <div class="valoracion-form__field">
             <label class="valoracion-form__label" for="usuarioAutor">Usuario autor *</label>
-            <select
-              id="usuarioAutor"
-              class="valoracion-form__input"
-              formControlName="usuarioAutor"
-            >
+            <select id="usuarioAutor" class="valoracion-form__input" formControlName="usuarioAutor">
               <option value="">Selecciona un usuario</option>
               <option *ngFor="let usuario of usuarios" [value]="usuario._id">
                 {{ usuario.name }} · {{ usuario.email }}
@@ -137,10 +123,7 @@
             </select>
           </div>
 
-          <article
-            class="valoracion-form__relation-card"
-            *ngIf="autorSeleccionado as usuarioAutor"
-          >
+          <article class="valoracion-form__relation-card" *ngIf="autorSeleccionado as usuarioAutor">
             <span class="valoracion-form__relation-information">
               <strong>{{ usuarioAutor.name || 'Usuario sin nombre' }}</strong>
               <small>{{ usuarioAutor.email || usuarioAutor._id }}</small>
@@ -148,9 +131,7 @@
           </article>
 
           <div class="valoracion-form__field">
-            <label class="valoracion-form__label" for="usuarioValorado">
-              Usuario valorado *
-            </label>
+            <label class="valoracion-form__label" for="usuarioValorado"> Usuario valorado * </label>
             <select
               id="usuarioValorado"
               class="valoracion-form__input"
@@ -174,9 +155,7 @@
           </article>
         </div>
 
-        <span class="valoracion-form__hint" *ngIf="isLoadingRelations">
-          Cargando usuarios...
-        </span>
+        <span class="valoracion-form__hint" *ngIf="isLoadingRelations"> Cargando usuarios... </span>
       </section>
     </ng-template>
 
@@ -195,9 +174,7 @@
               {{ libro.title }} · {{ libro.isbn }}
             </option>
           </select>
-          <span class="valoracion-form__hint" *ngIf="isLoadingRelations">
-            Cargando libros...
-          </span>
+          <span class="valoracion-form__hint" *ngIf="isLoadingRelations"> Cargando libros... </span>
         </div>
 
         <article class="valoracion-form__relation-card" *ngIf="libroSeleccionado as libro">

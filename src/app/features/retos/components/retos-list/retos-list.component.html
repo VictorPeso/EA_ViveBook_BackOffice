@@ -48,10 +48,7 @@
         {{ reto.updatedAt ? (reto.updatedAt | date: 'dd/MM/yyyy') : '-' }}
       </span>
       <code class="retos-list__id" data-label="ID">{{ reto._id || '-' }}</code>
-      <span
-        class="retos-list__status"
-        [class.retos-list__status--inactive]="reto.activo === false"
-      >
+      <span class="retos-list__status" [class.retos-list__status--inactive]="reto.activo === false">
         {{ reto.activo === false ? 'Inactivo' : 'Activo' }}
       </span>
       <button

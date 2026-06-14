@@ -19,9 +19,7 @@
         <button
           type="button"
           class="admin-editor__navigation-item"
-          [class.admin-editor__navigation-item--active]="
-            activeSectionId() === section.sectionId
-          "
+          [class.admin-editor__navigation-item--active]="activeSectionId() === section.sectionId"
           [attr.aria-current]="activeSectionId() === section.sectionId ? 'page' : null"
           (click)="selectSection(section.sectionId)"
         >

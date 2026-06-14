@@ -45,10 +45,7 @@
       </span>
       <code class="eventos-list__id" data-label="ID">{{ evento._id || '-' }}</code>
 
-      <span
-        class="eventos-list__status"
-        [class.eventos-list__status--deleted]="evento.IsDeleted"
-      >
+      <span class="eventos-list__status" [class.eventos-list__status--deleted]="evento.IsDeleted">
         {{ evento.IsDeleted ? 'Desactivado' : 'Activo' }}
       </span>
 

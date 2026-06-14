@@ -31,10 +31,7 @@
 
         <div class="libro-form__field">
           <span class="libro-form__label">Estado del registro</span>
-          <span
-            class="libro-form__status"
-            [class.libro-form__status--inactive]="libro?.IsDeleted"
-          >
+          <span class="libro-form__status" [class.libro-form__status--inactive]="libro?.IsDeleted">
             {{ libro?.IsDeleted ? 'Desactivado' : 'Activo' }}
           </span>
         </div>

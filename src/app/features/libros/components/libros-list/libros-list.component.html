@@ -43,10 +43,7 @@
       <span class="libros-list__type" data-label="Tipo">{{ libro.type || '-' }}</span>
       <code class="libros-list__id" data-label="ID">{{ libro._id || '-' }}</code>
 
-      <span
-        class="libros-list__status"
-        [class.libros-list__status--deleted]="libro.IsDeleted"
-      >
+      <span class="libros-list__status" [class.libros-list__status--deleted]="libro.IsDeleted">
         {{ libro.IsDeleted ? 'Desactivado' : 'Activo' }}
       </span>
 
