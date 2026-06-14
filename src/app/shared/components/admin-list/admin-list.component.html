@@ -1,0 +1,64 @@
+<section class="admin-list">
+  <header class="admin-list__heading">
+    <div>
+      <p class="admin-list__eyebrow">Listado</p>
+      <h2 class="admin-list__title">{{ title }}</h2>
+    </div>
+  </header>
+
+  <div class="admin-list__controls">
+    <label class="admin-list__search">
+      <span class="admin-list__sr-only">Término de búsqueda</span>
+      <input
+        type="search"
+        [formControl]="searchControl"
+        [placeholder]="searchPlaceholder"
+      />
+    </label>
+
+    <label class="admin-list__field-selector">
+      <span class="admin-list__sr-only">Campo de búsqueda</span>
+      <select [formControl]="searchFieldControl">
+        <option *ngFor="let field of searchFields" [value]="field.value">
+          {{ field.label }}
+        </option>
+      </select>
+    </label>
+
+    <app-admin-pagination
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [totalItems]="totalItems"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[5, 10, 25, 50]"
+      (paginationChange)="onPaginationChange($event)"
+    />
+
+    <button
+      *ngIf="canCreate"
+      type="button"
+      class="admin-list__create-button"
+      (click)="createNew.emit()"
+    >
+      + {{ createLabel }}
+    </button>
+  </div>
+
+  <div class="admin-list__summary">
+    Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }} {{ itemLabel }}
+  </div>
+
+  <div class="admin-list__table" *ngIf="!isLoading && visibleItems > 0">
+    <div class="admin-list__table-header">
+      <ng-content select="[adminListHeader]" />
+    </div>
+    <div class="admin-list__rows">
+      <ng-content select="[adminListRows]" />
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="admin-list__state">Cargando {{ itemLabel }}...</div>
+  <div *ngIf="!isLoading && visibleItems === 0" class="admin-list__state">
+    {{ emptyMessage }}
+  </div>
+</section>

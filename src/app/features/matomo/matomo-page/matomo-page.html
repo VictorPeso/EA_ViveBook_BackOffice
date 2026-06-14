@@ -1,49 +1,93 @@
-<div class="main">
-  <h1 class="title">Matomo Version {{ version() }}</h1>
-  <table class="tabla">
-    <tr>
-      <th class="side">nb_uniq_visitors</th>
-      <th>{{ summary().nb_uniq_visitors }}</th>
-    </tr>
-    <tr>
-      <th class="side">nb_users</th>
-      <th>{{ summary().nb_users }}</th>
-    </tr>
-    <tr>
-      <th class="side">nb_visits</th>
-      <th>{{ summary().nb_visits }}</th>
-    </tr>
-    <tr>
-      <th class="side">nb_actions</th>
-      <th>{{ summary().nb_actions }}</th>
-    </tr>
-    <tr>
-      <th class="side">nb_visits_converted</th>
-      <th>{{ summary().nb_visits_converted }}</th>
-    </tr>
-    <tr>
-      <th class="side">bounce_count</th>
-      <th>{{ summary().bounce_count }}</th>
-    </tr>
-    <tr>
-      <th class="side">sum_visit_length</th>
-      <th>{{ summary().sum_visit_length }}</th>
-    </tr>
-    <tr>
-      <th class="side">max_actions</th>
-      <th>{{ summary().max_actions }}</th>
-    </tr>
-    <tr>
-      <th class="side">bounce_rate</th>
-      <th>{{ summary().bounce_count }}</th>
-    </tr>
-    <tr>
-      <th class="side">nb_actions_per_visit</th>
-      <th>{{ summary().nb_actions_per_visit }}</th>
-    </tr>
-    <tr>
-      <th class="side">avg_time_on_site</th>
-      <th>{{ summary().avg_time_on_site }}</th>
-    </tr>
-  </table>
-</div>
+<section class="statistics-page admin-page">
+  <header class="statistics-page__header">
+    <div>
+      <p class="statistics-page__eyebrow">Analítica de ViveBook</p>
+      <h1>Estadísticas</h1>
+      <p>Resumen semanal del sitio configurado en Matomo.</p>
+    </div>
+
+    <button
+      class="statistics-page__refresh"
+      type="button"
+      [disabled]="isLoadingVersion() || isLoadingSummary()"
+      (click)="loadStatistics()"
+    >
+      {{ isLoadingVersion() || isLoadingSummary() ? 'Actualizando...' : 'Actualizar datos' }}
+    </button>
+  </header>
+
+  <section class="statistics-page__connection" aria-label="Estado de la conexión con Matomo">
+    <div>
+      <span class="statistics-page__label">Estado de Matomo</span>
+      @if (isLoadingVersion()) {
+        <strong>Comprobando conexión...</strong>
+      } @else if (version()) {
+        <strong>Conectado</strong>
+      } @else {
+        <strong>No disponible</strong>
+      }
+    </div>
+    <div>
+      <span class="statistics-page__label">Versión</span>
+      <strong>{{ version() ?? 'Sin datos' }}</strong>
+    </div>
+    <div>
+      <span class="statistics-page__label">Periodo consultado</span>
+      <strong>Semana actual</strong>
+    </div>
+  </section>
+
+  @if (isLoadingSummary()) {
+    <div class="statistics-page__state" role="status">Cargando estadísticas...</div>
+  } @else {
+    <section class="statistics-page__metrics" aria-label="Resumen de visitas">
+      <article class="statistics-card statistics-card--featured">
+        <span>Visitas</span>
+        <strong>{{ formatNumber(summary().nb_visits) }}</strong>
+        <small>Sesiones totales</small>
+      </article>
+      <article class="statistics-card statistics-card--featured">
+        <span>Visitantes únicos</span>
+        <strong>{{ formatNumber(summary().nb_uniq_visitors) }}</strong>
+        <small>Personas diferenciadas</small>
+      </article>
+      <article class="statistics-card statistics-card--featured">
+        <span>Acciones</span>
+        <strong>{{ formatNumber(summary().nb_actions) }}</strong>
+        <small>Páginas, descargas y enlaces</small>
+      </article>
+      <article class="statistics-card">
+        <span>Usuarios identificados</span>
+        <strong>{{ formatNumber(summary().nb_users) }}</strong>
+      </article>
+      <article class="statistics-card">
+        <span>Visitas convertidas</span>
+        <strong>{{ formatNumber(summary().nb_visits_converted) }}</strong>
+      </article>
+      <article class="statistics-card">
+        <span>Rebotes</span>
+        <strong>{{ formatNumber(summary().bounce_count) }}</strong>
+      </article>
+      <article class="statistics-card">
+        <span>Tasa de rebote</span>
+        <strong>{{ summary().bounce_rate ?? 'Sin datos' }}</strong>
+      </article>
+      <article class="statistics-card">
+        <span>Acciones por visita</span>
+        <strong>{{ formatNumber(summary().nb_actions_per_visit) }}</strong>
+      </article>
+      <article class="statistics-card">
+        <span>Máximo de acciones</span>
+        <strong>{{ formatNumber(summary().max_actions) }}</strong>
+      </article>
+      <article class="statistics-card">
+        <span>Duración media</span>
+        <strong>{{ formatDuration(summary().avg_time_on_site) }}</strong>
+      </article>
+      <article class="statistics-card">
+        <span>Tiempo total</span>
+        <strong>{{ formatDuration(summary().sum_visit_length) }}</strong>
+      </article>
+    </section>
+  }
+</section>

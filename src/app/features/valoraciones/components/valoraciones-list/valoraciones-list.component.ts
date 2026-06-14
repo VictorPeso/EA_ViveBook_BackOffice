@@ -1,19 +1,20 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+
+import { AdminListQuery, AdminSearchField } from '../../../../Core/models/admin-list.model';
 import { Libro } from '../../../../Core/models/libro.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { Valoracion } from '../../../../Core/models/valoracion.model';
+import { AdminListComponent } from '../../../../shared/components/admin-list/admin-list.component';
 
 @Component({
   selector: 'app-valoraciones-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, AdminListComponent],
   templateUrl: './valoraciones-list.component.html',
   styleUrl: './valoraciones-list.component.css',
 })
-export class ValoracionesListComponent implements OnInit, OnDestroy {
+export class ValoracionesListComponent {
   @Input() valoraciones: Valoracion[] = [];
   @Input() selectedId: string | null = null;
   @Input() isLoading = false;
@@ -21,34 +22,46 @@ export class ValoracionesListComponent implements OnInit, OnDestroy {
   @Input() totalPages = 1;
   @Input() totalItems = 0;
   @Input() pageSize = 5;
+  @Input() isAdmin = true;
+
   @Output() selectValoracion = new EventEmitter<Valoracion>();
   @Output() createNew = new EventEmitter<void>();
-  @Output() search = new EventEmitter<string>();
-  @Output() pageChange = new EventEmitter<number>();
-  readonly searchControl = new FormControl('');
-  private readonly destroy = new Subject<void>();
-  ngOnInit(): void {
-    this.searchControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
-      .subscribe((value) => this.search.emit(value ?? ''));
-  }
-  ngOnDestroy(): void {
-    this.destroy.next();
-    this.destroy.complete();
-  }
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
-  }
-  get showingFrom(): number {
-    return this.totalItems ? (this.currentPage - 1) * this.pageSize + 1 : 0;
-  }
-  get showingTo(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalItems);
-  }
+  @Output() queryChange = new EventEmitter<AdminListQuery>();
+  @Output() permanentDelete = new EventEmitter<Valoracion>();
+
+  readonly searchFields: AdminSearchField[] = [
+    { value: 'user', label: 'Usuario' },
+    { value: 'book', label: 'Libro' },
+    { value: 'rating', label: 'Puntuación' },
+    { value: '_id', label: 'ID de MongoDB' },
+  ];
+
   user(value: string | Usuario): string {
-    return typeof value === 'string' ? value : value.name;
+    if (typeof value === 'string') return value;
+    return value.name || value.email || value._id || '-';
   }
+
   book(value: string | Libro): string {
-    return typeof value === 'string' ? value : value.title;
+    if (typeof value === 'string') return value;
+    return value.title || value.isbn || value._id || '-';
+  }
+
+  onSelect(valoracion: Valoracion): void {
+    this.selectValoracion.emit(valoracion);
+  }
+
+  onPermanentDelete(event: MouseEvent, valoracion: Valoracion): void {
+    event.stopPropagation();
+    this.permanentDelete.emit(valoracion);
+  }
+
+  onRowKeydown(event: KeyboardEvent, valoracion: Valoracion): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.onSelect(valoracion);
+  }
+
+  trackByValoracionId(index: number, valoracion: Valoracion): string | number {
+    return valoracion._id ?? index;
   }
 }

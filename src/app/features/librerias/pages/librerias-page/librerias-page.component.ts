@@ -2,9 +2,14 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
+import { AdminListQuery } from '../../../../Core/models/admin-list.model';
 import { Libreria } from '../../../../Core/models/libreria.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
-import { LibreriasService } from '../../../../Core/services/librerias.service';
+import {
+  AdminLibreriaSearchField,
+  LibreriasService,
+} from '../../../../Core/services/librerias.service';
+import { ToastService } from '../../../../Core/services/toast.service';
 import { LibreriaFormComponent } from '../../components/libreria-form/libreria-form.component';
 import { LibreriasListComponent } from '../../components/librerias-list/librerias-list.component';
 
@@ -17,6 +22,7 @@ import { LibreriasListComponent } from '../../components/librerias-list/libreria
 })
 export class LibreriasPageComponent implements OnInit {
   private readonly service = inject(LibreriasService);
+  private readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly librerias = signal<Libreria[]>([]);
@@ -32,6 +38,7 @@ export class LibreriasPageComponent implements OnInit {
   readonly totalItems = signal(0);
   readonly totalPages = signal(1);
   readonly search = signal('');
+  readonly searchField = signal<AdminLibreriaSearchField>('name');
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) this.loadLibrerias();
@@ -45,6 +52,7 @@ export class LibreriasPageComponent implements OnInit {
         page: this.currentPage(),
         limit: this.pageSize(),
         search: this.search(),
+        searchField: this.searchField(),
         includeDeleted: true,
       })
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -71,14 +79,15 @@ export class LibreriasPageComponent implements OnInit {
           this.selectedLibreria.set(null);
           this.isCreating.set(false);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar las librerías.')),
+        error: (error) => this.showError(error, 'No se pudieron cargar las librerías.'),
       });
   }
 
-  onSearch(term: string): void {
-    this.search.set(term.trim());
-    this.currentPage.set(1);
+  onListQuery(query: AdminListQuery): void {
+    this.search.set(query.search);
+    this.searchField.set(query.searchField as AdminLibreriaSearchField);
+    this.currentPage.set(query.page);
+    this.pageSize.set(query.pageSize);
     this.loadLibrerias();
   }
 
@@ -113,13 +122,12 @@ export class LibreriasPageComponent implements OnInit {
       next: (saved) => {
         this.isCreating.set(false);
         this.selectedLibreria.set(this.mapToForm(saved));
-        this.successMessage.set(
+        this.showSuccess(
           creating ? 'Librería creada correctamente.' : 'Librería actualizada correctamente.',
         );
         this.loadLibrerias(saved._id);
       },
-      error: (error) =>
-        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar la librería.')),
+      error: (error) => this.showError(error, 'No se pudo guardar la librería.'),
     });
   }
 
@@ -132,11 +140,10 @@ export class LibreriasPageComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selectedLibreria.set(this.mapToForm(updated));
-          this.successMessage.set('Librería desactivada correctamente.');
+          this.showSuccess('Librería desactivada correctamente.');
           this.loadLibrerias(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar la librería.')),
+        error: (error) => this.showError(error, 'No se pudo desactivar la librería.'),
       });
   }
 
@@ -149,11 +156,39 @@ export class LibreriasPageComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selectedLibreria.set(this.mapToForm(updated));
-          this.successMessage.set('Librería restaurada correctamente.');
+          this.showSuccess('Librería restaurada correctamente.');
           this.loadLibrerias(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar la librería.')),
+        error: (error) => this.showError(error, 'No se pudo restaurar la librería.'),
+      });
+  }
+
+  onPermanentDelete(libreria: Libreria): void {
+    if (
+      !libreria._id ||
+      !window.confirm(
+        `¿Eliminar definitivamente la librería "${libreria.name}"? Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.service
+      .permanentDeleteLibreria(libreria._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: () => {
+          if (this.selectedLibreria()?._id === libreria._id) {
+            this.selectedLibreria.set(null);
+          }
+          this.showSuccess('Librería eliminada definitivamente.');
+          this.loadLibrerias();
+        },
+        error: (error) => this.showError(error, 'No se pudo eliminar definitivamente la librería.'),
       });
   }
 
@@ -162,12 +197,6 @@ export class LibreriasPageComponent implements OnInit {
     this.isCreating.set(false);
     this.errorMessage.set('');
     this.successMessage.set('');
-  }
-
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadLibrerias();
   }
 
   private createEmpty(): Libreria {
@@ -181,5 +210,16 @@ export class LibreriasPageComponent implements OnInit {
       address: libreria.address ?? '',
       IsDeleted: libreria.IsDeleted ?? false,
     };
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.toastService.success(message);
+  }
+
+  private showError(error: unknown, fallbackMessage: string): void {
+    const message = getApiErrorMessage(error, fallbackMessage);
+    this.errorMessage.set(message);
+    this.toastService.error(message);
   }
 }

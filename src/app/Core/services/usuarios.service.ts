@@ -7,10 +7,13 @@ import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 import { environment } from '../../../environments/environment';
 import { AuthSessionService } from './auth-session.service';
 
+export type AdminUsuarioSearchField = 'name' | 'email' | 'role' | '_id';
+
 export interface AdminUsuariosQuery {
   page: number;
   limit: number;
   search?: string;
+  searchField?: AdminUsuarioSearchField;
   includeDeleted?: boolean;
   rol?: Usuario['rol'];
 }
@@ -102,6 +105,7 @@ export class UsuariosService {
 
     if (query.search?.trim()) {
       params = params.set('search', query.search.trim());
+      params = params.set('searchField', query.searchField ?? 'name');
     }
 
     if (query.rol) {
@@ -141,6 +145,12 @@ export class UsuariosService {
     return this.http
       .delete<ApiResponse<Usuario>>(`${this.adminApiUrl}/${usuarioId}`)
       .pipe(map((response) => response.data));
+  }
+
+  permanentDeleteUsuario(usuarioId: string): Observable<void> {
+    return this.http
+      .delete<ApiResponse<null>>(`${this.adminApiUrl}/${usuarioId}/permanent`)
+      .pipe(map(() => undefined));
   }
 
   restoreUsuario(usuarioId: string): Observable<Usuario> {

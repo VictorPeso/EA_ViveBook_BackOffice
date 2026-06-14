@@ -5,11 +5,12 @@ import { TopbarComponent } from './shared/components/topbar/topbar.component';
 import { UsuariosService } from './Core/services/usuarios.service';
 import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Toast } from './shared/components/toast/toast';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TopbarComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TopbarComponent, Toast],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -25,6 +26,7 @@ export class AppComponent {
   );
 
   readonly navigation = [
+    { label: 'Estadísticas', route: '/matomo', shortLabel: 'ES' },
     { label: 'Autor', route: '/autores', shortLabel: 'AU' },
     { label: 'Evento', route: '/eventos', shortLabel: 'EV' },
     { label: 'Libro', route: '/libros', shortLabel: 'LI' },

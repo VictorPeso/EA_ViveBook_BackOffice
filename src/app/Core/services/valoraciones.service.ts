@@ -6,10 +6,13 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 import { TipoOperacion, Valoracion } from '../models/valoracion.model';
 
+export type AdminValoracionSearchField = 'user' | 'book' | 'rating' | '_id';
+
 export interface AdminValoracionesQuery {
   page: number;
   limit: number;
   search?: string;
+  searchField?: AdminValoracionSearchField;
   includeDeleted?: boolean;
   puntuacion?: number;
   tipoOperacion?: TipoOperacion;
@@ -25,7 +28,10 @@ export class ValoracionesService {
       .set('page', query.page)
       .set('limit', query.limit)
       .set('includeDeleted', query.includeDeleted ?? true);
-    if (query.search?.trim()) params = params.set('search', query.search.trim());
+    if (query.search?.trim()) {
+      params = params.set('search', query.search.trim());
+      if (query.searchField) params = params.set('searchField', query.searchField);
+    }
     if (query.puntuacion) params = params.set('puntuacion', query.puntuacion);
     if (query.tipoOperacion) params = params.set('tipoOperacion', query.tipoOperacion);
     return this.http
@@ -54,6 +60,12 @@ export class ValoracionesService {
   restoreValoracion(id: string): Observable<Valoracion> {
     return this.http
       .patch<ApiResponse<Valoracion>>(`${this.adminApiUrl}/${id}/status`, { IsDeleted: false })
+      .pipe(map((response) => response.data));
+  }
+
+  permanentlyDeleteValoracion(id: string): Observable<null> {
+    return this.http
+      .delete<ApiResponse<null>>(`${this.adminApiUrl}/${id}/permanent`)
       .pipe(map((response) => response.data));
   }
 }

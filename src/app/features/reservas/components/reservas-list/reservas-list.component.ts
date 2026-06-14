@@ -1,20 +1,20 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
+import { AdminListQuery, AdminSearchField } from '../../../../Core/models/admin-list.model';
 import { Libro } from '../../../../Core/models/libro.model';
 import { Reserva } from '../../../../Core/models/reserva.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
+import { AdminListComponent } from '../../../../shared/components/admin-list/admin-list.component';
 
 @Component({
   selector: 'app-reservas-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, AdminListComponent],
   templateUrl: './reservas-list.component.html',
   styleUrl: './reservas-list.component.css',
 })
-export class ReservasListComponent implements OnInit, OnDestroy {
+export class ReservasListComponent {
   @Input() reservas: Reserva[] = [];
   @Input() selectedId: string | null = null;
   @Input() isLoading = false;
@@ -22,42 +22,47 @@ export class ReservasListComponent implements OnInit, OnDestroy {
   @Input() totalPages = 1;
   @Input() totalItems = 0;
   @Input() pageSize = 5;
+  @Input() isAdmin = true;
+
   @Output() selectReserva = new EventEmitter<Reserva>();
   @Output() createNew = new EventEmitter<void>();
-  @Output() search = new EventEmitter<string>();
-  @Output() pageChange = new EventEmitter<number>();
+  @Output() queryChange = new EventEmitter<AdminListQuery>();
+  @Output() permanentDelete = new EventEmitter<Reserva>();
 
-  readonly searchControl = new FormControl('');
-  private readonly destroy = new Subject<void>();
-
-  ngOnInit(): void {
-    this.searchControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
-      .subscribe((value) => this.search.emit(value ?? ''));
-  }
-
-  ngOnDestroy(): void {
-    this.destroy.next();
-    this.destroy.complete();
-  }
-
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
-  }
-
-  get showingFrom(): number {
-    return this.totalItems ? (this.currentPage - 1) * this.pageSize + 1 : 0;
-  }
-
-  get showingTo(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalItems);
-  }
+  readonly searchFields: AdminSearchField[] = [
+    { value: 'user', label: 'Usuario' },
+    { value: 'book', label: 'Libro' },
+    { value: 'date', label: 'Fecha' },
+    { value: 'status', label: 'Estado' },
+    { value: '_id', label: 'ID de MongoDB' },
+  ];
 
   user(value: string | Usuario): string {
-    return typeof value === 'string' ? value : value.name;
+    if (typeof value === 'string') return value;
+    return value.name || value.email || value._id || '-';
   }
 
   book(value: string | Libro): string {
-    return typeof value === 'string' ? value : value.title;
+    if (typeof value === 'string') return value;
+    return value.title || value.isbn || value._id || '-';
+  }
+
+  onSelect(reserva: Reserva): void {
+    this.selectReserva.emit(reserva);
+  }
+
+  onPermanentDelete(event: MouseEvent, reserva: Reserva): void {
+    event.stopPropagation();
+    this.permanentDelete.emit(reserva);
+  }
+
+  onRowKeydown(event: KeyboardEvent, reserva: Reserva): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.onSelect(reserva);
+  }
+
+  trackByReservaId(index: number, reserva: Reserva): string | number {
+    return reserva._id ?? index;
   }
 }

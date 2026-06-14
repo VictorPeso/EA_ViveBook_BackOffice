@@ -46,7 +46,10 @@ describe('authInterceptor', () => {
     request.flush({});
   });
 
-  it.each([401, 403])('clears the session after a protected %s response', (status) => {
+  it.each([
+    [401, 'expired'],
+    [403, 'rejected'],
+  ] as const)('clears the session after a protected %s response', (status, reason) => {
     localStorage.setItem('token', 'admin-token');
 
     http.get(`${environment.apiUrl}/admin/usuarios`).subscribe({ error: () => undefined });
@@ -54,7 +57,7 @@ describe('authInterceptor', () => {
     const request = httpTesting.expectOne(`${environment.apiUrl}/admin/usuarios`);
     request.flush({}, { status, statusText: 'Rejected' });
 
-    expect(sessionMock.clearSession).toHaveBeenCalledWith(true);
+    expect(sessionMock.clearSession).toHaveBeenCalledWith(true, reason);
   });
 
   it('does not clear the session when login fails without a token', () => {

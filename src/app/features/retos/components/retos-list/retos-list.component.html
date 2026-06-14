@@ -1,51 +1,69 @@
-<section class="retos-list">
-  <header>
-    <div>
-      <p>Administración</p>
-      <h2>Retos</h2>
-      <span>Gestiona el catálogo de retos activos e inactivos.</span>
-      <input [formControl]="searchControl" placeholder="Buscar por título, descripción o tipo..." />
-    </div>
-    <button (click)="createNew.emit()">+ Nuevo reto</button>
-  </header>
-  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
-  <div class="state" *ngIf="isLoading">Cargando retos...</div>
-  <div class="state" *ngIf="!isLoading && !retos.length">No hay retos disponibles.</div>
-  <div class="items" *ngIf="!isLoading">
+<app-admin-list
+  title="Retos"
+  itemLabel="retos"
+  emptyMessage="No hay retos que coincidan con la búsqueda."
+  searchPlaceholder="Buscar retos..."
+  [searchFields]="searchFields"
+  initialSearchField="title"
+  [isLoading]="isLoading"
+  [canCreate]="isAdmin"
+  createLabel="Nuevo reto"
+  [visibleItems]="retos.length"
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (queryChange)="queryChange.emit($event)"
+  (createNew)="createNew.emit()"
+>
+  <div adminListHeader class="retos-list__grid retos-list__header">
+    <span>Nombre</span>
+    <span>Tipo</span>
+    <span>Objetivo</span>
+    <span>Creación</span>
+    <span>Actualización</span>
+    <span>ID de MongoDB</span>
+    <span>Estado administrativo</span>
+    <span class="retos-list__actions-heading">Acciones</span>
+  </div>
+
+  <div adminListRows>
     <article
-      *ngFor="let item of retos"
-      [class.active]="item._id === selectedId"
-      [class.deleted]="!item.activo"
-      (click)="selectReto.emit(item)"
+      *ngFor="let reto of retos; trackBy: trackByRetoId"
+      class="retos-list__grid retos-list__row"
+      [class.retos-list__row--selected]="reto._id === selectedId"
+      [class.retos-list__row--inactive]="reto.activo === false"
+      tabindex="0"
+      role="button"
+      (click)="onSelect(reto)"
+      (keydown)="onRowKeydown($event, reto)"
     >
-      <div class="title">
-        <h3>{{ item.title }}</h3>
-        <span [class.inactive]="!item.activo">{{ item.activo ? 'Activo' : 'Inactivo' }}</span>
-      </div>
-      <p>{{ item.description }}</p>
-      <div class="fields">
-        <div>
-          <strong>Tipo</strong><span>{{ typeLabel(item.type) }}</span>
-        </div>
-        <div>
-          <strong>Objetivo</strong><span>{{ item.objetivo }}</span>
-        </div>
-      </div>
+      <strong class="retos-list__title">{{ reto.title || 'Sin nombre' }}</strong>
+      <span class="retos-list__type" data-label="Tipo">{{ typeLabel(reto.type) }}</span>
+      <span class="retos-list__objective" data-label="Objetivo">{{ reto.objetivo }}</span>
+      <span class="retos-list__date" data-label="Creación">
+        {{ reto.createdAt ? (reto.createdAt | date: 'dd/MM/yyyy') : '-' }}
+      </span>
+      <span class="retos-list__date" data-label="Actualización">
+        {{ reto.updatedAt ? (reto.updatedAt | date: 'dd/MM/yyyy') : '-' }}
+      </span>
+      <code class="retos-list__id" data-label="ID">{{ reto._id || '-' }}</code>
+      <span
+        class="retos-list__status"
+        [class.retos-list__status--inactive]="reto.activo === false"
+      >
+        {{ reto.activo === false ? 'Inactivo' : 'Activo' }}
+      </span>
+      <button
+        *ngIf="isAdmin"
+        type="button"
+        class="retos-list__delete"
+        title="Eliminar reto definitivamente"
+        aria-label="Eliminar reto definitivamente"
+        (click)="onPermanentDelete($event, reto)"
+      >
+        Eliminar
+      </button>
     </article>
   </div>
-  <nav *ngIf="totalPages > 1">
-    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
-      Anterior
-    </button>
-    <button
-      *ngFor="let page of pages"
-      [class.current]="page === currentPage"
-      (click)="pageChange.emit(page)"
-    >
-      {{ page }}
-    </button>
-    <button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
-      Siguiente
-    </button>
-  </nav>
-</section>
+</app-admin-list>

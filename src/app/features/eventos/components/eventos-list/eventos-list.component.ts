@@ -1,18 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+
+import { AdminListQuery, AdminSearchField } from '../../../../Core/models/admin-list.model';
 import { Evento } from '../../../../Core/models/evento.model';
-import { Usuario } from '../../../../Core/models/usuario.model';
+import { AdminListComponent } from '../../../../shared/components/admin-list/admin-list.component';
 
 @Component({
   selector: 'app-eventos-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, AdminListComponent],
   templateUrl: './eventos-list.component.html',
   styleUrl: './eventos-list.component.css',
 })
-export class EventosListComponent implements OnInit, OnDestroy {
+export class EventosListComponent {
   @Input() eventos: Evento[] = [];
   @Input() selectedId: string | null = null;
   @Input() isLoading = false;
@@ -20,31 +20,36 @@ export class EventosListComponent implements OnInit, OnDestroy {
   @Input() totalPages = 1;
   @Input() totalItems = 0;
   @Input() pageSize = 5;
+  @Input() isAdmin = true;
+
   @Output() selectEvento = new EventEmitter<Evento>();
   @Output() createNew = new EventEmitter<void>();
-  @Output() search = new EventEmitter<string>();
-  @Output() pageChange = new EventEmitter<number>();
-  readonly searchControl = new FormControl('');
-  private readonly destroy = new Subject<void>();
-  ngOnInit(): void {
-    this.searchControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
-      .subscribe((value) => this.search.emit(value ?? ''));
+  @Output() queryChange = new EventEmitter<AdminListQuery>();
+  @Output() permanentDelete = new EventEmitter<Evento>();
+
+  readonly searchFields: AdminSearchField[] = [
+    { value: 'title', label: 'Título' },
+    { value: 'eventDate', label: 'Fecha (AAAA-MM-DD)' },
+    { value: 'address', label: 'Dirección' },
+    { value: '_id', label: 'ID de MongoDB' },
+  ];
+
+  onSelect(evento: Evento): void {
+    this.selectEvento.emit(evento);
   }
-  ngOnDestroy(): void {
-    this.destroy.next();
-    this.destroy.complete();
+
+  onPermanentDelete(event: MouseEvent, evento: Evento): void {
+    event.stopPropagation();
+    this.permanentDelete.emit(evento);
   }
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+
+  onRowKeydown(event: KeyboardEvent, evento: Evento): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.onSelect(evento);
   }
-  get showingFrom(): number {
-    return this.totalItems ? (this.currentPage - 1) * this.pageSize + 1 : 0;
-  }
-  get showingTo(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalItems);
-  }
-  creator(evento: Evento): string {
-    return typeof evento.creator === 'string' ? evento.creator : evento.creator.name;
+
+  trackByEventoId(index: number, evento: Evento): string | number {
+    return evento._id ?? index;
   }
 }

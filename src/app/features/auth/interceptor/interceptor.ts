@@ -26,7 +26,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         error instanceof HttpErrorResponse &&
         (error.status === 401 || error.status === 403)
       ) {
-        authSession.clearSession(true);
+        authSession.clearSession(true, error.status === 401 ? 'expired' : 'rejected');
       }
 
       return throwError(() => error);

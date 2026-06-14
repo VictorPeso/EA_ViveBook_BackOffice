@@ -1,62 +1,69 @@
-<section class="reservas-list">
-  <header>
-    <div>
-      <p>Administración</p>
-      <h2>Reservas</h2>
-      <span>Consulta reservas activas y desactivadas.</span>
-      <input
-        [formControl]="searchControl"
-        placeholder="Buscar por usuario, libro, ISBN o estado..."
-      />
-    </div>
-    <button (click)="createNew.emit()">+ Nueva reserva</button>
-  </header>
-  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
-  <div class="state" *ngIf="isLoading">Cargando reservas...</div>
-  <div class="state" *ngIf="!isLoading && !reservas.length">No hay reservas disponibles.</div>
-  <div class="items" *ngIf="!isLoading">
+<app-admin-list
+  title="Reservas"
+  itemLabel="reservas"
+  emptyMessage="No hay reservas que coincidan con la búsqueda."
+  searchPlaceholder="Buscar reservas..."
+  [searchFields]="searchFields"
+  initialSearchField="user"
+  [isLoading]="isLoading"
+  [canCreate]="isAdmin"
+  createLabel="Nueva reserva"
+  [visibleItems]="reservas.length"
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (queryChange)="queryChange.emit($event)"
+  (createNew)="createNew.emit()"
+>
+  <div adminListHeader class="reservas-list__grid reservas-list__header">
+    <span>Usuario</span>
+    <span>Libro</span>
+    <span>Solicitud</span>
+    <span>Fecha límite</span>
+    <span>Estado</span>
+    <span>ID de MongoDB</span>
+    <span>Estado administrativo</span>
+    <span class="reservas-list__actions-heading">Acciones</span>
+  </div>
+
+  <div adminListRows>
     <article
-      *ngFor="let item of reservas"
-      [class.active]="item._id === selectedId"
-      [class.deleted]="item.IsDeleted"
-      (click)="selectReserva.emit(item)"
+      *ngFor="let reserva of reservas; trackBy: trackByReservaId"
+      class="reservas-list__grid reservas-list__row"
+      [class.reservas-list__row--selected]="reserva._id === selectedId"
+      [class.reservas-list__row--deleted]="reserva.IsDeleted"
+      tabindex="0"
+      role="button"
+      (click)="onSelect(reserva)"
+      (keydown)="onRowKeydown($event, reserva)"
     >
-      <div class="title">
-        <h3>{{ book(item.libro) }}</h3>
-        <span [class.inactive]="item.IsDeleted">
-          {{ item.IsDeleted ? 'Desactivada' : item.estado }}
-        </span>
-      </div>
-      <div class="fields">
-        <div>
-          <strong>Solicitante</strong><span>{{ user(item.usuarioSolicitante) }}</span>
-        </div>
-        <div>
-          <strong>Propietario</strong><span>{{ user(item.propietario) }}</span>
-        </div>
-        <div>
-          <strong>Solicitud</strong><span>{{ item.fechaSolicitud | date: 'short' }}</span>
-        </div>
-        <div>
-          <strong>Límite</strong
-          ><span>{{ item.fechaLimite ? (item.fechaLimite | date: 'short') : 'Sin límite' }}</span>
-        </div>
-      </div>
+      <strong class="reservas-list__user">{{ user(reserva.usuarioSolicitante) }}</strong>
+      <span class="reservas-list__cell" data-label="Libro">{{ book(reserva.libro) }}</span>
+      <span class="reservas-list__date" data-label="Solicitud">
+        {{ reserva.fechaSolicitud | date: 'dd/MM/yyyy' }}
+      </span>
+      <span class="reservas-list__date" data-label="Fecha límite">
+        {{ reserva.fechaLimite ? (reserva.fechaLimite | date: 'dd/MM/yyyy') : 'Sin límite' }}
+      </span>
+      <span class="reservas-list__functional-status">{{ reserva.estado }}</span>
+      <code class="reservas-list__id" data-label="ID">{{ reserva._id || '-' }}</code>
+      <span
+        class="reservas-list__admin-status"
+        [class.reservas-list__admin-status--deleted]="reserva.IsDeleted"
+      >
+        {{ reserva.IsDeleted ? 'Desactivada' : 'Activa' }}
+      </span>
+      <button
+        *ngIf="isAdmin"
+        type="button"
+        class="reservas-list__delete"
+        title="Eliminar reserva definitivamente"
+        aria-label="Eliminar reserva definitivamente"
+        (click)="onPermanentDelete($event, reserva)"
+      >
+        Eliminar
+      </button>
     </article>
   </div>
-  <nav *ngIf="totalPages > 1">
-    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
-      Anterior
-    </button>
-    <button
-      *ngFor="let page of pages"
-      [class.current]="page === currentPage"
-      (click)="pageChange.emit(page)"
-    >
-      {{ page }}
-    </button>
-    <button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
-      Siguiente
-    </button>
-  </nav>
-</section>
+</app-admin-list>

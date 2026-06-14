@@ -6,10 +6,13 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 import { Post, PostStatus } from '../models/post.model';
 
+export type AdminPostSearchField = 'book' | 'owner' | 'price' | 'status' | '_id';
+
 export interface AdminPostsQuery {
   page: number;
   limit: number;
   search?: string;
+  searchField?: AdminPostSearchField;
   includeDeleted?: boolean;
   status?: PostStatus;
 }
@@ -24,7 +27,10 @@ export class PostsService {
       .set('page', query.page)
       .set('limit', query.limit)
       .set('includeDeleted', query.includeDeleted ?? true);
-    if (query.search?.trim()) params = params.set('search', query.search.trim());
+    if (query.search?.trim()) {
+      params = params.set('search', query.search.trim());
+      if (query.searchField) params = params.set('searchField', query.searchField);
+    }
     if (query.status) params = params.set('status', query.status);
 
     return this.http
@@ -53,6 +59,12 @@ export class PostsService {
   restorePost(id: string): Observable<Post> {
     return this.http
       .patch<ApiResponse<Post>>(`${this.adminApiUrl}/${id}/status`, { IsDeleted: false })
+      .pipe(map((response) => response.data));
+  }
+
+  permanentlyDeletePost(id: string): Observable<Post> {
+    return this.http
+      .delete<ApiResponse<Post>>(`${this.adminApiUrl}/${id}/permanent`)
       .pipe(map((response) => response.data));
   }
 }

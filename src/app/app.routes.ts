@@ -105,8 +105,9 @@ export const routes: Routes = [
   },
   {
     path: 'matomo',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/matomo/matomo-page/matomo-page').then((m) => m.MatomoPage),
-    title: 'Matomo',
+    title: 'BackOffice - Estadísticas',
   },
 ];

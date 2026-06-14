@@ -6,10 +6,13 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 import { Libreria } from '../models/libreria.model';
 
+export type AdminLibreriaSearchField = 'name' | 'address' | '_id';
+
 export interface AdminLibreriasQuery {
   page: number;
   limit: number;
   search?: string;
+  searchField?: AdminLibreriaSearchField;
   includeDeleted?: boolean;
 }
 
@@ -25,7 +28,9 @@ export class LibreriasService {
       .set('includeDeleted', query.includeDeleted ?? true);
 
     if (query.search?.trim()) {
-      params = params.set('search', query.search.trim());
+      params = params
+        .set('search', query.search.trim())
+        .set('searchField', query.searchField ?? 'name');
     }
 
     return this.http
@@ -49,6 +54,12 @@ export class LibreriasService {
     return this.http
       .delete<ApiResponse<Libreria>>(`${this.adminApiUrl}/${libreriaId}`)
       .pipe(map((response) => response.data));
+  }
+
+  permanentDeleteLibreria(libreriaId: string): Observable<void> {
+    return this.http
+      .delete<ApiResponse<null>>(`${this.adminApiUrl}/${libreriaId}/permanent`)
+      .pipe(map(() => undefined));
   }
 
   restoreLibreria(libreriaId: string): Observable<Libreria> {

@@ -3,6 +3,7 @@ import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import VisitsSumamry from '../models/VisitsSummary';
+import { ApiResponse } from '../models/api-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -12,13 +13,11 @@ export class MatomoService {
 
   private readonly apiUrl = environment.apiUrl + '/matomo';
 
-  // no puedo poner observable<string>
-  readVersion(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/version`);
+  readVersion(): Observable<ApiResponse<{ version: string }>> {
+    return this.http.get<ApiResponse<{ version: string }>>(`${this.apiUrl}/version`);
   }
 
-  // ni tampoco Observable<VisitsSumamry> -_-
-  readSummary(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/summary`);
+  readSummary(): Observable<ApiResponse<VisitsSumamry>> {
+    return this.http.get<ApiResponse<VisitsSumamry>>(`${this.apiUrl}/summary`);
   }
 }

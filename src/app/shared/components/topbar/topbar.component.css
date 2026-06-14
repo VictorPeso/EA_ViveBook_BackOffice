@@ -12,7 +12,7 @@
   align-items: center;
   width: 100%;
   height: var(--header-height);
-  padding: 0 26px;
+  padding: 0 21px;
   justify-content: space-between;
   color: #fff9f7;
   background: var(--color-header);
@@ -27,7 +27,7 @@
 }
 
 .topbar__logout {
-  padding: 9px 16px;
+  padding: 7px 13px;
   color: #fff9f7;
   font: inherit;
   font-size: 0.82rem;

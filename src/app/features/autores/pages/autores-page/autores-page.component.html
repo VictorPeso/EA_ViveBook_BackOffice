@@ -37,10 +37,8 @@
         [pageSize]="pageSize()"
         (selectAutor)="onSelectAutor($event)"
         (createNew)="onCreateNew()"
-        (pageChange)="onPageChange($event)"
-        (nextPage)="onNextPage()"
-        (previousPage)="onPreviousPage()"
-        (search)="onSearch($event)"
+        (queryChange)="onListQuery($event)"
+        (permanentDelete)="onPermanentDelete($event)"
       />
     </section>
   </div>

@@ -2,22 +2,24 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
+import { AdminListQuery } from '../../../../Core/models/admin-list.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Libro, UsuarioRef } from '../../../../Core/models/libro.model';
-import { LibrosService } from '../../../../Core/services/libros.service';
+import { AdminLibroSearchField, LibrosService } from '../../../../Core/services/libros.service';
+import { ToastService } from '../../../../Core/services/toast.service';
 import { LibroFormComponent } from '../../components/libro-form/libro-form.component';
 import { LibrosListComponent } from '../../components/libros-list/libros-list.component';
-import { Toast } from '../../../../shared/components/toast/toast';
 
 @Component({
   selector: 'app-libros-page',
   standalone: true,
-  imports: [CommonModule, LibroFormComponent, LibrosListComponent, Toast],
+  imports: [CommonModule, LibroFormComponent, LibrosListComponent],
   templateUrl: './libros-page.component.html',
   styleUrl: './libros-page.component.css',
 })
 export class LibrosPageComponent implements OnInit {
   private readonly librosService = inject(LibrosService);
+  private readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly libros = signal<Libro[]>([]);
@@ -34,6 +36,7 @@ export class LibrosPageComponent implements OnInit {
   readonly totalItems = signal(0);
   readonly totalPages = signal(1);
   readonly searchBook = signal('');
+  readonly searchField = signal<AdminLibroSearchField>('title');
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -41,9 +44,11 @@ export class LibrosPageComponent implements OnInit {
     }
   }
 
-  onSearch(term: string): void {
-    this.searchBook.set(term.trim());
-    this.currentPage.set(1);
+  onListQuery(query: AdminListQuery): void {
+    this.searchBook.set(query.search);
+    this.searchField.set(query.searchField as AdminLibroSearchField);
+    this.currentPage.set(query.page);
+    this.pageSize.set(query.pageSize);
     this.loadLibros();
   }
 
@@ -56,6 +61,7 @@ export class LibrosPageComponent implements OnInit {
         page: this.currentPage(),
         limit: this.pageSize(),
         search: this.searchBook(),
+        searchField: this.searchField(),
         includeDeleted: true,
       })
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -88,7 +94,7 @@ export class LibrosPageComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al cargar libros:', error);
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los libros.'));
+          this.showError(error, 'No se pudieron cargar los libros.');
         },
       });
   }
@@ -121,14 +127,14 @@ export class LibrosPageComponent implements OnInit {
       next: (savedLibro) => {
         this.isCreating.set(false);
         this.selectedLibro.set(this.mapLibroToFormValue(savedLibro));
-        this.successMessage.set(
+        this.showSuccess(
           libroData._id ? 'Libro actualizado correctamente.' : 'Libro creado correctamente.',
         );
         this.loadLibros(savedLibro._id);
       },
       error: (error) => {
         console.error('Error al guardar libro:', error);
-        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el libro.'));
+        this.showError(error, 'No se pudo guardar el libro.');
       },
     });
   }
@@ -149,12 +155,12 @@ export class LibrosPageComponent implements OnInit {
         next: (updatedLibro) => {
           this.selectedLibro.set(this.mapLibroToFormValue(updatedLibro));
           this.isCreating.set(false);
-          this.successMessage.set('Libro desactivado correctamente.');
+          this.showSuccess('Libro desactivado correctamente.');
           this.loadLibros(updatedLibro._id);
         },
         error: (error) => {
           console.error('Error al desactivar libro:', error);
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el libro.'));
+          this.showError(error, 'No se pudo desactivar el libro.');
         },
       });
   }
@@ -171,11 +177,39 @@ export class LibrosPageComponent implements OnInit {
       .subscribe({
         next: (updatedLibro) => {
           this.selectedLibro.set(this.mapLibroToFormValue(updatedLibro));
-          this.successMessage.set('Libro restaurado correctamente.');
+          this.showSuccess('Libro restaurado correctamente.');
           this.loadLibros(updatedLibro._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el libro.')),
+        error: (error) => this.showError(error, 'No se pudo restaurar el libro.'),
+      });
+  }
+
+  onPermanentDelete(libro: Libro): void {
+    if (
+      !libro._id ||
+      !window.confirm(
+        `¿Eliminar definitivamente el libro "${libro.title}"? Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.librosService
+      .permanentDeleteLibro(libro._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: () => {
+          if (this.selectedLibro()?._id === libro._id) {
+            this.selectedLibro.set(null);
+          }
+          this.showSuccess('Libro eliminado definitivamente.');
+          this.loadLibros();
+        },
+        error: (error) => this.showError(error, 'No se pudo eliminar definitivamente el libro.'),
       });
   }
 
@@ -184,20 +218,6 @@ export class LibrosPageComponent implements OnInit {
     this.successMessage.set('');
     this.selectedLibro.set(null);
     this.isCreating.set(false);
-  }
-
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadLibros();
-  }
-
-  onNextPage(): void {
-    this.onPageChange(this.currentPage() + 1);
-  }
-
-  onPreviousPage(): void {
-    this.onPageChange(this.currentPage() - 1);
   }
 
   private createEmptyLibro(): Libro {
@@ -277,5 +297,16 @@ export class LibrosPageComponent implements OnInit {
   private optionalString(value: string | null | undefined): string | undefined {
     const normalized = value?.trim();
     return normalized || undefined;
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.toastService.success(message);
+  }
+
+  private showError(error: unknown, fallbackMessage: string): void {
+    const message = getApiErrorMessage(error, fallbackMessage);
+    this.errorMessage.set(message);
+    this.toastService.error(message);
   }
 }

@@ -1,18 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
+import { AdminListQuery, AdminSearchField } from '../../../../Core/models/admin-list.model';
 import { Libreria } from '../../../../Core/models/libreria.model';
+import { AdminListComponent } from '../../../../shared/components/admin-list/admin-list.component';
 
 @Component({
   selector: 'app-librerias-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, AdminListComponent],
   templateUrl: './librerias-list.component.html',
   styleUrl: './librerias-list.component.css',
 })
-export class LibreriasListComponent implements OnInit, OnDestroy {
+export class LibreriasListComponent {
   @Input() librerias: Libreria[] = [];
   @Input() selectedId: string | null = null;
   @Input() isLoading = false;
@@ -20,34 +20,35 @@ export class LibreriasListComponent implements OnInit, OnDestroy {
   @Input() totalPages = 1;
   @Input() totalItems = 0;
   @Input() pageSize = 5;
+  @Input() isAdmin = true;
+
   @Output() selectLibreria = new EventEmitter<Libreria>();
   @Output() createNew = new EventEmitter<void>();
-  @Output() search = new EventEmitter<string>();
-  @Output() pageChange = new EventEmitter<number>();
+  @Output() queryChange = new EventEmitter<AdminListQuery>();
+  @Output() permanentDelete = new EventEmitter<Libreria>();
 
-  readonly searchControl = new FormControl('');
-  private readonly destroy = new Subject<void>();
+  readonly searchFields: AdminSearchField[] = [
+    { value: 'name', label: 'Nombre' },
+    { value: 'address', label: 'Dirección' },
+    { value: '_id', label: 'ID de MongoDB' },
+  ];
 
-  ngOnInit(): void {
-    this.searchControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
-      .subscribe((value) => this.search.emit(value ?? ''));
+  onSelect(libreria: Libreria): void {
+    this.selectLibreria.emit(libreria);
   }
 
-  ngOnDestroy(): void {
-    this.destroy.next();
-    this.destroy.complete();
+  onPermanentDelete(event: MouseEvent, libreria: Libreria): void {
+    event.stopPropagation();
+    this.permanentDelete.emit(libreria);
   }
 
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
+  onRowKeydown(event: KeyboardEvent, libreria: Libreria): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.onSelect(libreria);
   }
 
-  get showingFrom(): number {
-    return this.totalItems ? (this.currentPage - 1) * this.pageSize + 1 : 0;
-  }
-
-  get showingTo(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalItems);
+  trackByLibreriaId(index: number, libreria: Libreria): string | number {
+    return libreria._id ?? index;
   }
 }

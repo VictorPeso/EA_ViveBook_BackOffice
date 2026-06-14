@@ -1,0 +1,80 @@
+<div class="admin-pagination">
+  <button
+    type="button"
+    class="admin-pagination__arrow"
+    [disabled]="currentPage <= 1"
+    (click)="previousPage()"
+    aria-label="Página anterior"
+  >
+    ‹
+  </button>
+
+  <button
+    type="button"
+    class="admin-pagination__current"
+    [class.admin-pagination__current--open]="isOpen"
+    [attr.aria-expanded]="isOpen"
+    aria-haspopup="dialog"
+    (click)="toggle()"
+  >
+    {{ currentPage }}
+  </button>
+
+  <button
+    type="button"
+    class="admin-pagination__arrow"
+    [disabled]="currentPage >= totalPages"
+    (click)="nextPage()"
+    aria-label="Página siguiente"
+  >
+    ›
+  </button>
+
+  <section
+    *ngIf="isOpen"
+    class="admin-pagination__popover"
+    role="dialog"
+    aria-label="Seleccionar página y elementos por página"
+  >
+    <div class="admin-pagination__content">
+      <div>
+        <span class="admin-pagination__label">Ir a la página</span>
+        <div class="admin-pagination__grid">
+          <button
+            type="button"
+            *ngFor="let page of visiblePages"
+            class="admin-pagination__number"
+            [class.admin-pagination__number--active]="page === currentPage"
+            [attr.aria-current]="page === currentPage ? 'page' : null"
+            (click)="selectPage(page)"
+          >
+            {{ page }}
+          </button>
+
+          <button
+            *ngIf="hasNextBlock"
+            type="button"
+            class="admin-pagination__number admin-pagination__number--more"
+            (click)="showNextBlock()"
+            aria-label="Mostrar las páginas siguientes"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <label class="admin-pagination__size">
+        <span class="admin-pagination__label">Elementos por página</span>
+        <select [(ngModel)]="pendingPageSize">
+          <option *ngFor="let option of pageSizeOptions" [ngValue]="option">
+            {{ option }}
+          </option>
+        </select>
+      </label>
+    </div>
+
+    <button type="button" class="admin-pagination__apply" (click)="applyPageSize()">
+      Aplicar y recargar
+    </button>
+  </section>
+</div>

@@ -1,48 +1,63 @@
-<section class="librerias-list">
-  <header>
-    <div>
-      <p>Listado</p>
-      <h2>Librerías</h2>
-      <span>Consulta librerías activas y desactivadas.</span>
-      <input [formControl]="searchControl" placeholder="Buscar por nombre o dirección..." />
-    </div>
-    <button (click)="createNew.emit()">+ Nueva librería</button>
-  </header>
-  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
-  <div class="state" *ngIf="isLoading">Cargando librerías...</div>
-  <div class="state" *ngIf="!isLoading && !librerias.length">No hay librerías disponibles.</div>
-  <div class="items" *ngIf="!isLoading">
+<app-admin-list
+  title="Librerías"
+  itemLabel="librerías"
+  emptyMessage="No hay librerías que coincidan con la búsqueda."
+  searchPlaceholder="Buscar librerías..."
+  [searchFields]="searchFields"
+  initialSearchField="name"
+  [isLoading]="isLoading"
+  [canCreate]="isAdmin"
+  createLabel="Nueva librería"
+  [visibleItems]="librerias.length"
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (queryChange)="queryChange.emit($event)"
+  (createNew)="createNew.emit()"
+>
+  <div adminListHeader class="librerias-list__grid librerias-list__header">
+    <span>Librería</span>
+    <span>Dirección</span>
+    <span>ID de MongoDB</span>
+    <span>Estado administrativo</span>
+    <span class="librerias-list__actions-heading">Acciones</span>
+  </div>
+
+  <div adminListRows>
     <article
-      *ngFor="let libreria of librerias"
-      [class.active]="libreria._id === selectedId"
-      [class.deleted]="libreria.IsDeleted"
-      (click)="selectLibreria.emit(libreria)"
+      *ngFor="let libreria of librerias; trackBy: trackByLibreriaId"
+      class="librerias-list__grid librerias-list__row"
+      [class.librerias-list__row--selected]="libreria._id === selectedId"
+      [class.librerias-list__row--deleted]="libreria.IsDeleted"
+      tabindex="0"
+      role="button"
+      (click)="onSelect(libreria)"
+      (keydown)="onRowKeydown($event, libreria)"
     >
-      <div class="card-title">
-        <h3>{{ libreria.name }}</h3>
-        <span [class.inactive]="libreria.IsDeleted">
-          {{ libreria.IsDeleted ? 'Desactivada' : 'Activa' }}
-        </span>
-      </div>
-      <strong>Dirección</strong>
-      <p>{{ libreria.address }}</p>
-      <strong>ID</strong>
-      <p>{{ libreria._id }}</p>
+      <strong class="librerias-list__name">{{ libreria.name || 'Sin nombre' }}</strong>
+      <span class="librerias-list__cell" data-label="Dirección">
+        {{ libreria.address || '-' }}
+      </span>
+      <code class="librerias-list__id" data-label="ID">{{ libreria._id || '-' }}</code>
+
+      <span
+        class="librerias-list__status"
+        [class.librerias-list__status--deleted]="libreria.IsDeleted"
+      >
+        {{ libreria.IsDeleted ? 'Desactivada' : 'Activa' }}
+      </span>
+
+      <button
+        *ngIf="isAdmin"
+        type="button"
+        class="librerias-list__delete"
+        title="Eliminar librería definitivamente"
+        aria-label="Eliminar librería definitivamente"
+        (click)="onPermanentDelete($event, libreria)"
+      >
+        Eliminar
+      </button>
     </article>
   </div>
-  <nav *ngIf="totalPages > 1">
-    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
-      Anterior
-    </button>
-    <button
-      *ngFor="let page of pages"
-      [class.current]="page === currentPage"
-      (click)="pageChange.emit(page)"
-    >
-      {{ page }}
-    </button>
-    <button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
-      Siguiente
-    </button>
-  </nav>
-</section>
+</app-admin-list>

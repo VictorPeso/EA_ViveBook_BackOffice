@@ -6,10 +6,13 @@ import { Libro } from '../models/libro.model';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 
+export type AdminLibroSearchField = 'title' | 'isbn' | 'author' | '_id';
+
 export interface AdminLibrosQuery {
   page: number;
   limit: number;
   search?: string;
+  searchField?: AdminLibroSearchField;
   includeDeleted?: boolean;
   type?: Libro['type'];
   estado?: string;
@@ -50,6 +53,7 @@ export class LibrosService {
 
     if (query.search?.trim()) {
       params = params.set('search', query.search.trim());
+      params = params.set('searchField', query.searchField ?? 'title');
     }
 
     if (query.type) {
@@ -93,6 +97,12 @@ export class LibrosService {
     return this.http
       .delete<ApiResponse<Libro>>(`${this.adminApiUrl}/${libroId}`)
       .pipe(map((response) => response.data));
+  }
+
+  permanentDeleteLibro(libroId: string): Observable<void> {
+    return this.http
+      .delete<ApiResponse<null>>(`${this.adminApiUrl}/${libroId}/permanent`)
+      .pipe(map(() => undefined));
   }
 
   restoreLibro(libroId: string): Observable<Libro> {

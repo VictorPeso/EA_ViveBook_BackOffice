@@ -1,17 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+
+import { AdminListQuery, AdminSearchField } from '../../../../Core/models/admin-list.model';
 import { Post } from '../../../../Core/models/post.model';
+import { AdminListComponent } from '../../../../shared/components/admin-list/admin-list.component';
 
 @Component({
   selector: 'app-posts-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, AdminListComponent],
   templateUrl: './posts-list.component.html',
   styleUrl: './posts-list.component.css',
 })
-export class PostsListComponent implements OnInit, OnDestroy {
+export class PostsListComponent {
   @Input() posts: Post[] = [];
   @Input() selectedId: string | null = null;
   @Input() isLoading = false;
@@ -19,35 +20,47 @@ export class PostsListComponent implements OnInit, OnDestroy {
   @Input() totalPages = 1;
   @Input() totalItems = 0;
   @Input() pageSize = 5;
+  @Input() isAdmin = true;
+
   @Output() selectPost = new EventEmitter<Post>();
   @Output() createNew = new EventEmitter<void>();
-  @Output() search = new EventEmitter<string>();
-  @Output() pageChange = new EventEmitter<number>();
-  readonly searchControl = new FormControl('');
-  private readonly destroy = new Subject<void>();
+  @Output() queryChange = new EventEmitter<AdminListQuery>();
+  @Output() permanentDelete = new EventEmitter<Post>();
 
-  ngOnInit(): void {
-    this.searchControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
-      .subscribe((value) => this.search.emit(value ?? ''));
-  }
-  ngOnDestroy(): void {
-    this.destroy.next();
-    this.destroy.complete();
-  }
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
-  }
-  get showingFrom(): number {
-    return this.totalItems ? (this.currentPage - 1) * this.pageSize + 1 : 0;
-  }
-  get showingTo(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalItems);
-  }
+  readonly searchFields: AdminSearchField[] = [
+    { value: 'book', label: 'Libro' },
+    { value: 'owner', label: 'Propietario' },
+    { value: 'price', label: 'Precio' },
+    { value: 'status', label: 'Estado' },
+    { value: '_id', label: 'ID de MongoDB' },
+  ];
+
   owner(post: Post): string {
-    return typeof post.ownerId === 'string' ? post.ownerId : post.ownerId.name;
+    if (typeof post.ownerId === 'string') return post.ownerId;
+    return post.ownerId.name || post.ownerId.email || post.ownerId._id || '-';
   }
+
   book(post: Post): string {
-    return typeof post.bookId === 'string' ? post.bookId : post.bookId.title;
+    if (typeof post.bookId === 'string') return post.bookId;
+    return post.bookId.title || post.bookId.isbn || post.bookId._id || '-';
+  }
+
+  onSelect(post: Post): void {
+    this.selectPost.emit(post);
+  }
+
+  onPermanentDelete(event: MouseEvent, post: Post): void {
+    event.stopPropagation();
+    this.permanentDelete.emit(post);
+  }
+
+  onRowKeydown(event: KeyboardEvent, post: Post): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.onSelect(post);
+  }
+
+  trackByPostId(index: number, post: Post): string | number {
+    return post._id ?? index;
   }
 }

@@ -2,12 +2,17 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize, forkJoin } from 'rxjs';
 
-import { Libro } from '../../../../Core/models/libro.model';
+import { AdminListQuery } from '../../../../Core/models/admin-list.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
+import { Libro } from '../../../../Core/models/libro.model';
 import { Reserva } from '../../../../Core/models/reserva.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { LibrosService } from '../../../../Core/services/libros.service';
-import { ReservasService } from '../../../../Core/services/reservas.service';
+import {
+  AdminReservaSearchField,
+  ReservasService,
+} from '../../../../Core/services/reservas.service';
+import { ToastService } from '../../../../Core/services/toast.service';
 import { UsuariosService } from '../../../../Core/services/usuarios.service';
 import { ReservaFormComponent } from '../../components/reserva-form/reserva-form.component';
 import { ReservasListComponent } from '../../components/reservas-list/reservas-list.component';
@@ -23,6 +28,7 @@ export class ReservasPageComponent implements OnInit {
   private readonly service = inject(ReservasService);
   private readonly usuariosService = inject(UsuariosService);
   private readonly librosService = inject(LibrosService);
+  private readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly reservas = signal<Reserva[]>([]);
@@ -41,6 +47,7 @@ export class ReservasPageComponent implements OnInit {
   readonly totalItems = signal(0);
   readonly totalPages = signal(1);
   readonly search = signal('');
+  readonly searchField = signal<AdminReservaSearchField>('user');
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -57,6 +64,7 @@ export class ReservasPageComponent implements OnInit {
         page: this.currentPage(),
         limit: this.pageSize(),
         search: this.search(),
+        searchField: this.search() ? this.searchField() : undefined,
         includeDeleted: true,
       })
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -80,8 +88,7 @@ export class ReservasPageComponent implements OnInit {
           this.selected.set(null);
           this.isCreating.set(false);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar las reservas.')),
+        error: (error) => this.showError(error, 'No se pudieron cargar las reservas.'),
       });
   }
 
@@ -105,16 +112,15 @@ export class ReservasPageComponent implements OnInit {
           this.usuarios.set(usuarios.data);
           this.libros.set(libros.data);
         },
-        error: (error) =>
-          this.errorMessage.set(
-            getApiErrorMessage(error, 'No se pudieron cargar usuarios y libros.'),
-          ),
+        error: (error) => this.showError(error, 'No se pudieron cargar usuarios y libros.'),
       });
   }
 
-  onSearch(term: string): void {
-    this.search.set(term.trim());
-    this.currentPage.set(1);
+  onListQuery(query: AdminListQuery): void {
+    this.search.set(query.search);
+    this.searchField.set(query.searchField as AdminReservaSearchField);
+    this.currentPage.set(query.page);
+    this.pageSize.set(query.pageSize);
     this.loadReservas();
   }
 
@@ -144,13 +150,12 @@ export class ReservasPageComponent implements OnInit {
       next: (saved) => {
         this.selected.set(this.mapToForm(saved));
         this.isCreating.set(false);
-        this.successMessage.set(
+        this.showSuccess(
           creating ? 'Reserva creada correctamente.' : 'Reserva actualizada correctamente.',
         );
         this.loadReservas(saved._id);
       },
-      error: (error) =>
-        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar la reserva.')),
+      error: (error) => this.showError(error, 'No se pudo guardar la reserva.'),
     });
   }
 
@@ -163,11 +168,10 @@ export class ReservasPageComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selected.set(this.mapToForm(updated));
-          this.successMessage.set('Reserva desactivada correctamente.');
+          this.showSuccess('Reserva desactivada correctamente.');
           this.loadReservas(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar la reserva.')),
+        error: (error) => this.showError(error, 'No se pudo desactivar la reserva.'),
       });
   }
 
@@ -180,18 +184,38 @@ export class ReservasPageComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selected.set(this.mapToForm(updated));
-          this.successMessage.set('Reserva restaurada correctamente.');
+          this.showSuccess('Reserva restaurada correctamente.');
           this.loadReservas(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar la reserva.')),
+        error: (error) => this.showError(error, 'No se pudo restaurar la reserva.'),
       });
   }
 
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadReservas();
+  onPermanentDelete(reserva: Reserva): void {
+    if (!reserva._id) return;
+
+    const book = typeof reserva.libro === 'string' ? reserva.libro : reserva.libro.title;
+    if (
+      !window.confirm(
+        `¿Eliminar definitivamente la reserva de "${book}"? Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+    this.service
+      .permanentlyDeleteReserva(reserva._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: () => {
+          if (this.selected()?._id === reserva._id) this.onCancel();
+          this.showSuccess('Reserva eliminada definitivamente.');
+          this.loadReservas();
+        },
+        error: (error) => this.showError(error, 'No se pudo eliminar definitivamente la reserva.'),
+      });
   }
 
   onCancel(): void {
@@ -238,5 +262,16 @@ export class ReservasPageComponent implements OnInit {
 
   private bookId(book: string | Libro): string {
     return typeof book === 'string' ? book : (book._id ?? '');
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.toastService.success(message);
+  }
+
+  private showError(error: unknown, fallbackMessage: string): void {
+    const message = getApiErrorMessage(error, fallbackMessage);
+    this.errorMessage.set(message);
+    this.toastService.error(message);
   }
 }

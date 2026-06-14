@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
+import { AdminListQuery, AdminSearchField } from '../../../../Core/models/admin-list.model';
 import { Autor } from '../../../../Core/models/autor.model';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { AdminListComponent } from '../../../../shared/components/admin-list/admin-list.component';
 
 @Component({
   selector: 'app-autores-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, AdminListComponent],
   templateUrl: './autores-list.component.html',
   styleUrl: './autores-list.component.css',
 })
@@ -24,45 +24,27 @@ export class AutoresListComponent {
 
   @Output() selectAutor = new EventEmitter<Autor>();
   @Output() createNew = new EventEmitter<void>();
-  @Output() pageChange = new EventEmitter<number>();
-  @Output() nextPage = new EventEmitter<void>();
-  @Output() previousPage = new EventEmitter<void>();
+  @Output() queryChange = new EventEmitter<AdminListQuery>();
+  @Output() permanentDelete = new EventEmitter<Autor>();
 
-  @Output() search = new EventEmitter<string>();
-  searchAutor = new FormControl('');
-  private destroy = new Subject<void>();
-
-  ngOnInit(): void {
-    this.searchAutor.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
-      .subscribe((value) => {
-        this.search.emit(value ?? '');
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy.next();
-    this.destroy.complete();
-  }
+  readonly searchFields: AdminSearchField[] = [
+    { value: 'fullName', label: 'Nombre completo' },
+    { value: '_id', label: 'ID de MongoDB' },
+  ];
 
   onSelect(autor: Autor): void {
     this.selectAutor.emit(autor);
   }
 
-  onCreateNew(): void {
-    this.createNew.emit();
+  onPermanentDelete(event: MouseEvent, autor: Autor): void {
+    event.stopPropagation();
+    this.permanentDelete.emit(autor);
   }
 
-  onGoToPage(page: number): void {
-    this.pageChange.emit(page);
-  }
-
-  onNextPage(): void {
-    this.nextPage.emit();
-  }
-
-  onPreviousPage(): void {
-    this.previousPage.emit();
+  onRowKeydown(event: KeyboardEvent, autor: Autor): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.onSelect(autor);
   }
 
   isSelected(autor: Autor): boolean {
@@ -71,38 +53,5 @@ export class AutoresListComponent {
 
   trackByAutorId(index: number, autor: Autor): string | number {
     return autor._id ?? index;
-  }
-
-  getVisibleFields(autor: Autor): Array<{ label: string; value: string }> {
-    return [
-      {
-        label: 'Nombre completo',
-        value: autor.fullName || '-',
-      },
-      {
-        label: 'Estado',
-        value: autor.IsDeleted ? 'Eliminado' : 'Activo',
-      },
-      {
-        label: 'ID',
-        value: autor._id || '-',
-      },
-    ];
-  }
-
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
-  }
-
-  get showingFrom(): number {
-    if (this.totalItems === 0) {
-      return 0;
-    }
-
-    return (this.currentPage - 1) * this.pageSize + 1;
-  }
-
-  get showingTo(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalItems);
   }
 }

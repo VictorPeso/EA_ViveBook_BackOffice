@@ -1,59 +1,67 @@
-<section class="eventos-list">
-  <header>
-    <div>
-      <p>Listado</p>
-      <h2>Eventos</h2>
-      <span>Consulta eventos activos, pasados y desactivados.</span
-      ><input
-        [formControl]="searchControl"
-        placeholder="Buscar por título, descripción o dirección..."
-      />
-    </div>
-    <button (click)="createNew.emit()">+ Nuevo evento</button>
-  </header>
-  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
-  <div class="state" *ngIf="isLoading">Cargando eventos...</div>
-  <div class="state" *ngIf="!isLoading && !eventos.length">No hay eventos disponibles.</div>
-  <div class="items" *ngIf="!isLoading">
+<app-admin-list
+  title="Eventos"
+  itemLabel="eventos"
+  emptyMessage="No hay eventos que coincidan con la búsqueda."
+  searchPlaceholder="Buscar eventos..."
+  [searchFields]="searchFields"
+  initialSearchField="title"
+  [isLoading]="isLoading"
+  [canCreate]="isAdmin"
+  createLabel="Nuevo evento"
+  [visibleItems]="eventos.length"
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (queryChange)="queryChange.emit($event)"
+  (createNew)="createNew.emit()"
+>
+  <div adminListHeader class="eventos-list__grid eventos-list__header">
+    <span>Evento</span>
+    <span>Fecha</span>
+    <span>Dirección</span>
+    <span>ID de MongoDB</span>
+    <span>Estado administrativo</span>
+    <span class="eventos-list__actions-heading">Acciones</span>
+  </div>
+
+  <div adminListRows>
     <article
-      *ngFor="let evento of eventos"
-      [class.active]="evento._id === selectedId"
-      [class.deleted]="evento.IsDeleted"
-      (click)="selectEvento.emit(evento)"
+      *ngFor="let evento of eventos; trackBy: trackByEventoId"
+      class="eventos-list__grid eventos-list__row"
+      [class.eventos-list__row--selected]="evento._id === selectedId"
+      [class.eventos-list__row--deleted]="evento.IsDeleted"
+      tabindex="0"
+      role="button"
+      (click)="onSelect(evento)"
+      (keydown)="onRowKeydown($event, evento)"
     >
-      <div class="title">
-        <h3>{{ evento.title }}</h3>
-        <span [class.inactive]="evento.IsDeleted">{{
-          evento.IsDeleted ? 'Desactivado' : 'Activo'
-        }}</span>
-      </div>
-      <div class="fields">
-        <div>
-          <strong>Fecha</strong><span>{{ evento.eventDate | date: 'medium' }}</span>
-        </div>
-        <div>
-          <strong>Creador</strong><span>{{ creator(evento) }}</span>
-        </div>
-        <div>
-          <strong>Dirección</strong><span>{{ evento.direccionExacta }}</span>
-        </div>
-        <div>
-          <strong>Participantes</strong><span>{{ evento.participant.length }}</span>
-        </div>
-      </div>
+      <strong class="eventos-list__title">{{ evento.title || 'Sin título' }}</strong>
+      <time class="eventos-list__cell" data-label="Fecha" [attr.datetime]="evento.eventDate">
+        {{ evento.eventDate | date: 'dd/MM/yyyy HH:mm' }}
+      </time>
+      <span class="eventos-list__cell" data-label="Dirección">
+        {{ evento.direccionExacta || '-' }}
+      </span>
+      <code class="eventos-list__id" data-label="ID">{{ evento._id || '-' }}</code>
+
+      <span
+        class="eventos-list__status"
+        [class.eventos-list__status--deleted]="evento.IsDeleted"
+      >
+        {{ evento.IsDeleted ? 'Desactivado' : 'Activo' }}
+      </span>
+
+      <button
+        *ngIf="isAdmin"
+        type="button"
+        class="eventos-list__delete"
+        title="Eliminar evento definitivamente"
+        aria-label="Eliminar evento definitivamente"
+        (click)="onPermanentDelete($event, evento)"
+      >
+        Eliminar
+      </button>
     </article>
   </div>
-  <nav *ngIf="totalPages > 1">
-    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
-      Anterior</button
-    ><button
-      *ngFor="let page of pages"
-      [class.current]="page === currentPage"
-      (click)="pageChange.emit(page)"
-    >
-      {{ page }}</button
-    ><button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
-      Siguiente
-    </button>
-  </nav>
-</section>
+</app-admin-list>

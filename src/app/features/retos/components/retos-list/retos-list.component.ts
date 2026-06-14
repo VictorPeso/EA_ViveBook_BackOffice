@@ -1,18 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
+import { AdminListQuery, AdminSearchField } from '../../../../Core/models/admin-list.model';
 import { Reto } from '../../../../Core/models/reto.model';
+import { AdminListComponent } from '../../../../shared/components/admin-list/admin-list.component';
 
 @Component({
   selector: 'app-retos-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, AdminListComponent],
   templateUrl: './retos-list.component.html',
   styleUrl: './retos-list.component.css',
 })
-export class RetosListComponent implements OnInit, OnDestroy {
+export class RetosListComponent {
   @Input() retos: Reto[] = [];
   @Input() selectedId: string | null = null;
   @Input() isLoading = false;
@@ -20,38 +20,41 @@ export class RetosListComponent implements OnInit, OnDestroy {
   @Input() totalPages = 1;
   @Input() totalItems = 0;
   @Input() pageSize = 5;
+  @Input() isAdmin = true;
+
   @Output() selectReto = new EventEmitter<Reto>();
   @Output() createNew = new EventEmitter<void>();
-  @Output() search = new EventEmitter<string>();
-  @Output() pageChange = new EventEmitter<number>();
+  @Output() queryChange = new EventEmitter<AdminListQuery>();
+  @Output() permanentDelete = new EventEmitter<Reto>();
 
-  readonly searchControl = new FormControl('');
-  private readonly destroy = new Subject<void>();
-
-  ngOnInit(): void {
-    this.searchControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
-      .subscribe((value) => this.search.emit(value ?? ''));
-  }
-
-  ngOnDestroy(): void {
-    this.destroy.next();
-    this.destroy.complete();
-  }
-
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
-  }
-
-  get showingFrom(): number {
-    return this.totalItems ? (this.currentPage - 1) * this.pageSize + 1 : 0;
-  }
-
-  get showingTo(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalItems);
-  }
+  readonly searchFields: AdminSearchField[] = [
+    { value: 'title', label: 'Nombre' },
+    { value: 'type', label: 'Tipo' },
+    { value: 'objective', label: 'Objetivo' },
+    { value: 'date', label: 'Fecha' },
+    { value: '_id', label: 'ID de MongoDB' },
+  ];
 
   typeLabel(type: Reto['type']): string {
     return type.replaceAll('_', ' ').toLowerCase();
+  }
+
+  onSelect(reto: Reto): void {
+    this.selectReto.emit(reto);
+  }
+
+  onPermanentDelete(event: MouseEvent, reto: Reto): void {
+    event.stopPropagation();
+    this.permanentDelete.emit(reto);
+  }
+
+  onRowKeydown(event: KeyboardEvent, reto: Reto): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.onSelect(reto);
+  }
+
+  trackByRetoId(index: number, reto: Reto): string | number {
+    return reto._id ?? index;
   }
 }

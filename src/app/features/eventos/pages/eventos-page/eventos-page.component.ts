@@ -2,10 +2,12 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
+import { AdminListQuery } from '../../../../Core/models/admin-list.model';
 import { Evento } from '../../../../Core/models/evento.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
-import { EventosService } from '../../../../Core/services/eventos.service';
+import { AdminEventoSearchField, EventosService } from '../../../../Core/services/eventos.service';
+import { ToastService } from '../../../../Core/services/toast.service';
 import { UsuariosService } from '../../../../Core/services/usuarios.service';
 import { EventoFormComponent } from '../../components/evento-form/evento-form.component';
 import { EventosListComponent } from '../../components/eventos-list/eventos-list.component';
@@ -20,6 +22,7 @@ import { EventosListComponent } from '../../components/eventos-list/eventos-list
 export class EventosPageComponent implements OnInit {
   private readonly eventosService = inject(EventosService);
   private readonly usuariosService = inject(UsuariosService);
+  private readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly eventos = signal<Evento[]>([]);
@@ -37,6 +40,7 @@ export class EventosPageComponent implements OnInit {
   readonly totalItems = signal(0);
   readonly totalPages = signal(1);
   readonly search = signal('');
+  readonly searchField = signal<AdminEventoSearchField>('title');
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -53,6 +57,7 @@ export class EventosPageComponent implements OnInit {
         page: this.currentPage(),
         limit: this.pageSize(),
         search: this.search(),
+        searchField: this.searchField(),
         includeDeleted: true,
       })
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -76,8 +81,7 @@ export class EventosPageComponent implements OnInit {
           this.selectedEvento.set(null);
           this.isCreating.set(false);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los eventos.')),
+        error: (error) => this.showError(error, 'No se pudieron cargar los eventos.'),
       });
   }
 
@@ -88,14 +92,15 @@ export class EventosPageComponent implements OnInit {
       .pipe(finalize(() => this.isLoadingUsuarios.set(false)))
       .subscribe({
         next: (result) => this.usuarios.set(result.data),
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los usuarios.')),
+        error: (error) => this.showError(error, 'No se pudieron cargar los usuarios.'),
       });
   }
 
-  onSearch(term: string): void {
-    this.search.set(term.trim());
-    this.currentPage.set(1);
+  onListQuery(query: AdminListQuery): void {
+    this.search.set(query.search);
+    this.searchField.set(query.searchField as AdminEventoSearchField);
+    this.currentPage.set(query.page);
+    this.pageSize.set(query.pageSize);
     this.loadEventos();
   }
 
@@ -125,13 +130,12 @@ export class EventosPageComponent implements OnInit {
       next: (saved) => {
         this.selectedEvento.set(this.mapToForm(saved));
         this.isCreating.set(false);
-        this.successMessage.set(
+        this.showSuccess(
           creating ? 'Evento creado correctamente.' : 'Evento actualizado correctamente.',
         );
         this.loadEventos(saved._id);
       },
-      error: (error) =>
-        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el evento.')),
+      error: (error) => this.showError(error, 'No se pudo guardar el evento.'),
     });
   }
 
@@ -144,11 +148,10 @@ export class EventosPageComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selectedEvento.set(this.mapToForm(updated));
-          this.successMessage.set('Evento desactivado correctamente.');
+          this.showSuccess('Evento desactivado correctamente.');
           this.loadEventos(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el evento.')),
+        error: (error) => this.showError(error, 'No se pudo desactivar el evento.'),
       });
   }
 
@@ -161,18 +164,40 @@ export class EventosPageComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selectedEvento.set(this.mapToForm(updated));
-          this.successMessage.set('Evento restaurado correctamente.');
+          this.showSuccess('Evento restaurado correctamente.');
           this.loadEventos(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el evento.')),
+        error: (error) => this.showError(error, 'No se pudo restaurar el evento.'),
       });
   }
 
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadEventos();
+  onPermanentDelete(evento: Evento): void {
+    if (
+      !evento._id ||
+      !window.confirm(
+        `¿Eliminar definitivamente el evento "${evento.title}"? Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.eventosService
+      .permanentDeleteEvento(evento._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: () => {
+          if (this.selectedEvento()?._id === evento._id) {
+            this.selectedEvento.set(null);
+          }
+          this.showSuccess('Evento eliminado definitivamente.');
+          this.loadEventos();
+        },
+        error: (error) => this.showError(error, 'No se pudo eliminar definitivamente el evento.'),
+      });
   }
 
   onCancel(): void {
@@ -223,5 +248,16 @@ export class EventosPageComponent implements OnInit {
 
   private userId(user: string | Usuario): string {
     return typeof user === 'string' ? user : (user._id ?? '');
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.toastService.success(message);
+  }
+
+  private showError(error: unknown, fallbackMessage: string): void {
+    const message = getApiErrorMessage(error, fallbackMessage);
+    this.errorMessage.set(message);
+    this.toastService.error(message);
   }
 }

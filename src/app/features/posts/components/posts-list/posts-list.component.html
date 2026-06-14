@@ -1,56 +1,65 @@
-<section class="posts-list">
-  <header>
-    <div>
-      <p>Listado</p>
-      <h2>Posts</h2>
-      <span>Consulta posts activos y desactivados.</span
-      ><input [formControl]="searchControl" placeholder="Buscar por descripción o estado..." />
-    </div>
-    <button (click)="createNew.emit()">+ Nuevo post</button>
-  </header>
-  <div class="toolbar">Mostrando {{ showingFrom }}-{{ showingTo }} de {{ totalItems }}</div>
-  <div class="state" *ngIf="isLoading">Cargando posts...</div>
-  <div class="state" *ngIf="!isLoading && !posts.length">No hay posts disponibles.</div>
-  <div class="items" *ngIf="!isLoading">
+<app-admin-list
+  title="Posts"
+  itemLabel="posts"
+  emptyMessage="No hay posts que coincidan con la búsqueda."
+  searchPlaceholder="Buscar posts..."
+  [searchFields]="searchFields"
+  initialSearchField="book"
+  [isLoading]="isLoading"
+  [canCreate]="isAdmin"
+  createLabel="Nuevo post"
+  [visibleItems]="posts.length"
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (queryChange)="queryChange.emit($event)"
+  (createNew)="createNew.emit()"
+>
+  <div adminListHeader class="posts-list__grid posts-list__header">
+    <span>Libro</span>
+    <span>Propietario</span>
+    <span>Precio</span>
+    <span>Estado</span>
+    <span>ID de MongoDB</span>
+    <span>Estado administrativo</span>
+    <span class="posts-list__actions-heading">Acciones</span>
+  </div>
+
+  <div adminListRows>
     <article
-      *ngFor="let post of posts"
-      [class.active]="post._id === selectedId"
-      [class.deleted]="post.IsDeleted"
-      (click)="selectPost.emit(post)"
+      *ngFor="let post of posts; trackBy: trackByPostId"
+      class="posts-list__grid posts-list__row"
+      [class.posts-list__row--selected]="post._id === selectedId"
+      [class.posts-list__row--deleted]="post.IsDeleted"
+      tabindex="0"
+      role="button"
+      (click)="onSelect(post)"
+      (keydown)="onRowKeydown($event, post)"
     >
-      <div class="title">
-        <h3>{{ post.description || 'Sin descripción' }}</h3>
-        <span [class.inactive]="post.IsDeleted">{{
-          post.IsDeleted ? 'Desactivado' : 'Activo'
-        }}</span>
-      </div>
-      <div class="fields">
-        <div>
-          <strong>Estado</strong><span>{{ post.status }}</span>
-        </div>
-        <div>
-          <strong>Precio</strong><span>{{ post.price }} €</span>
-        </div>
-        <div>
-          <strong>Propietario</strong><span>{{ owner(post) }}</span>
-        </div>
-        <div>
-          <strong>Libro</strong><span>{{ book(post) }}</span>
-        </div>
-      </div>
+      <strong class="posts-list__book">{{ book(post) }}</strong>
+      <span class="posts-list__cell" data-label="Propietario">{{ owner(post) }}</span>
+      <span class="posts-list__cell" data-label="Precio">
+        {{ post.price | number: '1.2-2' }} €
+      </span>
+      <span class="posts-list__publication-status" data-label="Estado">{{ post.status }}</span>
+      <code class="posts-list__id" data-label="ID">{{ post._id || '-' }}</code>
+      <span
+        class="posts-list__admin-status"
+        [class.posts-list__admin-status--deleted]="post.IsDeleted"
+      >
+        {{ post.IsDeleted ? 'Desactivado' : 'Activo' }}
+      </span>
+      <button
+        *ngIf="isAdmin"
+        type="button"
+        class="posts-list__delete"
+        title="Eliminar post definitivamente"
+        aria-label="Eliminar post definitivamente"
+        (click)="onPermanentDelete($event, post)"
+      >
+        Eliminar
+      </button>
     </article>
   </div>
-  <nav *ngIf="totalPages > 1">
-    <button [disabled]="currentPage === 1" (click)="pageChange.emit(currentPage - 1)">
-      Anterior</button
-    ><button
-      *ngFor="let page of pages"
-      [class.current]="page === currentPage"
-      (click)="pageChange.emit(page)"
-    >
-      {{ page }}</button
-    ><button [disabled]="currentPage === totalPages" (click)="pageChange.emit(currentPage + 1)">
-      Siguiente
-    </button>
-  </nav>
-</section>
+</app-admin-list>

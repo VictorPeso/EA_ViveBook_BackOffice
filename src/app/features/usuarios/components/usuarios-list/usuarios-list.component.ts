@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
+import { AdminListQuery, AdminSearchField } from '../../../../Core/models/admin-list.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { AdminListComponent } from '../../../../shared/components/admin-list/admin-list.component';
 
 @Component({
   selector: 'app-usuarios-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, AdminListComponent],
   templateUrl: './usuarios-list.component.html',
   styleUrl: './usuarios-list.component.css',
 })
@@ -24,43 +24,29 @@ export class UsuariosListComponent {
 
   @Output() selectUsuario = new EventEmitter<Usuario>();
   @Output() createNew = new EventEmitter<void>();
-  @Output() pageChange = new EventEmitter<number>();
-  @Output() nextPage = new EventEmitter<void>();
-  @Output() previousPage = new EventEmitter<void>();
+  @Output() queryChange = new EventEmitter<AdminListQuery>();
+  @Output() permanentDelete = new EventEmitter<Usuario>();
 
-  @Output() search = new EventEmitter<string>();
-  searchUsuario = new FormControl('');
-  private destroy = new Subject<void>();
-
-  ngOnInit(): void {
-    this.searchUsuario.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy))
-      .subscribe((value) => this.search.emit(value ?? ''));
-  }
-
-  ngOnDestroy(): void {
-    this.destroy.next();
-    this.destroy.complete();
-  }
+  readonly searchFields: AdminSearchField[] = [
+    { value: 'name', label: 'Nombre' },
+    { value: 'email', label: 'Email' },
+    { value: 'role', label: 'Rol' },
+    { value: '_id', label: 'ID de MongoDB' },
+  ];
 
   onSelect(usuario: Usuario): void {
     this.selectUsuario.emit(usuario);
   }
 
-  onCreateNew(): void {
-    this.createNew.emit();
+  onPermanentDelete(event: MouseEvent, usuario: Usuario): void {
+    event.stopPropagation();
+    this.permanentDelete.emit(usuario);
   }
 
-  onGoToPage(page: number): void {
-    this.pageChange.emit(page);
-  }
-
-  onNextPage(): void {
-    this.nextPage.emit();
-  }
-
-  onPreviousPage(): void {
-    this.previousPage.emit();
+  onRowKeydown(event: KeyboardEvent, usuario: Usuario): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.onSelect(usuario);
   }
 
   isSelected(usuario: Usuario): boolean {
@@ -69,66 +55,5 @@ export class UsuariosListComponent {
 
   trackByUsuarioId(index: number, usuario: Usuario): string | number {
     return usuario._id ?? index;
-  }
-
-  getLibrosDisplay(usuario: Usuario): string {
-    if (!Array.isArray(usuario.libros) || usuario.libros.length === 0) {
-      return 'Sin libros';
-    }
-
-    return usuario.libros
-      .map((libro) => {
-        if (typeof libro === 'string') {
-          return libro;
-        }
-
-        return libro.title || libro._id;
-      })
-      .join(', ');
-  }
-
-  getVisibleFields(usuario: Usuario): Array<{ label: string; value: string }> {
-    return [
-      {
-        label: 'Nombre',
-        value: usuario.name || '-',
-      },
-      {
-        label: 'Email',
-        value: usuario.email || '-',
-      },
-      {
-        label: 'Rol',
-        value: usuario.rol || '-',
-      },
-      {
-        label: 'Libros',
-        value: this.getLibrosDisplay(usuario),
-      },
-      {
-        label: 'Estado',
-        value: usuario.IsDeleted ? 'Desactivado' : 'Activo',
-      },
-      {
-        label: 'ID',
-        value: usuario._id || '-',
-      },
-    ];
-  }
-
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
-  }
-
-  get showingFrom(): number {
-    if (this.totalItems === 0) {
-      return 0;
-    }
-
-    return (this.currentPage - 1) * this.pageSize + 1;
-  }
-
-  get showingTo(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalItems);
   }
 }

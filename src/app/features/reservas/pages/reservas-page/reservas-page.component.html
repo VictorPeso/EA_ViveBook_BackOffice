@@ -43,8 +43,8 @@
         [pageSize]="pageSize()"
         (selectReserva)="onSelect($event)"
         (createNew)="onCreateNew()"
-        (search)="onSearch($event)"
-        (pageChange)="onPageChange($event)"
+        (queryChange)="onListQuery($event)"
+        (permanentDelete)="onPermanentDelete($event)"
       />
     </section>
   </div>

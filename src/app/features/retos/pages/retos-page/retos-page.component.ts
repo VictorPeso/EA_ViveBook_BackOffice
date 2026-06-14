@@ -2,9 +2,11 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
-import { Reto } from '../../../../Core/models/reto.model';
+import { AdminListQuery } from '../../../../Core/models/admin-list.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
-import { RetosService } from '../../../../Core/services/retos.service';
+import { Reto } from '../../../../Core/models/reto.model';
+import { AdminRetoSearchField, RetosService } from '../../../../Core/services/retos.service';
+import { ToastService } from '../../../../Core/services/toast.service';
 import { RetoFormComponent } from '../../components/reto-form/reto-form.component';
 import { RetosListComponent } from '../../components/retos-list/retos-list.component';
 
@@ -17,6 +19,7 @@ import { RetosListComponent } from '../../components/retos-list/retos-list.compo
 })
 export class RetosPageComponent implements OnInit {
   private readonly service = inject(RetosService);
+  private readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly retos = signal<Reto[]>([]);
@@ -32,6 +35,7 @@ export class RetosPageComponent implements OnInit {
   readonly totalItems = signal(0);
   readonly totalPages = signal(1);
   readonly search = signal('');
+  readonly searchField = signal<AdminRetoSearchField>('title');
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) this.loadRetos();
@@ -45,6 +49,7 @@ export class RetosPageComponent implements OnInit {
         page: this.currentPage(),
         limit: this.pageSize(),
         search: this.search(),
+        searchField: this.search() ? this.searchField() : undefined,
         includeInactive: true,
       })
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -68,14 +73,15 @@ export class RetosPageComponent implements OnInit {
           this.selected.set(null);
           this.isCreating.set(false);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los retos.')),
+        error: (error) => this.showError(error, 'No se pudieron cargar los retos.'),
       });
   }
 
-  onSearch(term: string): void {
-    this.search.set(term.trim());
-    this.currentPage.set(1);
+  onListQuery(query: AdminListQuery): void {
+    this.search.set(query.search);
+    this.searchField.set(query.searchField as AdminRetoSearchField);
+    this.currentPage.set(query.page);
+    this.pageSize.set(query.pageSize);
     this.loadRetos();
   }
 
@@ -105,13 +111,12 @@ export class RetosPageComponent implements OnInit {
       next: (saved) => {
         this.selected.set(saved);
         this.isCreating.set(false);
-        this.successMessage.set(
+        this.showSuccess(
           creating ? 'Reto creado correctamente.' : 'Reto actualizado correctamente.',
         );
         this.loadRetos(saved._id);
       },
-      error: (error) =>
-        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el reto.')),
+      error: (error) => this.showError(error, 'No se pudo guardar el reto.'),
     });
   }
 
@@ -124,11 +129,10 @@ export class RetosPageComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selected.set(updated);
-          this.successMessage.set('Reto desactivado correctamente.');
+          this.showSuccess('Reto desactivado correctamente.');
           this.loadRetos(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el reto.')),
+        error: (error) => this.showError(error, 'No se pudo desactivar el reto.'),
       });
   }
 
@@ -141,18 +145,37 @@ export class RetosPageComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selected.set(updated);
-          this.successMessage.set('Reto activado correctamente.');
+          this.showSuccess('Reto activado correctamente.');
           this.loadRetos(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo activar el reto.')),
+        error: (error) => this.showError(error, 'No se pudo activar el reto.'),
       });
   }
 
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadRetos();
+  onPermanentDelete(reto: Reto): void {
+    if (!reto._id) return;
+
+    if (
+      !window.confirm(
+        `¿Eliminar definitivamente el reto "${reto.title}" y sus progresos? Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+    this.service
+      .permanentlyDeleteReto(reto._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: () => {
+          if (this.selected()?._id === reto._id) this.onCancel();
+          this.showSuccess('Reto eliminado definitivamente.');
+          this.loadRetos();
+        },
+        error: (error) => this.showError(error, 'No se pudo eliminar definitivamente el reto.'),
+      });
   }
 
   onCancel(): void {
@@ -180,5 +203,16 @@ export class RetosPageComponent implements OnInit {
       objetivo: Number(reto.objetivo),
       activo: reto.activo ?? true,
     };
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.toastService.success(message);
+  }
+
+  private showError(error: unknown, fallbackMessage: string): void {
+    const message = getApiErrorMessage(error, fallbackMessage);
+    this.errorMessage.set(message);
+    this.toastService.error(message);
   }
 }

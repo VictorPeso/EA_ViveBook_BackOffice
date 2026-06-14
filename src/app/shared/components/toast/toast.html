@@ -1,7 +1,18 @@
-<div class="toast-wrapper">
+<div class="toast-wrapper" aria-live="polite" aria-atomic="false">
   @for (toast of toasts(); track toast.id) {
-    <div class="toast-card" [class]="toast.type" (click)="toastService.remove(toast.id)">
-      {{ toast.text }}
-    </div>
+    <button
+      type="button"
+      class="toast-card"
+      [class.toast-card--success]="toast.type === 'success'"
+      [class.toast-card--error]="toast.type === 'error'"
+      [class.toast-card--warning]="toast.type === 'warning'"
+      [class.toast-card--info]="toast.type === 'info'"
+      [attr.role]="toast.type === 'error' ? 'alert' : 'status'"
+      [attr.aria-label]="toast.text + '. Cerrar notificacion'"
+      (click)="toastService.remove(toast.id)"
+    >
+      <span>{{ toast.text }}</span>
+      <span class="toast-card__close" aria-hidden="true">x</span>
+    </button>
   }
 </div>

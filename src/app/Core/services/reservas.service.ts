@@ -6,10 +6,13 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 import { EstadoReserva, Reserva } from '../models/reserva.model';
 
+export type AdminReservaSearchField = 'user' | 'book' | 'date' | 'status' | '_id';
+
 export interface AdminReservasQuery {
   page: number;
   limit: number;
   search?: string;
+  searchField?: AdminReservaSearchField;
   includeDeleted?: boolean;
   estado?: EstadoReserva;
 }
@@ -24,7 +27,10 @@ export class ReservasService {
       .set('page', query.page)
       .set('limit', query.limit)
       .set('includeDeleted', query.includeDeleted ?? true);
-    if (query.search?.trim()) params = params.set('search', query.search.trim());
+    if (query.search?.trim()) {
+      params = params.set('search', query.search.trim());
+      if (query.searchField) params = params.set('searchField', query.searchField);
+    }
     if (query.estado) params = params.set('estado', query.estado);
     return this.http
       .get<ApiResponse<PaginatedResult<Reserva>>>(this.adminApiUrl, { params })
@@ -52,6 +58,12 @@ export class ReservasService {
   restoreReserva(id: string): Observable<Reserva> {
     return this.http
       .patch<ApiResponse<Reserva>>(`${this.adminApiUrl}/${id}/status`, { IsDeleted: false })
+      .pipe(map((response) => response.data));
+  }
+
+  permanentlyDeleteReserva(id: string): Observable<null> {
+    return this.http
+      .delete<ApiResponse<null>>(`${this.adminApiUrl}/${id}/permanent`)
       .pipe(map((response) => response.data));
   }
 }

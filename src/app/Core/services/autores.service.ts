@@ -6,10 +6,13 @@ import { Autor } from '../models/autor.model';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 
+export type AdminAutorSearchField = 'fullName' | '_id';
+
 export interface AdminAutoresQuery {
   page: number;
   limit: number;
   search?: string;
+  searchField?: AdminAutorSearchField;
   includeDeleted?: boolean;
 }
 
@@ -48,6 +51,7 @@ export class AutoresService {
 
     if (query.search?.trim()) {
       params = params.set('search', query.search.trim());
+      params = params.set('searchField', query.searchField ?? 'fullName');
     }
 
     return this.http
@@ -77,6 +81,12 @@ export class AutoresService {
     return this.http
       .delete<ApiResponse<Autor>>(`${this.adminApiUrl}/${autorId}`)
       .pipe(map((response) => response.data));
+  }
+
+  permanentDeleteAutor(autorId: string): Observable<void> {
+    return this.http
+      .delete<ApiResponse<null>>(`${this.adminApiUrl}/${autorId}/permanent`)
+      .pipe(map(() => undefined));
   }
 
   restoreAutor(autorId: string): Observable<Autor> {

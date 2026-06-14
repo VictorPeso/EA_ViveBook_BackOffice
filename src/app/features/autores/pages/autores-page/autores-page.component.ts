@@ -2,9 +2,11 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
+import { AdminListQuery } from '../../../../Core/models/admin-list.model';
 import { Autor } from '../../../../Core/models/autor.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
-import { AutoresService } from '../../../../Core/services/autores.service';
+import { AdminAutorSearchField, AutoresService } from '../../../../Core/services/autores.service';
+import { ToastService } from '../../../../Core/services/toast.service';
 import { AutorFormComponent } from '../../components/autor-form/autor-form.component';
 import { AutoresListComponent } from '../../components/autores-list/autores-list.component';
 
@@ -17,6 +19,7 @@ import { AutoresListComponent } from '../../components/autores-list/autores-list
 })
 export class AutoresPageComponent implements OnInit {
   private readonly autoresService = inject(AutoresService);
+  private readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly autores = signal<Autor[]>([]);
@@ -36,10 +39,13 @@ export class AutoresPageComponent implements OnInit {
   readonly totalItems = signal(0);
   readonly totalPages = signal(1);
   readonly searchAutor = signal('');
+  readonly searchField = signal<AdminAutorSearchField>('fullName');
 
-  onSearch(term: string): void {
-    this.searchAutor.set(term.trim());
-    this.currentPage.set(1);
+  onListQuery(query: AdminListQuery): void {
+    this.searchAutor.set(query.search);
+    this.searchField.set(query.searchField as AdminAutorSearchField);
+    this.currentPage.set(query.page);
+    this.pageSize.set(query.pageSize);
     this.loadAutores();
   }
 
@@ -58,6 +64,7 @@ export class AutoresPageComponent implements OnInit {
         page: this.currentPage(),
         limit: this.pageSize(),
         search: this.searchAutor(),
+        searchField: this.searchField(),
         includeDeleted: true,
       })
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -103,7 +110,7 @@ export class AutoresPageComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al cargar autores:', error);
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los autores.'));
+          this.showError(error, 'No se pudieron cargar los autores.');
         },
       });
   }
@@ -137,7 +144,7 @@ export class AutoresPageComponent implements OnInit {
           next: (createdAutor) => {
             this.isCreating.set(false);
             this.selectedAutor.set(this.mapAutorToFormValue(createdAutor));
-            this.successMessage.set('Autor creado correctamente.');
+            this.showSuccess('Autor creado correctamente.');
 
             if (createdAutor._id) {
               this.loadAutores(createdAutor._id);
@@ -147,7 +154,7 @@ export class AutoresPageComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error al crear autor:', error);
-            this.errorMessage.set(getApiErrorMessage(error, 'No se pudo crear el autor.'));
+            this.showError(error, 'No se pudo crear el autor.');
           },
         });
 
@@ -163,7 +170,7 @@ export class AutoresPageComponent implements OnInit {
         next: (updatedAutor) => {
           this.isCreating.set(false);
           this.selectedAutor.set(this.mapAutorToFormValue(updatedAutor));
-          this.successMessage.set('Autor actualizado correctamente.');
+          this.showSuccess('Autor actualizado correctamente.');
 
           if (updatedAutor._id) {
             this.loadAutores(updatedAutor._id);
@@ -173,7 +180,7 @@ export class AutoresPageComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al actualizar autor:', error);
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo actualizar el autor.'));
+          this.showError(error, 'No se pudo actualizar el autor.');
         },
       });
   }
@@ -200,14 +207,14 @@ export class AutoresPageComponent implements OnInit {
       .pipe(finalize(() => this.isDeleting.set(false)))
       .subscribe({
         next: () => {
-          this.successMessage.set('Autor eliminado correctamente.');
+          this.showSuccess('Autor desactivado correctamente.');
           this.selectedAutor.set(null);
           this.isCreating.set(false);
           this.loadAutores();
         },
         error: (error) => {
           console.error('Error al eliminar autor:', error);
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el autor.'));
+          this.showError(error, 'No se pudo desactivar el autor.');
         },
       });
   }
@@ -230,33 +237,40 @@ export class AutoresPageComponent implements OnInit {
         next: (updatedAutor) => {
           this.selectedAutor.set(this.mapAutorToFormValue(updatedAutor));
           this.isCreating.set(false);
-          this.successMessage.set('Autor restaurado con éxito');
+          this.showSuccess('Autor restaurado correctamente.');
           this.loadAutores(updatedAutor._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el autor.')),
+        error: (error) => this.showError(error, 'No se pudo restaurar el autor.'),
       });
   }
 
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) {
+  onPermanentDelete(autor: Autor): void {
+    if (
+      !autor._id ||
+      !window.confirm(
+        `¿Eliminar definitivamente al autor "${autor.fullName}"? Esta acción no se puede deshacer.`,
+      )
+    ) {
       return;
     }
 
-    this.currentPage.set(page);
-    this.loadAutores();
-  }
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
-  onNextPage(): void {
-    this.onPageChange(this.currentPage() + 1);
-  }
-
-  onPreviousPage(): void {
-    this.onPageChange(this.currentPage() - 1);
-  }
-
-  trackByAutorId(index: number, autor: Autor): string | number {
-    return autor._id ?? index;
+    this.autoresService
+      .permanentDeleteAutor(autor._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: () => {
+          if (this.selectedAutor()?._id === autor._id) {
+            this.selectedAutor.set(null);
+          }
+          this.showSuccess('Autor eliminado definitivamente.');
+          this.loadAutores();
+        },
+        error: (error) => this.showError(error, 'No se pudo eliminar definitivamente el autor.'),
+      });
   }
 
   private createEmptyAutor(): Autor {
@@ -288,5 +302,16 @@ export class AutoresPageComponent implements OnInit {
       fullName: autor.fullName.trim(),
       IsDeleted: autor.IsDeleted ?? false,
     };
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.toastService.success(message);
+  }
+
+  private showError(error: unknown, fallbackMessage: string): void {
+    const message = getApiErrorMessage(error, fallbackMessage);
+    this.errorMessage.set(message);
+    this.toastService.error(message);
   }
 }

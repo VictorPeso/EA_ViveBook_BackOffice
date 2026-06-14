@@ -1,15 +1,14 @@
-import { Component, ElementRef, inject, signal, ViewChild } from '@angular/core';
-import { Toast } from '../../../../shared/components/toast/toast';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { ToastService } from '../../../../Core/services/toast.service';
 import { LibrosService } from '../../../../Core/services/libros.service';
 import { Libro } from '../../../../Core/models/libro.model';
-import { catchError, retry, throwError } from 'rxjs';
+import { catchError, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-libro-modal',
-  imports: [Toast, FormsModule],
+  imports: [FormsModule],
   templateUrl: './libro-modal.html',
   styleUrl: './libro-modal.css',
 })

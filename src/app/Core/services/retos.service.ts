@@ -6,10 +6,13 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 import { Reto, TipoReto } from '../models/reto.model';
 
+export type AdminRetoSearchField = 'title' | 'type' | 'objective' | 'date' | '_id';
+
 export interface AdminRetosQuery {
   page: number;
   limit: number;
   search?: string;
+  searchField?: AdminRetoSearchField;
   includeInactive?: boolean;
   type?: TipoReto;
 }
@@ -24,7 +27,10 @@ export class RetosService {
       .set('page', query.page)
       .set('limit', query.limit)
       .set('includeInactive', query.includeInactive ?? true);
-    if (query.search?.trim()) params = params.set('search', query.search.trim());
+    if (query.search?.trim()) {
+      params = params.set('search', query.search.trim());
+      if (query.searchField) params = params.set('searchField', query.searchField);
+    }
     if (query.type) params = params.set('type', query.type);
     return this.http
       .get<ApiResponse<PaginatedResult<Reto>>>(this.adminApiUrl, { params })
@@ -52,6 +58,12 @@ export class RetosService {
   activateReto(id: string): Observable<Reto> {
     return this.http
       .patch<ApiResponse<Reto>>(`${this.adminApiUrl}/${id}/status`, { activo: true })
+      .pipe(map((response) => response.data));
+  }
+
+  permanentlyDeleteReto(id: string): Observable<null> {
+    return this.http
+      .delete<ApiResponse<null>>(`${this.adminApiUrl}/${id}/permanent`)
       .pipe(map((response) => response.data));
   }
 }

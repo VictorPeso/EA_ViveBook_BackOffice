@@ -5,20 +5,20 @@
 .auth-page {
   display: grid;
   min-height: 100vh;
-  padding: 32px;
+  padding: 26px;
   place-items: center;
   background: linear-gradient(145deg, #f3c7bd 0%, #dfa196 52%, #cb7d74 100%);
 }
 
 .auth-shell {
   display: grid;
-  grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
-  width: min(1000px, 100%);
-  min-height: 560px;
+  grid-template-columns: minmax(256px, 0.9fr) minmax(336px, 1.1fr);
+  width: min(800px, 100%);
+  min-height: 448px;
   overflow: hidden;
   background: #fff9f7;
   border: 1px solid rgba(123, 20, 30, 0.12);
-  border-radius: 24px;
+  border-radius: 19px;
   box-shadow: 0 24px 70px rgba(123, 20, 30, 0.18);
 }
 
@@ -27,7 +27,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 42px;
+  padding: 34px;
   overflow: hidden;
   color: #fff9f7;
   background: linear-gradient(150deg, #8f262b, #7b141e);
@@ -60,8 +60,8 @@
 
 .auth-logo {
   display: grid;
-  width: 36px;
-  height: 36px;
+  width: 29px;
+  height: 29px;
   place-items: center;
   color: #7b141e;
   font-size: 0.68rem;
@@ -72,7 +72,7 @@
 }
 
 .auth-copy {
-  width: min(270px, 72%);
+  width: min(216px, 72%);
   max-width: none;
   margin: auto 0;
 }
@@ -108,12 +108,12 @@
 
 .auth-panel {
   display: grid;
-  padding: 56px clamp(34px, 6vw, 74px);
+  padding: 45px clamp(27px, 6vw, 59px);
   place-items: center;
 }
 
 .auth-card {
-  width: min(100%, 390px);
+  width: min(100%, 312px);
 }
 
 .eyebrow {
@@ -121,7 +121,7 @@
 }
 
 .auth-card h2 {
-  max-width: 340px;
+  max-width: 272px;
   margin: 0;
   color: #7b141e;
   font-size: clamp(1.8rem, 3vw, 2.35rem);
@@ -138,7 +138,7 @@
 .auth-card form {
   display: grid;
   gap: 8px;
-  margin-top: 30px;
+  margin-top: 24px;
 }
 
 .auth-card label {
@@ -150,7 +150,7 @@
 
 .auth-card input {
   width: 100%;
-  padding: 12px 13px;
+  padding: 10px;
   color: #7b141e;
   background: transparent;
   border: 1px solid #cb7d74;
@@ -171,9 +171,9 @@
 }
 
 .primary-action {
-  min-width: 150px;
-  margin: 22px auto 0;
-  padding: 12px 22px;
+  min-width: 120px;
+  margin: 18px auto 0;
+  padding: 10px 18px;
   color: #fff9f7;
   font-size: 0.78rem;
   font-weight: 800;
@@ -208,6 +208,12 @@
 .auth-alert.success {
   color: #8f262b;
   border-left-color: #b75b56;
+}
+
+.auth-alert--session {
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border-color: var(--color-border);
 }
 
 .auth-card footer {

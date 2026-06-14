@@ -9,6 +9,8 @@ type JwtPayload = {
   exp?: number;
 };
 
+export type SessionEndReason = 'expired' | 'rejected';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -34,12 +36,14 @@ export class AuthSessionService {
     return isAuthenticated;
   }
 
-  clearSession(redirectToLogin = false): void {
+  clearSession(redirectToLogin = false, reason?: SessionEndReason): void {
     this.clearStoredSession();
     this.isAuthenticated.set(false);
 
     if (redirectToLogin) {
-      void this.router.navigate(['/auth']);
+      void this.router.navigate(['/auth'], {
+        queryParams: reason ? { session: reason } : undefined,
+      });
     }
   }
 

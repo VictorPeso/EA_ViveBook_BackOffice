@@ -2,12 +2,14 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
-import { Libro } from '../../../../Core/models/libro.model';
+import { AdminListQuery } from '../../../../Core/models/admin-list.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
+import { Libro } from '../../../../Core/models/libro.model';
 import { Post } from '../../../../Core/models/post.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
 import { LibrosService } from '../../../../Core/services/libros.service';
-import { PostsService } from '../../../../Core/services/posts.service';
+import { AdminPostSearchField, PostsService } from '../../../../Core/services/posts.service';
+import { ToastService } from '../../../../Core/services/toast.service';
 import { UsuariosService } from '../../../../Core/services/usuarios.service';
 import { PostFormComponent } from '../../components/post-form/post-form.component';
 import { PostsListComponent } from '../../components/posts-list/posts-list.component';
@@ -23,6 +25,7 @@ export class PostsPage implements OnInit {
   private readonly postsService = inject(PostsService);
   private readonly librosService = inject(LibrosService);
   private readonly usuariosService = inject(UsuariosService);
+  private readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly posts = signal<Post[]>([]);
@@ -41,6 +44,7 @@ export class PostsPage implements OnInit {
   readonly totalItems = signal(0);
   readonly totalPages = signal(1);
   readonly search = signal('');
+  readonly searchField = signal<AdminPostSearchField>('book');
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -57,6 +61,7 @@ export class PostsPage implements OnInit {
         page: this.currentPage(),
         limit: this.pageSize(),
         search: this.search(),
+        searchField: this.search() ? this.searchField() : undefined,
         includeDeleted: true,
       })
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -80,8 +85,7 @@ export class PostsPage implements OnInit {
           this.selectedPost.set(null);
           this.isCreating.set(false);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los posts.')),
+        error: (error) => this.showError(error, 'No se pudieron cargar los posts.'),
       });
   }
 
@@ -94,23 +98,23 @@ export class PostsPage implements OnInit {
     };
     this.librosService.getAdminLibros({ page: 1, limit: 100, includeDeleted: false }).subscribe({
       next: (result) => this.libros.set(result.data),
-      error: (error) =>
-        this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los libros.')),
+      error: (error) => this.showError(error, 'No se pudieron cargar los libros.'),
       complete: done,
     });
     this.usuariosService
       .getAdminUsuarios({ page: 1, limit: 100, includeDeleted: false })
       .subscribe({
         next: (result) => this.usuarios.set(result.data),
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los usuarios.')),
+        error: (error) => this.showError(error, 'No se pudieron cargar los usuarios.'),
         complete: done,
       });
   }
 
-  onSearch(term: string): void {
-    this.search.set(term.trim());
-    this.currentPage.set(1);
+  onListQuery(query: AdminListQuery): void {
+    this.search.set(query.search);
+    this.searchField.set(query.searchField as AdminPostSearchField);
+    this.currentPage.set(query.page);
+    this.pageSize.set(query.pageSize);
     this.loadPosts();
   }
 
@@ -140,13 +144,12 @@ export class PostsPage implements OnInit {
       next: (saved) => {
         this.selectedPost.set(this.mapToForm(saved));
         this.isCreating.set(false);
-        this.successMessage.set(
+        this.showSuccess(
           creating ? 'Post creado correctamente.' : 'Post actualizado correctamente.',
         );
         this.loadPosts(saved._id);
       },
-      error: (error) =>
-        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el post.')),
+      error: (error) => this.showError(error, 'No se pudo guardar el post.'),
     });
   }
 
@@ -159,11 +162,10 @@ export class PostsPage implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selectedPost.set(this.mapToForm(updated));
-          this.successMessage.set('Post desactivado correctamente.');
+          this.showSuccess('Post desactivado correctamente.');
           this.loadPosts(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el post.')),
+        error: (error) => this.showError(error, 'No se pudo desactivar el post.'),
       });
   }
 
@@ -176,18 +178,38 @@ export class PostsPage implements OnInit {
       .subscribe({
         next: (updated) => {
           this.selectedPost.set(this.mapToForm(updated));
-          this.successMessage.set('Post restaurado correctamente.');
+          this.showSuccess('Post restaurado correctamente.');
           this.loadPosts(updated._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el post.')),
+        error: (error) => this.showError(error, 'No se pudo restaurar el post.'),
       });
   }
 
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadPosts();
+  onPermanentDelete(post: Post): void {
+    if (!post._id) return;
+
+    const book = typeof post.bookId === 'string' ? post.bookId : post.bookId.title;
+    if (
+      !window.confirm(
+        `¿Eliminar definitivamente el post de "${book}"? Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+    this.postsService
+      .permanentlyDeletePost(post._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: () => {
+          if (this.selectedPost()?._id === post._id) this.onCancel();
+          this.showSuccess('Post eliminado definitivamente.');
+          this.loadPosts();
+        },
+        error: (error) => this.showError(error, 'No se pudo eliminar definitivamente el post.'),
+      });
   }
 
   onCancel(): void {
@@ -227,5 +249,16 @@ export class PostsPage implements OnInit {
       bookId: typeof post.bookId === 'string' ? post.bookId : (post.bookId._id ?? ''),
       price: Number(post.price),
     };
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.toastService.success(message);
+  }
+
+  private showError(error: unknown, fallbackMessage: string): void {
+    const message = getApiErrorMessage(error, fallbackMessage);
+    this.errorMessage.set(message);
+    this.toastService.error(message);
   }
 }

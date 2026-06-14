@@ -6,10 +6,13 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../models/api-response.model';
 import { Evento } from '../models/evento.model';
 
+export type AdminEventoSearchField = 'title' | 'eventDate' | 'address' | '_id';
+
 export interface AdminEventosQuery {
   page: number;
   limit: number;
   search?: string;
+  searchField?: AdminEventoSearchField;
   includeDeleted?: boolean;
   upcoming?: boolean;
 }
@@ -24,7 +27,11 @@ export class EventosService {
       .set('page', query.page)
       .set('limit', query.limit)
       .set('includeDeleted', query.includeDeleted ?? true);
-    if (query.search?.trim()) params = params.set('search', query.search.trim());
+    if (query.search?.trim()) {
+      params = params
+        .set('search', query.search.trim())
+        .set('searchField', query.searchField ?? 'title');
+    }
     if (query.upcoming !== undefined) params = params.set('upcoming', query.upcoming);
     return this.http
       .get<ApiResponse<PaginatedResult<Evento>>>(this.adminApiUrl, { params })
@@ -47,6 +54,12 @@ export class EventosService {
     return this.http
       .delete<ApiResponse<Evento>>(`${this.adminApiUrl}/${id}`)
       .pipe(map((response) => response.data));
+  }
+
+  permanentDeleteEvento(id: string): Observable<void> {
+    return this.http
+      .delete<ApiResponse<null>>(`${this.adminApiUrl}/${id}/permanent`)
+      .pipe(map(() => undefined));
   }
 
   restoreEvento(id: string): Observable<Evento> {

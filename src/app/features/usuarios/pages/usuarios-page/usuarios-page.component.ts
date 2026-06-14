@@ -2,9 +2,14 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 
+import { AdminListQuery } from '../../../../Core/models/admin-list.model';
 import { getApiErrorMessage } from '../../../../Core/models/api-response.model';
 import { Usuario } from '../../../../Core/models/usuario.model';
-import { UsuariosService } from '../../../../Core/services/usuarios.service';
+import {
+  AdminUsuarioSearchField,
+  UsuariosService,
+} from '../../../../Core/services/usuarios.service';
+import { ToastService } from '../../../../Core/services/toast.service';
 import { UsuarioFormComponent } from '../../components/usuario-form/usuario-form.component';
 import { UsuariosListComponent } from '../../components/usuarios-list/usuarios-list.component';
 
@@ -17,6 +22,7 @@ import { UsuariosListComponent } from '../../components/usuarios-list/usuarios-l
 })
 export class UsuariosPageComponent implements OnInit {
   private readonly usuariosService = inject(UsuariosService);
+  private readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly usuarios = signal<Usuario[]>([]);
@@ -33,6 +39,7 @@ export class UsuariosPageComponent implements OnInit {
   readonly totalItems = signal(0);
   readonly totalPages = signal(1);
   readonly searchUsuario = signal('');
+  readonly searchField = signal<AdminUsuarioSearchField>('name');
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -40,9 +47,11 @@ export class UsuariosPageComponent implements OnInit {
     }
   }
 
-  onSearch(term: string): void {
-    this.searchUsuario.set(term.trim());
-    this.currentPage.set(1);
+  onListQuery(query: AdminListQuery): void {
+    this.searchUsuario.set(query.search);
+    this.searchField.set(query.searchField as AdminUsuarioSearchField);
+    this.currentPage.set(query.page);
+    this.pageSize.set(query.pageSize);
     this.loadUsuarios();
   }
 
@@ -55,6 +64,7 @@ export class UsuariosPageComponent implements OnInit {
         page: this.currentPage(),
         limit: this.pageSize(),
         search: this.searchUsuario(),
+        searchField: this.searchField(),
         includeDeleted: true,
       })
       .pipe(finalize(() => this.isLoading.set(false)))
@@ -83,7 +93,7 @@ export class UsuariosPageComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al cargar usuarios:', error);
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudieron cargar los usuarios.'));
+          this.showError(error, 'No se pudieron cargar los usuarios.');
         },
       });
   }
@@ -119,14 +129,14 @@ export class UsuariosPageComponent implements OnInit {
       next: (savedUsuario) => {
         this.isCreating.set(false);
         this.selectedUsuario.set(this.mapUsuarioToFormValue(savedUsuario));
-        this.successMessage.set(
+        this.showSuccess(
           creating ? 'Usuario creado correctamente.' : 'Usuario actualizado correctamente.',
         );
         this.loadUsuarios(savedUsuario._id);
       },
       error: (error) => {
         console.error('Error al guardar usuario:', error);
-        this.errorMessage.set(getApiErrorMessage(error, 'No se pudo guardar el usuario.'));
+        this.showError(error, 'No se pudo guardar el usuario.');
       },
     });
   }
@@ -142,11 +152,10 @@ export class UsuariosPageComponent implements OnInit {
       .subscribe({
         next: (updatedUsuario) => {
           this.selectedUsuario.set(this.mapUsuarioToFormValue(updatedUsuario));
-          this.successMessage.set('Usuario desactivado correctamente.');
+          this.showSuccess('Usuario desactivado correctamente.');
           this.loadUsuarios(updatedUsuario._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo desactivar el usuario.')),
+        error: (error) => this.showError(error, 'No se pudo desactivar el usuario.'),
       });
   }
 
@@ -161,11 +170,39 @@ export class UsuariosPageComponent implements OnInit {
       .subscribe({
         next: (updatedUsuario) => {
           this.selectedUsuario.set(this.mapUsuarioToFormValue(updatedUsuario));
-          this.successMessage.set('Usuario restaurado correctamente.');
+          this.showSuccess('Usuario restaurado correctamente.');
           this.loadUsuarios(updatedUsuario._id);
         },
-        error: (error) =>
-          this.errorMessage.set(getApiErrorMessage(error, 'No se pudo restaurar el usuario.')),
+        error: (error) => this.showError(error, 'No se pudo restaurar el usuario.'),
+      });
+  }
+
+  onPermanentDelete(usuario: Usuario): void {
+    if (
+      !usuario._id ||
+      !window.confirm(
+        `¿Eliminar definitivamente al usuario "${usuario.name}"? Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.usuariosService
+      .permanentDeleteUsuario(usuario._id)
+      .pipe(finalize(() => this.isDeleting.set(false)))
+      .subscribe({
+        next: () => {
+          if (this.selectedUsuario()?._id === usuario._id) {
+            this.selectedUsuario.set(null);
+          }
+          this.showSuccess('Usuario eliminado definitivamente.');
+          this.loadUsuarios();
+        },
+        error: (error) => this.showError(error, 'No se pudo eliminar definitivamente el usuario.'),
       });
   }
 
@@ -174,20 +211,6 @@ export class UsuariosPageComponent implements OnInit {
     this.successMessage.set('');
     this.selectedUsuario.set(null);
     this.isCreating.set(false);
-  }
-
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadUsuarios();
-  }
-
-  onNextPage(): void {
-    this.onPageChange(this.currentPage() + 1);
-  }
-
-  onPreviousPage(): void {
-    this.onPageChange(this.currentPage() - 1);
   }
 
   private createEmptyUsuario(): Usuario {
@@ -280,5 +303,16 @@ export class UsuariosPageComponent implements OnInit {
           .map((reference) => (typeof reference === 'string' ? reference : reference._id))
           .filter((id): id is string => !!id)
       : [];
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.toastService.success(message);
+  }
+
+  private showError(error: unknown, fallbackMessage: string): void {
+    const message = getApiErrorMessage(error, fallbackMessage);
+    this.errorMessage.set(message);
+    this.toastService.error(message);
   }
 }
