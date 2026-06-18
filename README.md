@@ -482,11 +482,11 @@ Imagen resultante:
 
 Variables/secretos necesarios:
 
-| Nombre | Tipo | Uso |
-| --- | --- | --- |
-| `DOCKER_HUB_USERNAME` | Secret | Usuario Docker Hub. |
-| `DOCKER_HUB_ACCESS_TOKEN` | Secret | Token de acceso Docker Hub. |
-| `BACKOFFICE_API_URL` | Repository variable | URL publica del Backend. |
+| Nombre                    | Tipo                | Uso                         |
+| ------------------------- | ------------------- | --------------------------- |
+| `DOCKER_HUB_USERNAME`     | Secret              | Usuario Docker Hub.         |
+| `DOCKER_HUB_ACCESS_TOKEN` | Secret              | Token de acceso Docker Hub. |
+| `BACKOFFICE_API_URL`      | Repository variable | URL publica del Backend.    |
 
 El workflow valida que `BACKOFFICE_API_URL` exista y no apunte a `localhost`.
 
@@ -564,19 +564,19 @@ src/app/Core/models/
 
 ## Rutas frontend
 
-| Ruta | Descripcion |
-| --- | --- |
-| `/auth` | Login. |
-| `/auth/signup` | Registro. |
-| `/matomo` | Estadisticas. |
-| `/autores` | Gestion de autores. |
-| `/eventos` | Gestion de eventos. |
-| `/librerias` | Gestion de librerias. |
-| `/libros` | Gestion de libros. |
-| `/posts` | Gestion de posts. |
-| `/reservas` | Gestion de reservas. |
-| `/retos` | Gestion de retos. |
-| `/usuarios` | Gestion de usuarios. |
+| Ruta            | Descripcion              |
+| --------------- | ------------------------ |
+| `/auth`         | Login.                   |
+| `/auth/signup`  | Registro.                |
+| `/matomo`       | Estadisticas.            |
+| `/autores`      | Gestion de autores.      |
+| `/eventos`      | Gestion de eventos.      |
+| `/librerias`    | Gestion de librerias.    |
+| `/libros`       | Gestion de libros.       |
+| `/posts`        | Gestion de posts.        |
+| `/reservas`     | Gestion de reservas.     |
+| `/retos`        | Gestion de retos.        |
+| `/usuarios`     | Gestion de usuarios.     |
 | `/valoraciones` | Gestion de valoraciones. |
 
 ## Resolucion de problemas
