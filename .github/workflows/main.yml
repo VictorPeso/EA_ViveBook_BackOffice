@@ -47,6 +47,8 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/vivebook-backoffice-ea:latest
           build-args: |
             BACKOFFICE_API_URL=${{ vars.BACKOFFICE_API_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
