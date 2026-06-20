@@ -667,7 +667,7 @@ El BackOffice esta preparado para trabajar con el Backend actual de ViveBook:
 
 ## Mejoras recomendadas
 
-- Ampliar cobertura de tests unitarios para `AdminListComponent`, `AdminEditorComponent` y servicios principales.
+- Ampliar cobertura de tests unitarios para `AdminListComponent`, `AdminEditorComponent` y servicios principales
 - Documentar el contrato exacto de cada endpoint administrativo.
 - Anadir pruebas de flujo para login y CRUD administrativo.
 - Revisar nombres de proyecto Angular (`mini-spa`) si se quiere alinear con ViveBook.
