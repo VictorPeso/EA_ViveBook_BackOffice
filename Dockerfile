@@ -12,7 +12,7 @@ WORKDIR /usr/src/app
 # Build the application
 FROM base AS build
 
-ARG BACKOFFICE_API_URL=http://localhost:1337
+ARG BACKOFFICE_API_URL=http://ea3-api.upc.edu:1337
 ENV BACKOFFICE_API_URL=${BACKOFFICE_API_URL}
 
 # Disable Husky hooks inside the container
